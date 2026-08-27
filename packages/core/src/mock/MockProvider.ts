@@ -157,13 +157,13 @@ export class MockProvider implements Provider {
     if (request.background) this.capabilityStatus.set('background', this.decideCapability());
     if (request.history) this.capabilityStatus.set('history', ios ? 'granted' : this.decideCapability());
     if (request.profile) this.capabilityStatus.set('profile', ios ? this.decideCapability() : 'denied');
-    return this.permissionResult([...new Set([...read, ...write])]);
+    return this.permissionResult(read, write);
   }
 
   async getPermissions(types: HealthType[]): Promise<PermissionResult> {
     this.assertAvailable();
     for (const t of types) this.assertType(t);
-    return this.permissionResult(types);
+    return this.permissionResult(types, types);
   }
 
   async read<T extends HealthType>(type: T, query: ReadQuery): Promise<HealthRecordOf<T>[]> {
@@ -361,13 +361,12 @@ export class MockProvider implements Provider {
     return this.options.permissionPolicy === 'deny' ? 'denied' : 'granted';
   }
 
-  private permissionResult(types: HealthType[]): PermissionResult {
+  /** SPEC §3.2 — the result covers exactly what was requested: read statuses for reads, write for writes. */
+  private permissionResult(read: HealthType[], write: HealthType[]): PermissionResult {
     const ios = this.options.platform === 'ios';
     const result: PermissionResult = { read: {}, write: {}, capabilities: {} };
-    for (const t of types) {
-      result.read[t] = this.readStatus.get(t) ?? (ios ? 'unknown' : 'denied');
-      result.write[t] = this.writeStatus.get(t) ?? (ios ? 'unknown' : 'denied');
-    }
+    for (const t of read) result.read[t] = this.readStatus.get(t) ?? (ios ? 'unknown' : 'denied');
+    for (const t of write) result.write[t] = this.writeStatus.get(t) ?? (ios ? 'unknown' : 'denied');
     for (const [c, s] of this.capabilityStatus) result.capabilities[c] = s;
     return result;
   }

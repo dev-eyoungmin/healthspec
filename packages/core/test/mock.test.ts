@@ -186,3 +186,13 @@ test('NOT_SUPPORTED errors name the counterpart', async () => {
     (e: unknown) => isHealthError(e) && /"distance"/.test(e.message),
   );
 });
+
+test('supportedTypes narrows a declaration to what the provider offers', async () => {
+  const store = new HealthStore(mock({ types: ['steps', 'heart_rate'], seed: false }));
+  assert.deepEqual(store.supportedTypes(['steps', 'sleep_session', 'heart_rate']), ['steps', 'heart_rate']);
+  // One declaration, both platforms: the unsupported type is dropped instead of rejecting the whole request.
+  const result = await store.requestSupportedPermissions({ read: ['steps', 'sleep_session'], write: ['weight'] });
+  assert.deepEqual(Object.keys(result.read), ['steps']);
+  assert.deepEqual(Object.keys(result.write), []);
+  await assert.rejects(store.requestPermissions({ read: ['steps', 'sleep_session'] }), code('NOT_SUPPORTED'));
+});

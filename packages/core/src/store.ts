@@ -134,6 +134,26 @@ export class HealthStore {
     return describeType(type, this.platform, this.capabilities());
   }
 
+  /**
+   * The subset of `types` this provider supports. Apps declare one type list for a screen, but a platform may
+   * lack some of them; requesting an unsupported type rejects (SPEC §2.1), so filter before asking.
+   */
+  supportedTypes(types: readonly HealthType[]): HealthType[] {
+    const declared = this.capabilities().types;
+    return types.filter((t) => declared.includes(t));
+  }
+
+  /** Permission request narrowed to what this provider supports, so one declaration works on both platforms. */
+  requestSupportedPermissions(request: PermissionRequest): Promise<PermissionResult> {
+    const narrowed: PermissionRequest = { ...request };
+    if (request.read) narrowed.read = this.supportedTypes(request.read);
+    if (request.write) {
+      const writable = new Set(this.capabilities().write);
+      narrowed.write = this.supportedTypes(request.write).filter((t) => writable.has(t));
+    }
+    return this.requestPermissions(narrowed);
+  }
+
   /** Support for every spec type — for a capability screen or a startup log. */
   describe(): SupportReport {
     const caps = this.capabilities();

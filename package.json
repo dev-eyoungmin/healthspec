@@ -17,7 +17,8 @@
     "verify": "pnpm codegen:check && pnpm build && pnpm typecheck && pnpm test && pnpm verify:swift",
     "verify:mappings": "tsx tools/verify/src/healthkit.ts $HEALTHSPEC_SOURCES && tsx tools/verify/src/healthconnect.ts $HEALTHSPEC_SOURCES",
     "verify:mappings:apply": "tsx tools/verify/src/healthkit.ts $HEALTHSPEC_SOURCES --apply && tsx tools/verify/src/healthconnect.ts $HEALTHSPEC_SOURCES --apply",
-    "verify:swift": "swift build && swift run healthspec-check"
+    "verify:swift": "swift build && swift run healthspec-check",
+    "example": "pnpm --filter healthspec-example"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
