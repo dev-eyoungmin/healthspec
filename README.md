@@ -1,89 +1,123 @@
+<div align="center">
+
 # HealthSpec
+
+**Standardized specification for on-device health data across every platform**
 
 [English](README.md) · [한국어](README.ko.md)
 
-> One schema, one permission model, one sync model for on-device health data — across Apple HealthKit, Android Health Connect, and vendor SDKs.
+</div>
 
-**Status: pre-alpha.** Phase 0 (specification + codegen) is complete; Phase 1 (reference SDK) is in progress. Nothing is published to npm yet.
+## Overview
 
-## Why
+HealthSpec describes Apple HealthKit and Android Health Connect in one place: 182 health types, the identifier
+and unit each platform uses for every one of them, and the behaviour a client must implement — permissions,
+availability, incremental sync, aggregation and de-duplication.
 
-Every React Native app that touches health data today installs one iOS-only library and one Android-only library, then writes its own normalisation layer on top. The two platforms disagree on types, units, permission semantics and sync models, and that knowledge lives in app code and library comments instead of a specification.
+The specification is the product. [`spec/schema`](spec/schema) is the single source of truth; types,
+validators, mapping tables and the native packages are generated from it. Any library can implement the
+specification and prove it with the conformance suite.
 
-HealthSpec is a *specification first*: the JSON Schemas under [`spec/schema`](spec/schema) are the single source of truth. TypeScript types, runtime validators, the platform mapping table, native mapping tables and the documentation are all generated from them. The reference SDK for React Native / Expo (`@healthspec/expo`) implements the spec; any other library or vendor SDK can do the same and prove it with the conformance suite.
+Type semantics follow [IEEE 1752 / Open mHealth](https://www.openmhealth.org/) where those standards define a
+concept.
 
-Semantics align with [IEEE 1752 / Open mHealth](https://www.openmhealth.org/) where they exist. HealthSpec adds what a mobile SDK needs that those standards leave open: platform mapping metadata, permission semantics (`unknown` is a first-class state, because iOS never reveals read grants), availability, and an incremental-sync model with opaque cursors.
-
-## Packages
-
-| Package | What it is | Status |
-|---|---|---|
-| [`spec/`](spec) | The specification — [`SPEC.md`](spec/SPEC.md) (behaviour) and JSON Schemas (data) | draft 0.1 |
-| [`@healthspec/schema`](packages/schema) | Generated types, validators, mapping tables, unit helpers — no runtime deps | Phase 0 ✔ |
-| [`@healthspec/core`](packages/core) | `Provider` contract, `HealthStore`, `MockProvider`, cursors, time buckets — pure TS | Phase 1 |
-| [`@healthspec/expo`](packages/expo) | Expo module: Apple Health + Health Connect providers, config plugin, hooks | Phase 1 (not yet compiled) |
-| [`docs/mapping`](docs/mapping/README.md) | Generated HealthKit ↔ Health Connect mapping table | generated |
+> **Pre-release.** Nothing is published yet and no code has run on a physical device.
+> See [NATIVE-VERIFICATION.md](docs/NATIVE-VERIFICATION.md).
 
 ## Packages
 
-| Package | What it is | Consumers |
+| Package | Language | Contents |
 |---|---|---|
-| [`spec/`](spec) | the specification — [`SPEC.md`](spec/SPEC.md) and JSON Schemas | everyone |
-| [`@healthspec/schema`](packages/schema) | generated TypeScript types, validators, mapping tables | TypeScript |
-| [`@healthspec/core`](packages/core) | `Provider` contract, `HealthStore`, `MockProvider` | TypeScript |
-| [`@healthspec/conformance`](packages/conformance) | the conformance suite every provider must pass | implementers |
-| [`HealthSpec`](packages/apple) | Swift package + CocoaPod — HealthKit mapping, no React Native required | Swift / iOS |
-| [`dev.healthspec:healthspec`](packages/google) | Android library — Health Connect mapping, serialization, aggregation | Kotlin / Android |
-| [`healthspec`](packages/dart) | Dart package — type system and mapping | Dart / Flutter |
-| [`@healthspec/expo`](libraries/expo-health) | Expo module: both providers, config plugin, hooks | Expo / React Native |
+| [`spec`](spec) | — | [`SPEC.md`](spec/SPEC.md) and 182 JSON Schemas |
+| [`@healthspec/schema`](packages/schema) | TypeScript | types, validators, platform tables |
+| [`@healthspec/core`](packages/core) | TypeScript | `Provider` contract, `HealthStore`, `MockProvider` |
+| [`@healthspec/conformance`](packages/conformance) | TypeScript | conformance suite |
+| [`HealthSpec`](packages/apple) | Swift | HealthKit mapping — SPM and CocoaPods |
+| [`dev.healthspec:healthspec`](packages/google) | Kotlin | Health Connect mapping, serialization, aggregation |
+| [`healthspec`](packages/dart) | Dart | type system and mapping |
 
-The platform packages carry no framework dependency, so a plain Swift, Kotlin or Flutter project can adopt the
-specification without React Native.
+The platform packages carry no framework dependency, so a plain Swift, Kotlin or Flutter project can use the
+specification directly.
 
-## Platform differences
+## Libraries
 
-The spec covers what each platform actually stores, so differences are declared rather than hidden:
+| Framework | Platforms | Package | Status |
+|---|---|---|---|
+| [Expo · React Native](libraries/expo-health) | iOS, Android | `@healthspec/expo` | unreleased |
+| Flutter | iOS, Android | — | planned |
+| Kotlin Multiplatform | iOS, Android | — | planned |
+| .NET MAUI | iOS, Android | — | planned |
 
-- **Type availability** — `CROSS_PLATFORM_TYPES` / `IOS_ONLY_TYPES` / `ANDROID_ONLY_TYPES` at build time, `store.support(type)` at runtime.
-- **Field availability** — a shared type can still lack a field on one platform; `support(type).missingFields` lists them.
-- **Counterparts** — `hrv_sdnn` (iOS) and `hrv_rmssd` (Android) are related but *not* interchangeable, and the spec says so. A `NOT_SUPPORTED` error names the counterpart and why it differs.
+## Usage
 
-See the generated [platform differences](docs/mapping/README.md#platform-differences) table.
+```ts
+import { HealthStore } from '@healthspec/expo';
+
+const store = HealthStore.default();          // Apple Health · Health Connect · Mock in Expo Go and tests
+
+await store.requestSupportedPermissions({ read: ['steps', 'heart_rate', 'sleep_session'], write: ['weight'] });
+
+const daily = await store.aggregate('steps', { start, end, fn: 'sum', bucket: 'day' });
+const [latest] = await store.read('heart_rate', { start, end, order: 'desc', limit: 1 });
+await store.write([{ type: 'weight', start: now, end: now, value: { kilograms: 72.4 } }]);
+```
+
+Declare the types in `app.json` and the config plugin derives every native permission, entitlement and usage
+string from the specification:
+
+```json
+["@healthspec/expo", { "read": ["steps", "heart_rate", "sleep_session"], "write": ["weight"], "background": true }]
+```
+
+## Health types
+
+182 types — **38** on both platforms, **129** Apple only, **15** Android only.
+See the generated [mapping table](docs/mapping/README.md).
+
+Differences are declared rather than discovered:
+
+```ts
+store.support('hrv_sdnn').read;            // false on Android
+store.support('hrv_sdnn').counterparts;    // [{ type: 'hrv_rmssd', interchangeable: false, reason: … }]
+store.support('cervical_mucus').missingFields;  // ['sensation'] on iOS
+```
+
+`interchangeable: false` means the two measure different things and must never be converted into each other.
+
+## Conformance
+
+```ts
+import { runConformanceSuite } from '@healthspec/conformance';
+
+const report = await runConformanceSuite(myProvider);
+report.conformant;   // every scenario cites the SPEC clause it enforces
+```
+
+## Documentation
+
+| | |
+|---|---|
+| [Specification](spec/SPEC.md) | normative behaviour |
+| [Platform mapping](docs/mapping/README.md) | generated, per type and per field |
+| [Verification](docs/VERIFICATION.md) | what is established, and at which level of evidence |
+| [Native verification](docs/NATIVE-VERIFICATION.md) | what still needs a device |
+| [Parity](docs/PARITY.md) | comparison with existing libraries |
 
 ## Develop
 
 ```sh
 pnpm install
-pnpm codegen        # spec → generated code + docs
-pnpm verify         # codegen is fresh + build + typecheck + tests
+pnpm codegen        # spec → generated code and docs
+pnpm verify         # codegen freshness + build + typecheck + tests + the Swift runtime check
 ```
 
-Adding a health type = adding one JSON file under `spec/schema/types/` and running `pnpm codegen`. Never edit `packages/*/src/generated` by hand.
-
-## Verification
-
-Platform mappings are cross-checked against libraries that compile against the real SDKs — see
-[VERIFICATION.md](docs/VERIFICATION.md) (HealthKit 159/167 identifiers, Health Connect 41/53 records
-confirmed; the rest are APIs no comparison library implements).
-
-```sh
-HEALTHSPEC_SOURCES=/path/to/sources pnpm verify:mappings
-```
-
-Identifier existence is not behaviour: what still needs a real device build is tracked in
-[NATIVE-VERIFICATION.md](docs/NATIVE-VERIFICATION.md).
-
-## Documents
-
-- [Specification](spec/SPEC.md) (English, normative)
-- [Platform mapping](docs/mapping/README.md) (generated)
-- [PRD](docs/PRD.md) (Korean)
+Adding a health type is one JSON file under `spec/schema/types/` plus `pnpm codegen`. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Acknowledgements
 
-Built on the platform SDKs only — no third-party runtime dependencies. Three MIT-licensed libraries
-(`@kingstinct/react-native-healthkit`, `react-native-health`, `react-native-health-connect`) served as
-verification oracles and prior art during development; see [NOTICE.md](NOTICE.md) for what each contributed.
+No third-party runtime dependencies. Three MIT-licensed libraries served as verification oracles and prior
+art during development — see [NOTICE.md](NOTICE.md) for what each contributed.
 
 ## License
 
