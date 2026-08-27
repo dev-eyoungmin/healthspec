@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # The toolchain moves together; separate PRs for each Babel or Metro package are noise.
+      dev-tooling:
+        patterns: ['@types/*', 'typescript', 'tsx', 'ajv*']
+      expo:
+        patterns: ['expo', 'expo-*', '@expo/*', 'react-native', 'react', '@types/react']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

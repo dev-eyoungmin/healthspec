@@ -26,5 +26,10 @@
     "ajv-formats": "^3.0.1",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "^8.5.26"
+    }
   }
 }
