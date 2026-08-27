@@ -1,6 +1,6 @@
 # @healthspec/conformance
 
-The conformance suite for [HealthSpec](https://healthspec.dev). Run it against any `Provider` to check it
+The conformance suite for [HealthSpec](https://github.com/dev-eyoungmin/healthspec). Run it against any `Provider` to check it
 against the specification — and to claim compatibility honestly.
 
 ```ts

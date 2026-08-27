@@ -35,7 +35,7 @@ publishing {
       pom {
         name = 'HealthSpec for Android'
         description = 'Health Connect implementation of the HealthSpec specification.'
-        url = 'https://healthspec.dev'
+        url = 'https://github.com/dev-eyoungmin/healthspec'
         licenses { license { name = 'MIT'; url = 'https://opensource.org/licenses/MIT' } }
       }
     }

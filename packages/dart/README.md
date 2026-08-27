@@ -1,6 +1,6 @@
 # healthspec (Dart)
 
-Type system and platform mapping for the [HealthSpec](https://healthspec.dev) specification, for Flutter
+Type system and platform mapping for the [HealthSpec](https://github.com/dev-eyoungmin/healthspec) specification, for Flutter
 plugins and Dart tooling.
 
 ```dart

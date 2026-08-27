@@ -39,10 +39,10 @@
     "react-native": "^0.81.0"
   },
   "author": "HealthSpec contributors",
-  "homepage": "https://github.com/healthspec/healthspec",
+  "homepage": "https://github.com/dev-eyoungmin/healthspec",
   "repository": {
     "type": "git",
-    "url": "https://github.com/healthspec/healthspec.git"
+    "url": "https://github.com/dev-eyoungmin/healthspec.git"
   },
   "keywords": [
     "expo",

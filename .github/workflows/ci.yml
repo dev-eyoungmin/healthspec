@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # The spec is the source of truth: a stale generated file is a failure, not a warning.
+      - name: Generated code is up to date
+        run: pnpm codegen:check
+
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  swift:
+    name: Swift
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the Apple package
+        run: swift build
+
+      # Asks HealthKit to resolve every identifier the spec names. This is the only check that can catch a
+      # mapping the SDK does not actually recognise — a cross-reference against another library cannot.
+      - name: Verify the generated tables against HealthKit
+        run: swift run healthspec-check
+
+  mappings:
+    name: Mapping cross-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Compares every mapping against libraries that compile against the real SDKs. Informational: these
+      # sources have their own mistakes (see docs/VERIFICATION.md), so a mismatch is a prompt to look, not a
+      # reason to block a merge.
+      - name: Fetch comparison sources
+        continue-on-error: true
+        run: |
+          mkdir -p /tmp/sources/{kh,hc,rnh}
+          curl -sL https://codeload.github.com/kingstinct/react-native-healthkit/tar.gz/master | tar -xz -C /tmp/sources/kh
+          curl -sL https://codeload.github.com/matinzd/react-native-health-connect/tar.gz/main | tar -xz -C /tmp/sources/hc
+          curl -sL https://codeload.github.com/agencyenterprise/react-native-health/tar.gz/master | tar -xz -C /tmp/sources/rnh
+      - name: Cross-check mappings
+        continue-on-error: true
+        run: HEALTHSPEC_SOURCES=/tmp/sources pnpm verify:mappings

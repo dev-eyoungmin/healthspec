@@ -1,6 +1,6 @@
 # HealthSpec for Apple platforms
 
-HealthKit side of the [HealthSpec](https://healthspec.dev) specification, usable from any Swift project — a
+HealthKit side of the [HealthSpec](https://github.com/dev-eyoungmin/healthspec) specification, usable from any Swift project — a
 React Native bridge is not required.
 
 ```swift
@@ -16,7 +16,7 @@ HealthSpec.crossPlatform.contains(.steps)   // true — Health Connect stores it
 Install with Swift Package Manager:
 
 ```swift
-.package(url: "https://github.com/healthspec/healthspec.git", from: "0.1.0")
+.package(url: "https://github.com/dev-eyoungmin/healthspec.git", from: "0.1.0")
 ```
 
 or CocoaPods:

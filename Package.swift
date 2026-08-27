@@ -2,7 +2,7 @@
 import PackageDescription
 
 // Root manifest so the repository can be consumed directly as a Swift package:
-//   .package(url: "https://github.com/healthspec/healthspec.git", from: "0.1.0")
+//   .package(url: "https://github.com/dev-eyoungmin/healthspec.git", from: "0.1.0")
 //
 // `HealthSpecCheck` verifies the generated tables without XCTest or Swift Testing, so it runs on a plain
 // toolchain (Command Line Tools, CI containers) as well as inside Xcode: `swift run healthspec-check`.

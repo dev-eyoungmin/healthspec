@@ -1,6 +1,6 @@
 # HealthSpec for Android
 
-Health Connect implementation of the [HealthSpec](https://healthspec.dev) specification, usable from any
+Health Connect implementation of the [HealthSpec](https://github.com/dev-eyoungmin/healthspec) specification, usable from any
 Android project — a React Native bridge is not required.
 
 ```kotlin
