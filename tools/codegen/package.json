@@ -1,0 +1,11 @@
+{
+  "name": "@healthspec/codegen",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Generates TypeScript types, mapping tables and docs from spec/schema.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test test/*.test.ts"
+  }
+}

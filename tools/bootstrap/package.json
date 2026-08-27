@@ -1,0 +1,10 @@
+{
+  "name": "@healthspec/bootstrap",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "One-off authoring helper: writes spec/schema/types/*.json from compact tables. The JSON files are canonical once written; re-run with --force to overwrite listed ids.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
