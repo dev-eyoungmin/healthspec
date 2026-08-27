@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["HealthSpecModule"]
+  },
+  "android": {
+    "modules": ["dev.healthspec.expo.HealthSpecModule"]
+  }
+}

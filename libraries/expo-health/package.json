@@ -1,0 +1,57 @@
+{
+  "name": "@healthspec/expo",
+  "version": "0.0.0",
+  "description": "HealthSpec for Expo and React Native \u2014 Apple HealthKit and Android Health Connect behind one spec-conformant API.",
+  "license": "MIT",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "build",
+    "plugin/build",
+    "app.plugin.js",
+    "ios",
+    "android",
+    "expo-module.config.json",
+    "README.md",
+    "!android/build",
+    "!ios/build"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p plugin/tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p plugin/tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@healthspec/core": "workspace:*",
+    "@healthspec/schema": "workspace:*"
+  },
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "expo": "^54.0.0",
+    "expo-modules-core": "^3.0.0",
+    "react": "^19.0.0",
+    "react-native": "^0.81.0"
+  },
+  "author": "HealthSpec contributors",
+  "homepage": "https://github.com/healthspec/healthspec",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/healthspec/healthspec.git"
+  },
+  "keywords": [
+    "expo",
+    "react-native",
+    "health",
+    "healthkit",
+    "health-connect",
+    "fitness",
+    "ios",
+    "android"
+  ]
+}
