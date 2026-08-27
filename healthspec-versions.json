@@ -1,0 +1,8 @@
+{
+  "spec": "0.1.0",
+  "apple": "0.0.0",
+  "google": "0.0.0",
+  "libraries": {
+    "expo-health": "0.0.0"
+  }
+}
