@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/total_energy.json",
+  "title": "total_energy",
+  "description": "Total energy burned during the interval (active + basal).",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "derived",
+        "identifiers": [
+          "HKQuantityTypeIdentifierActiveEnergyBurned",
+          "HKQuantityTypeIdentifierBasalEnergyBurned"
+        ],
+        "unit": "kcal",
+        "read": true,
+        "write": false,
+        "notes": [
+          "Derived as active + basal over the same interval. Records report recordingMethod=unknown and metadata.derived=true."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "TotalCaloriesBurnedRecord",
+        "permission": "TOTAL_CALORIES_BURNED",
+        "field": "energy",
+        "unit": "kilocalories",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [
+      "HealthKit has no native total-energy type; writes are rejected on iOS with NOT_SUPPORTED."
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "kilocalories": {
+      "type": "number",
+      "minimum": 0,
+      "x-unit": "kcal"
+    }
+  },
+  "required": [
+    "kilocalories"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "kilocalories": 2104
+    }
+  ]
+}

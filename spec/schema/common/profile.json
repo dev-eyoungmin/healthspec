@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/common/profile.json",
+  "title": "HealthProfile",
+  "description": "User characteristics that are not time-stamped records. HealthKit exposes them as characteristic types; Health Connect has no equivalent, so Android providers return an empty profile and declare capabilities.profile = false.",
+  "type": "object",
+  "properties": {
+    "biologicalSex": { "type": "string", "enum": ["female", "male", "other"] },
+    "dateOfBirth": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "Calendar date, YYYY-MM-DD." },
+    "bloodType": { "type": "string", "enum": ["a_positive", "a_negative", "b_positive", "b_negative", "ab_positive", "ab_negative", "o_positive", "o_negative"] },
+    "fitzpatrickSkinType": { "type": "string", "enum": ["type_1", "type_2", "type_3", "type_4", "type_5", "type_6"] },
+    "wheelchairUse": { "type": "boolean" },
+    "activityMoveMode": { "type": "string", "enum": ["active_energy", "move_time"] }
+  },
+  "additionalProperties": false
+}

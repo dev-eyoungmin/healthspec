@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/blood_alcohol_content.json",
+  "title": "blood_alcohol_content",
+  "description": "Blood alcohol content.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierBloodAlcoholContent",
+        "unit": "%",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "percent": {
+      "type": "number",
+      "x-unit": "%",
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": [
+    "percent"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "percent": 0.04
+    }
+  ]
+}

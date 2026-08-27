@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/apple_stand_hour.json",
+  "title": "apple_stand_hour",
+  "description": "Whether the user stood during an hour (Stand ring).",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "duration"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierAppleStandHour",
+        "values": {
+          "stood": 0,
+          "idle": 1
+        },
+        "valueField": "status",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "stood",
+        "idle"
+      ]
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "status": "stood"
+    }
+  ]
+}

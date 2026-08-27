@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/running_stride_length.json",
+  "title": "running_stride_length",
+  "description": "Running stride length sample.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierRunningStrideLength",
+        "unit": "m",
+        "since": "iOS 16",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "meters": {
+      "type": "number",
+      "x-unit": "m",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "meters"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "meters": 1.25
+    }
+  ]
+}

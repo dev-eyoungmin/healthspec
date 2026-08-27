@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/paddle_sports_speed.json",
+  "title": "paddle_sports_speed",
+  "description": "Paddle-sports speed sample.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierPaddleSportsSpeed",
+        "unit": "m/s",
+        "since": "iOS 18",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "metersPerSecond": {
+      "type": "number",
+      "x-unit": "m/s",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "metersPerSecond"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "metersPerSecond": 2.2
+    }
+  ]
+}

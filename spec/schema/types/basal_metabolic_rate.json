@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/basal_metabolic_rate.json",
+  "title": "basal_metabolic_rate",
+  "description": "Basal metabolic rate as an energy *rate* (Health Connect). For HealthKit’s basal energy over an interval see basal_energy.",
+  "x-healthspec": {
+    "category": "body",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "BasalMetabolicRateRecord",
+        "permission": "BASAL_METABOLIC_RATE",
+        "field": "basalMetabolicRate",
+        "unit": "kilocaloriesPerDay",
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "counterparts": [
+      {
+        "type": "basal_energy",
+        "platform": "healthkit",
+        "interchangeable": false,
+        "reason": "A rate (kcal/day) cannot be compared with interval energy (kcal) without assuming the rate held for the whole interval."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "kilocaloriesPerDay": {
+      "type": "number",
+      "x-unit": "kcal/day",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "kilocaloriesPerDay"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "kilocaloriesPerDay": 1650
+    }
+  ]
+}

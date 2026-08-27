@@ -1,0 +1,359 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/nutrition.json",
+  "title": "nutrition",
+  "description": "Nutrients consumed during the interval (a meal or a day). Every nutrient either platform records; fields a platform lacks are simply absent there.",
+  "x-healthspec": {
+    "category": "nutrition",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "multi",
+        "fields": {
+          "kilocalories": "HKQuantityTypeIdentifierDietaryEnergyConsumed",
+          "proteinGrams": "HKQuantityTypeIdentifierDietaryProtein",
+          "carbohydrateGrams": "HKQuantityTypeIdentifierDietaryCarbohydrates",
+          "fatGrams": "HKQuantityTypeIdentifierDietaryFatTotal",
+          "fatSaturatedGrams": "HKQuantityTypeIdentifierDietaryFatSaturated",
+          "fatMonounsaturatedGrams": "HKQuantityTypeIdentifierDietaryFatMonounsaturated",
+          "fatPolyunsaturatedGrams": "HKQuantityTypeIdentifierDietaryFatPolyunsaturated",
+          "fiberGrams": "HKQuantityTypeIdentifierDietaryFiber",
+          "sugarGrams": "HKQuantityTypeIdentifierDietarySugar",
+          "cholesterolMilligrams": "HKQuantityTypeIdentifierDietaryCholesterol",
+          "sodiumMilligrams": "HKQuantityTypeIdentifierDietarySodium",
+          "potassiumMilligrams": "HKQuantityTypeIdentifierDietaryPotassium",
+          "calciumMilligrams": "HKQuantityTypeIdentifierDietaryCalcium",
+          "ironMilligrams": "HKQuantityTypeIdentifierDietaryIron",
+          "magnesiumMilligrams": "HKQuantityTypeIdentifierDietaryMagnesium",
+          "phosphorusMilligrams": "HKQuantityTypeIdentifierDietaryPhosphorus",
+          "zincMilligrams": "HKQuantityTypeIdentifierDietaryZinc",
+          "copperMilligrams": "HKQuantityTypeIdentifierDietaryCopper",
+          "manganeseMilligrams": "HKQuantityTypeIdentifierDietaryManganese",
+          "chlorideMilligrams": "HKQuantityTypeIdentifierDietaryChloride",
+          "seleniumMicrograms": "HKQuantityTypeIdentifierDietarySelenium",
+          "iodineMicrograms": "HKQuantityTypeIdentifierDietaryIodine",
+          "chromiumMicrograms": "HKQuantityTypeIdentifierDietaryChromium",
+          "molybdenumMicrograms": "HKQuantityTypeIdentifierDietaryMolybdenum",
+          "vitaminAMicrograms": "HKQuantityTypeIdentifierDietaryVitaminA",
+          "vitaminB6Milligrams": "HKQuantityTypeIdentifierDietaryVitaminB6",
+          "vitaminB12Micrograms": "HKQuantityTypeIdentifierDietaryVitaminB12",
+          "vitaminCMilligrams": "HKQuantityTypeIdentifierDietaryVitaminC",
+          "vitaminDMicrograms": "HKQuantityTypeIdentifierDietaryVitaminD",
+          "vitaminEMilligrams": "HKQuantityTypeIdentifierDietaryVitaminE",
+          "vitaminKMicrograms": "HKQuantityTypeIdentifierDietaryVitaminK",
+          "thiaminMilligrams": "HKQuantityTypeIdentifierDietaryThiamin",
+          "riboflavinMilligrams": "HKQuantityTypeIdentifierDietaryRiboflavin",
+          "niacinMilligrams": "HKQuantityTypeIdentifierDietaryNiacin",
+          "folateMicrograms": "HKQuantityTypeIdentifierDietaryFolate",
+          "biotinMicrograms": "HKQuantityTypeIdentifierDietaryBiotin",
+          "pantothenicAcidMilligrams": "HKQuantityTypeIdentifierDietaryPantothenicAcid",
+          "caffeineMilligrams": "HKQuantityTypeIdentifierDietaryCaffeine"
+        },
+        "notes": [
+          "No single nutrition object: one quantity sample per nutrient, grouped in an HKCorrelationTypeIdentifierFood correlation on write and when reading.",
+          "HKUnit strings: kcal, g, mg, mcg."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "NutritionRecord",
+        "permission": "NUTRITION",
+        "fields": {
+          "kilocalories": "energy",
+          "energyFromFatKilocalories": "energyFromFat",
+          "proteinGrams": "protein",
+          "carbohydrateGrams": "totalCarbohydrate",
+          "fatGrams": "totalFat",
+          "fatSaturatedGrams": "saturatedFat",
+          "fatMonounsaturatedGrams": "monounsaturatedFat",
+          "fatPolyunsaturatedGrams": "polyunsaturatedFat",
+          "transFatGrams": "transFat",
+          "unsaturatedFatGrams": "unsaturatedFat",
+          "fiberGrams": "dietaryFiber",
+          "sugarGrams": "sugar",
+          "cholesterolMilligrams": "cholesterol",
+          "sodiumMilligrams": "sodium",
+          "potassiumMilligrams": "potassium",
+          "calciumMilligrams": "calcium",
+          "ironMilligrams": "iron",
+          "magnesiumMilligrams": "magnesium",
+          "phosphorusMilligrams": "phosphorus",
+          "zincMilligrams": "zinc",
+          "copperMilligrams": "copper",
+          "manganeseMilligrams": "manganese",
+          "chlorideMilligrams": "chloride",
+          "seleniumMicrograms": "selenium",
+          "iodineMicrograms": "iodine",
+          "chromiumMicrograms": "chromium",
+          "molybdenumMicrograms": "molybdenum",
+          "vitaminAMicrograms": "vitaminA",
+          "vitaminB6Milligrams": "vitaminB6",
+          "vitaminB12Micrograms": "vitaminB12",
+          "vitaminCMilligrams": "vitaminC",
+          "vitaminDMicrograms": "vitaminD",
+          "vitaminEMilligrams": "vitaminE",
+          "vitaminKMicrograms": "vitaminK",
+          "thiaminMilligrams": "thiamin",
+          "riboflavinMilligrams": "riboflavin",
+          "niacinMilligrams": "niacin",
+          "folateMicrograms": "folate",
+          "folicAcidMicrograms": "folicAcid",
+          "biotinMicrograms": "biotin",
+          "pantothenicAcidMilligrams": "pantothenicAcid",
+          "caffeineMilligrams": "caffeine"
+        },
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [
+      "The two platforms are structural opposites (many samples vs one record); the spec models the Health Connect shape and HealthKit providers group/ungroup."
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "kilocalories": {
+      "type": "number",
+      "x-unit": "kcal",
+      "minimum": 0
+    },
+    "energyFromFatKilocalories": {
+      "type": "number",
+      "x-unit": "kcal",
+      "minimum": 0
+    },
+    "proteinGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "carbohydrateGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "fatGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "fatSaturatedGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "fatMonounsaturatedGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "fatPolyunsaturatedGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "transFatGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "unsaturatedFatGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "fiberGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "sugarGrams": {
+      "type": "number",
+      "x-unit": "g",
+      "minimum": 0
+    },
+    "cholesterolMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "sodiumMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "potassiumMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "calciumMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "ironMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "magnesiumMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "phosphorusMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "zincMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "copperMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "manganeseMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "chlorideMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "seleniumMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "iodineMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "chromiumMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "molybdenumMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "vitaminAMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "vitaminB6Milligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "vitaminB12Micrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "vitaminCMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "vitaminDMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "vitaminEMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "vitaminKMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "thiaminMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "riboflavinMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "niacinMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "folateMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "folicAcidMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "biotinMicrograms": {
+      "type": "number",
+      "x-unit": "mcg",
+      "minimum": 0
+    },
+    "pantothenicAcidMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "caffeineMilligrams": {
+      "type": "number",
+      "x-unit": "mg",
+      "minimum": 0
+    },
+    "mealType": {
+      "$ref": "../enums/meal_type.json"
+    },
+    "name": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "kilocalories": 620,
+      "proteinGrams": 32,
+      "carbohydrateGrams": 71,
+      "fatGrams": 22,
+      "vitaminCMilligrams": 40,
+      "mealType": "lunch",
+      "name": "Bibimbap"
+    }
+  ]
+}

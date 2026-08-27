@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/heart_rate_recovery_one_minute.json",
+  "title": "heart_rate_recovery_one_minute",
+  "description": "Heart-rate drop one minute after exercise.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierHeartRateRecoveryOneMinute",
+        "unit": "count/min",
+        "since": "iOS 16",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "bpm": {
+      "type": "number",
+      "x-unit": "beats/min",
+      "minimum": 0,
+      "maximum": 300
+    }
+  },
+  "required": [
+    "bpm"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "bpm": 28
+    }
+  ]
+}

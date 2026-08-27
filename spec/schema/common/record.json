@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/common/record.json",
+  "title": "HealthRecordEnvelope",
+  "description": "Common envelope shared by every health record. The `value` object is defined per type under schema/types.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Provider-scoped stable identifier (HealthKit UUID, Health Connect record id, …)." },
+    "type": { "type": "string", "description": "Health type id, e.g. \"steps\". Refined to a constant per type." },
+    "start": { "type": "string", "format": "date-time", "description": "Start instant, RFC 3339 / ISO 8601 with offset or Z." },
+    "end": { "type": "string", "format": "date-time", "description": "End instant. Equal to `start` for point samples." },
+    "zoneOffset": { "type": "string", "pattern": "^[+-]\\d{2}:\\d{2}$", "description": "UTC offset in effect when the record was made (e.g. \"+09:00\"). Preserved from Health Connect; derived from HKMetadataKeyTimeZone on HealthKit when present." },
+    "value": { "type": "object", "description": "Type-specific payload in canonical units." },
+    "source": { "$ref": "source.json" },
+    "metadata": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Provider-specific string metadata passed through untouched." }
+  },
+  "required": ["id", "type", "start", "end", "value", "source"],
+  "additionalProperties": false
+}

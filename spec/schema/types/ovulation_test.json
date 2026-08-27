@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/ovulation_test.json",
+  "title": "ovulation_test",
+  "description": "Result of an ovulation (LH / estrogen) test.",
+  "x-healthspec": {
+    "category": "cycle",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierOvulationTestResult",
+        "valueField": "result",
+        "values": {
+          "negative": 1,
+          "positive": 2,
+          "inconclusive": 3,
+          "high": 4
+        },
+        "notes": [
+          "HealthKit: positive = luteinizingHormoneSurge, high = estrogenSurge, inconclusive = indeterminate."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "OvulationTestRecord",
+        "permission": "OVULATION_TEST",
+        "field": "result",
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "result": {
+      "type": "string",
+      "enum": [
+        "negative",
+        "positive",
+        "high",
+        "inconclusive"
+      ]
+    }
+  },
+  "required": [
+    "result"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "result": "positive"
+    }
+  ]
+}

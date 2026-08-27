@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/blood_glucose.json",
+  "title": "blood_glucose",
+  "description": "Blood glucose concentration. Canonical unit is mmol/L; use units.glucose to convert to mg/dL (× 18.0182).",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierBloodGlucose",
+        "unit": "mmol<180.1558800000541>/L",
+        "read": true,
+        "write": true,
+        "notes": [
+          "Read with HKUnit.moleUnit(with: .milli, molarMass: HKUnitMolarMassBloodGlucose).unitDivided(by: .liter()). Meal relation from HKMetadataKeyBloodGlucoseMealTime."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "BloodGlucoseRecord",
+        "permission": "BLOOD_GLUCOSE",
+        "field": "level",
+        "unit": "millimolesPerLiter",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "blood-glucose"
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "millimolesPerLiter": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 60,
+      "x-unit": "mmol/L"
+    },
+    "specimenSource": {
+      "type": "string",
+      "enum": [
+        "interstitial_fluid",
+        "capillary_blood",
+        "plasma",
+        "serum",
+        "tears",
+        "whole_blood",
+        "unknown"
+      ],
+      "x-platform": "healthconnect"
+    },
+    "mealType": {
+      "$ref": "../enums/meal_type.json"
+    },
+    "relationToMeal": {
+      "type": "string",
+      "enum": [
+        "general",
+        "fasting",
+        "before_meal",
+        "after_meal",
+        "unknown"
+      ],
+      "x-platform": "healthconnect"
+    }
+  },
+  "required": [
+    "millimolesPerLiter"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "millimolesPerLiter": 5.4,
+      "specimenSource": "capillary_blood",
+      "relationToMeal": "fasting"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/six_minute_walk_distance.json",
+  "title": "six_minute_walk_distance",
+  "description": "Estimated six-minute walk test distance.",
+  "x-healthspec": {
+    "category": "mobility",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierSixMinuteWalkTestDistance",
+        "unit": "m",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "meters": {
+      "type": "number",
+      "x-unit": "m",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "meters"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "meters": 520
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/symptom_generalized_body_ache.json",
+  "title": "symptom_generalized_body_ache",
+  "description": "Generalized body ache (symptom with severity).",
+  "x-healthspec": {
+    "category": "symptom",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "duration"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierGeneralizedBodyAche",
+        "values": {
+          "unspecified": 0,
+          "not_present": 1,
+          "mild": 2,
+          "moderate": 3,
+          "severe": 4
+        },
+        "valueField": "severity",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "severity": {
+      "type": "string",
+      "enum": [
+        "unspecified",
+        "not_present",
+        "mild",
+        "moderate",
+        "severe"
+      ]
+    }
+  },
+  "required": [
+    "severity"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "severity": "moderate"
+    }
+  ]
+}

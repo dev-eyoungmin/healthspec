@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/walking_asymmetry.json",
+  "title": "walking_asymmetry",
+  "description": "Walking asymmetry (percentage of steps where one foot moves faster than the other).",
+  "x-healthspec": {
+    "category": "mobility",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierWalkingAsymmetryPercentage",
+        "unit": "%",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "percent": {
+      "type": "number",
+      "x-unit": "%",
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": [
+    "percent"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "percent": 4
+    }
+  ]
+}

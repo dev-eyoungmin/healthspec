@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/menstruation_flow.json",
+  "title": "menstruation_flow",
+  "description": "Menstrual flow observation for a day (or shorter interval).",
+  "x-healthspec": {
+    "category": "cycle",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierMenstrualFlow",
+        "valueField": "flow",
+        "values": {
+          "unknown": 1,
+          "light": 2,
+          "medium": 3,
+          "heavy": 4,
+          "none": 5
+        },
+        "metadataFields": {
+          "cycleStart": {
+            "key": "HKMenstrualCycleStart",
+            "type": "boolean"
+          }
+        },
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "MenstruationFlowRecord",
+        "permission": "MENSTRUATION",
+        "field": "flow",
+        "notes": [
+          "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN."
+        ],
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "flow": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "light",
+        "medium",
+        "heavy",
+        "none"
+      ]
+    },
+    "cycleStart": {
+      "type": "boolean",
+      "description": "First day of a cycle (HealthKit metadata only).",
+      "x-platform": "healthkit"
+    }
+  },
+  "required": [
+    "flow"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "flow": "medium",
+      "cycleStart": true
+    }
+  ]
+}

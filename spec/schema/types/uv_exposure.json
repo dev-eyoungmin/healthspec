@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/uv_exposure.json",
+  "title": "uv_exposure",
+  "description": "UV index exposure.",
+  "x-healthspec": {
+    "category": "environment",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierUVExposure",
+        "unit": "count",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "uvIndex": {
+      "type": "number",
+      "x-unit": "UV index",
+      "minimum": 0,
+      "maximum": 20
+    }
+  },
+  "required": [
+    "uvIndex"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "uvIndex": 6
+    }
+  ]
+}

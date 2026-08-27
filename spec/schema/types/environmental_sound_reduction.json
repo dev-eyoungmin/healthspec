@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/environmental_sound_reduction.json",
+  "title": "environmental_sound_reduction",
+  "description": "Sound reduction from active noise control.",
+  "x-healthspec": {
+    "category": "environment",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierEnvironmentalSoundReduction",
+        "unit": "dBASPL",
+        "since": "iOS 16",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "decibels": {
+      "type": "number",
+      "x-unit": "dB(A)",
+      "minimum": 0,
+      "maximum": 200
+    }
+  },
+  "required": [
+    "decibels"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "decibels": 12
+    }
+  ]
+}

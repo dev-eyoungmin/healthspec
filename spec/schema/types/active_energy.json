@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/active_energy.json",
+  "title": "active_energy",
+  "description": "Energy burned through activity during the interval (excludes basal metabolism).",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierActiveEnergyBurned",
+        "unit": "kcal",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "ActiveCaloriesBurnedRecord",
+        "permission": "ACTIVE_CALORIES_BURNED",
+        "field": "energy",
+        "unit": "kilocalories",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "calories-burned"
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "kilocalories": {
+      "type": "number",
+      "minimum": 0,
+      "x-unit": "kcal"
+    }
+  },
+  "required": [
+    "kilocalories"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "kilocalories": 312.4
+    }
+  ]
+}

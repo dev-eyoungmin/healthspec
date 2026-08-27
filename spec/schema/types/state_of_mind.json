@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/state_of_mind.json",
+  "title": "state_of_mind",
+  "description": "Logged emotion (momentary) or mood (daily) with valence, labels and life-area associations.",
+  "x-healthspec": {
+    "category": "mind",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "stateOfMind",
+        "identifier": "HKDataTypeIdentifierStateOfMind",
+        "since": "iOS 18"
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "momentary_emotion",
+        "daily_mood"
+      ]
+    },
+    "valence": {
+      "type": "number",
+      "x-unit": "valence",
+      "minimum": -1,
+      "maximum": 1
+    },
+    "valenceClassification": {
+      "type": "string",
+      "enum": [
+        "very_unpleasant",
+        "unpleasant",
+        "slightly_unpleasant",
+        "neutral",
+        "slightly_pleasant",
+        "pleasant",
+        "very_pleasant"
+      ]
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "amazed",
+          "amused",
+          "angry",
+          "anxious",
+          "ashamed",
+          "brave",
+          "calm",
+          "content",
+          "disappointed",
+          "discouraged",
+          "disgusted",
+          "embarrassed",
+          "excited",
+          "frustrated",
+          "grateful",
+          "guilty",
+          "happy",
+          "hopeless",
+          "irritated",
+          "jealous",
+          "joyful",
+          "lonely",
+          "passionate",
+          "peaceful",
+          "proud",
+          "relieved",
+          "sad",
+          "scared",
+          "stressed",
+          "surprised",
+          "worried",
+          "annoyed",
+          "confident",
+          "drained",
+          "hopeful",
+          "indifferent",
+          "overwhelmed",
+          "satisfied"
+        ]
+      }
+    },
+    "associations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "community",
+          "current_events",
+          "dating",
+          "education",
+          "family",
+          "fitness",
+          "friends",
+          "health",
+          "hobbies",
+          "identity",
+          "money",
+          "partner",
+          "self_care",
+          "spirituality",
+          "tasks",
+          "travel",
+          "work",
+          "weather"
+        ]
+      }
+    }
+  },
+  "required": [
+    "kind",
+    "valence"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "kind": "momentary_emotion",
+      "valence": 0.6,
+      "valenceClassification": "pleasant",
+      "labels": [
+        "calm",
+        "grateful"
+      ],
+      "associations": [
+        "family"
+      ]
+    }
+  ]
+}

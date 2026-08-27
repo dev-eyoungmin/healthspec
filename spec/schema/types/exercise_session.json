@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/exercise_session.json",
+  "title": "exercise_session",
+  "description": "A workout / exercise session. Duration is end − start. Associated totals (distance, energy, heart rate) are separate records overlapping the session's time range.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "session",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "duration"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "workout",
+        "identifier": "HKWorkoutTypeIdentifier",
+        "read": true,
+        "write": true
+      },
+      "healthconnect": {
+        "record": "ExerciseSessionRecord",
+        "permission": "EXERCISE",
+        "field": "exerciseType",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "physical-activity"
+    },
+    "notes": [
+      "Activity type mapping lives in enums/exercise_type.json (draft, to be verified in Phase 1).",
+      "Segments, laps and routes are out of scope for v1."
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "activity": {
+      "$ref": "../enums/exercise_type.json"
+    },
+    "title": {
+      "type": "string",
+      "x-platform": "healthconnect"
+    },
+    "notes": {
+      "type": "string",
+      "x-platform": "healthconnect"
+    }
+  },
+  "required": [
+    "activity"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "activity": "running",
+      "title": "Morning run"
+    }
+  ]
+}

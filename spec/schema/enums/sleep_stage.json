@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/enums/sleep_stage.json",
+  "title": "SleepStage",
+  "description": "Sleep stage within a sleep session. `in_bed` is HealthKit's legacy \"in bed, sleep state unknown\" and is kept distinct from `awake_in_bed`.",
+  "type": "string",
+  "enum": ["awake", "awake_in_bed", "in_bed", "out_of_bed", "sleeping", "light", "deep", "rem", "unknown"],
+  "x-healthspec": {
+    "mapping": {
+      "awake":        { "healthkit": "HKCategoryValueSleepAnalysis.awake", "healthconnect": "STAGE_TYPE_AWAKE" },
+      "awake_in_bed": { "healthconnect": "STAGE_TYPE_AWAKE_IN_BED" },
+      "in_bed":       { "healthkit": "HKCategoryValueSleepAnalysis.inBed" },
+      "out_of_bed":   { "healthconnect": "STAGE_TYPE_OUT_OF_BED" },
+      "sleeping":     { "healthkit": "HKCategoryValueSleepAnalysis.asleepUnspecified", "healthconnect": "STAGE_TYPE_SLEEPING" },
+      "light":        { "healthkit": "HKCategoryValueSleepAnalysis.asleepCore", "healthconnect": "STAGE_TYPE_LIGHT" },
+      "deep":         { "healthkit": "HKCategoryValueSleepAnalysis.asleepDeep", "healthconnect": "STAGE_TYPE_DEEP" },
+      "rem":          { "healthkit": "HKCategoryValueSleepAnalysis.asleepREM", "healthconnect": "STAGE_TYPE_REM" },
+      "unknown":      { "healthconnect": "STAGE_TYPE_UNKNOWN" }
+    }
+  }
+}

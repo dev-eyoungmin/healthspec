@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/pregnancy_test.json",
+  "title": "pregnancy_test",
+  "description": "Pregnancy test result.",
+  "x-healthspec": {
+    "category": "cycle",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierPregnancyTestResult",
+        "values": {
+          "negative": 1,
+          "positive": 2,
+          "indeterminate": 3
+        },
+        "valueField": "result",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "result": {
+      "type": "string",
+      "enum": [
+        "negative",
+        "positive",
+        "indeterminate"
+      ]
+    }
+  },
+  "required": [
+    "result"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "result": "negative"
+    }
+  ]
+}

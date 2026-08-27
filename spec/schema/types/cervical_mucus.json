@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/cervical_mucus.json",
+  "title": "cervical_mucus",
+  "description": "Cervical mucus observation.",
+  "x-healthspec": {
+    "category": "cycle",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierCervicalMucusQuality",
+        "valueField": "appearance",
+        "values": {
+          "dry": 1,
+          "sticky": 2,
+          "creamy": 3,
+          "watery": 4,
+          "egg_white": 5
+        },
+        "notes": [
+          "HealthKit records appearance only; sensation is Health Connect only."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "CervicalMucusRecord",
+        "permission": "CERVICAL_MUCUS",
+        "fields": {
+          "appearance": "appearance",
+          "sensation": "sensation"
+        },
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "appearance": {
+      "type": "string",
+      "enum": [
+        "dry",
+        "sticky",
+        "creamy",
+        "watery",
+        "egg_white",
+        "unusual",
+        "unknown"
+      ]
+    },
+    "sensation": {
+      "type": "string",
+      "enum": [
+        "light",
+        "medium",
+        "heavy",
+        "unknown"
+      ],
+      "x-platform": "healthconnect"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "appearance": "egg_white",
+      "sensation": "medium"
+    }
+  ]
+}

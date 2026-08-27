@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/distance_wheelchair.json",
+  "title": "distance_wheelchair",
+  "description": "Distance travelled by wheelchair during the interval.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierDistanceWheelchair",
+        "unit": "m",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false,
+    "counterparts": [
+      {
+        "type": "distance",
+        "platform": "healthconnect",
+        "interchangeable": false,
+        "reason": "Health Connect has one DistanceRecord for every activity; it already includes wheelchair distance."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "meters": {
+      "type": "number",
+      "x-unit": "m",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "meters"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "meters": 2400
+    }
+  ]
+}

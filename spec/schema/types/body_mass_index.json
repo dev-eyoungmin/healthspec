@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/body_mass_index.json",
+  "title": "body_mass_index",
+  "description": "Body mass index.",
+  "x-healthspec": {
+    "category": "body",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierBodyMassIndex",
+        "unit": "count",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "number",
+      "x-unit": "kg/m²",
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": [
+    "value"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "value": 23.4
+    }
+  ]
+}

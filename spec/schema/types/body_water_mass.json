@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/body_water_mass.json",
+  "title": "body_water_mass",
+  "description": "Total body water mass.",
+  "x-healthspec": {
+    "category": "body",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "BodyWaterMassRecord",
+        "permission": "BODY_WATER_MASS",
+        "field": "mass",
+        "unit": "kilograms",
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "kilograms": {
+      "type": "number",
+      "x-unit": "kg",
+      "exclusiveMinimum": 0,
+      "maximum": 500
+    }
+  },
+  "required": [
+    "kilograms"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "kilograms": 41.2
+    }
+  ]
+}

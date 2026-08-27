@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/speed.json",
+  "title": "speed",
+  "description": "Speed sample, activity-agnostic (Health Connect). HealthKit splits speed by activity — see walking_speed, running_speed, cycling_speed.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "SpeedRecord",
+        "permission": "SPEED",
+        "field": "samples[].speed",
+        "unit": "metersPerSecond",
+        "series": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "counterparts": [
+      {
+        "type": "walking_speed",
+        "platform": "healthkit",
+        "interchangeable": true,
+        "reason": "HealthKit splits speed by activity."
+      },
+      {
+        "type": "running_speed",
+        "platform": "healthkit",
+        "interchangeable": true,
+        "reason": "HealthKit splits speed by activity."
+      },
+      {
+        "type": "cycling_speed",
+        "platform": "healthkit",
+        "interchangeable": true,
+        "reason": "HealthKit splits speed by activity."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "metersPerSecond": {
+      "type": "number",
+      "x-unit": "m/s",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "metersPerSecond"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "metersPerSecond": 3.2
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/distance.json",
+  "title": "distance",
+  "description": "Distance travelled on foot during the interval.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierDistanceWalkingRunning",
+        "unit": "m",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "DistanceRecord",
+        "permission": "DISTANCE",
+        "field": "distance",
+        "unit": "meters",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "physical-activity"
+    },
+    "notes": [
+      "HealthKit splits distance by activity (distanceCycling, distanceSwimming, distanceWheelchair, distanceDownhillSnowSports); v1 maps walking/running only. Health Connect has a single DistanceRecord regardless of activity."
+    ],
+    "counterparts": [
+      {
+        "type": "distance_cycling",
+        "platform": "healthkit",
+        "interchangeable": false,
+        "reason": "HealthKit splits distance by activity and `distance` maps to walking/running only; summing both double-counts."
+      },
+      {
+        "type": "distance_swimming",
+        "platform": "healthkit",
+        "interchangeable": false,
+        "reason": "HealthKit splits distance by activity and `distance` maps to walking/running only; summing both double-counts."
+      },
+      {
+        "type": "distance_wheelchair",
+        "platform": "healthkit",
+        "interchangeable": false,
+        "reason": "HealthKit splits distance by activity and `distance` maps to walking/running only; summing both double-counts."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "meters": {
+      "type": "number",
+      "minimum": 0,
+      "x-unit": "m"
+    }
+  },
+  "required": [
+    "meters"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "meters": 2480.5
+    }
+  ]
+}

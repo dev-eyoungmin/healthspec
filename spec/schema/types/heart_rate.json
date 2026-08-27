@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/heart_rate.json",
+  "title": "heart_rate",
+  "description": "Heart rate sample.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max",
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierHeartRate",
+        "unit": "count/min",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "HeartRateRecord",
+        "permission": "HEART_RATE",
+        "field": "samples[].beatsPerMinute",
+        "unit": "bpm",
+        "series": true,
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "heart-rate"
+    },
+    "notes": [
+      "Health Connect stores a series of samples per record; providers flatten each sample into its own point record whose id is `<recordId>#<index>`."
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "bpm": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 300,
+      "x-unit": "beats/min"
+    }
+  },
+  "required": [
+    "bpm"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "bpm": 64
+    }
+  ]
+}

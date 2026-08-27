@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/cycling_functional_threshold_power.json",
+  "title": "cycling_functional_threshold_power",
+  "description": "Functional threshold power estimate.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierCyclingFunctionalThresholdPower",
+        "unit": "W",
+        "since": "iOS 17",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "watts": {
+      "type": "number",
+      "x-unit": "W",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "watts"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "watts": 240
+    }
+  ]
+}

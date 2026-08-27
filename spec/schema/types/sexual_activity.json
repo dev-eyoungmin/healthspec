@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/sexual_activity.json",
+  "title": "sexual_activity",
+  "description": "Sexual activity event.",
+  "x-healthspec": {
+    "category": "cycle",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierSexualActivity",
+        "values": {},
+        "metadataFields": {
+          "protectionUsed": {
+            "key": "HKSexualActivityProtectionUsed",
+            "type": "boolean",
+            "booleanEnum": {
+              "true": "protected",
+              "false": "unprotected"
+            }
+          }
+        },
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "SexualActivityRecord",
+        "permission": "SEXUAL_ACTIVITY",
+        "field": "protectionUsed",
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "protectionUsed": {
+      "type": "string",
+      "enum": [
+        "protected",
+        "unprotected",
+        "unknown"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "protectionUsed": "protected"
+    }
+  ]
+}

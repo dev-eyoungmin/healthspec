@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/insulin_delivery.json",
+  "title": "insulin_delivery",
+  "description": "Insulin delivered during the interval.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierInsulinDelivery",
+        "unit": "IU",
+        "metadataFields": {
+          "reason": {
+            "key": "HKInsulinDeliveryReason",
+            "type": "number"
+          }
+        },
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "internationalUnits": {
+      "type": "number",
+      "x-unit": "IU",
+      "minimum": 0
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "basal",
+        "bolus"
+      ]
+    }
+  },
+  "required": [
+    "internationalUnits"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "internationalUnits": 4.5
+    }
+  ]
+}

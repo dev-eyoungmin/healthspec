@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/forced_vital_capacity.json",
+  "title": "forced_vital_capacity",
+  "description": "Forced vital capacity.",
+  "x-healthspec": {
+    "category": "respiratory",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierForcedVitalCapacity",
+        "unit": "L",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "liters": {
+      "type": "number",
+      "x-unit": "L",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "liters"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "liters": 4.2
+    }
+  ]
+}

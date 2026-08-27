@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/wheelchair_pushes.json",
+  "title": "wheelchair_pushes",
+  "description": "Wheelchair pushes during the interval.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierPushCount",
+        "unit": "count",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "WheelchairPushesRecord",
+        "permission": "WHEELCHAIR_PUSHES",
+        "field": "count",
+        "unit": "count",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "x-unit": "count"
+    }
+  },
+  "required": [
+    "count"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "count": 540
+    }
+  ]
+}

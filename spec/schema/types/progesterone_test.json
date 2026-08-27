@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/progesterone_test.json",
+  "title": "progesterone_test",
+  "description": "Progesterone test result.",
+  "x-healthspec": {
+    "category": "cycle",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierProgesteroneTestResult",
+        "values": {
+          "negative": 1,
+          "positive": 2,
+          "indeterminate": 3
+        },
+        "valueField": "result",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "result": {
+      "type": "string",
+      "enum": [
+        "negative",
+        "positive",
+        "indeterminate"
+      ]
+    }
+  },
+  "required": [
+    "result"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "result": "positive"
+    }
+  ]
+}

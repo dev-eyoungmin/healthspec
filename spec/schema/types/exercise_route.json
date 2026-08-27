@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/exercise_route.json",
+  "title": "exercise_route",
+  "description": "GPS route of an exercise session. Read with readRoute(sessionId): Health Connect asks the user per session; HealthKit reads the route series linked to the workout.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "series",
+        "identifier": "HKWorkoutRouteTypeIdentifier",
+        "notes": [
+          "HKSeriesType.workoutRoute(); points arrive as CLLocation batches."
+        ]
+      },
+      "healthconnect": {
+        "read": false,
+        "write": true,
+        "record": "ExerciseRoute",
+        "permission": "EXERCISE_ROUTE",
+        "special": true,
+        "notes": [
+          "Read consent is per session via requestExerciseRoute (no READ permission exists); WRITE_EXERCISE_ROUTE covers writes."
+        ],
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "sessionId": {
+      "type": "string",
+      "description": "Id of the exercise_session this route belongs to."
+    },
+    "points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "latitude": {
+            "type": "number",
+            "x-unit": "°",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "x-unit": "°",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "altitudeMeters": {
+            "type": "number",
+            "x-unit": "m"
+          },
+          "horizontalAccuracyMeters": {
+            "type": "number",
+            "x-unit": "m",
+            "minimum": 0
+          },
+          "verticalAccuracyMeters": {
+            "type": "number",
+            "x-unit": "m",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "time",
+          "latitude",
+          "longitude"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "points"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "sessionId": "abc",
+      "points": [
+        {
+          "time": "2026-08-21T07:00:00Z",
+          "latitude": 37.5665,
+          "longitude": 126.978,
+          "altitudeMeters": 38
+        }
+      ]
+    }
+  ]
+}

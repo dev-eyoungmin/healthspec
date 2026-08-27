@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/common/source.json",
+  "title": "HealthSource",
+  "description": "Where a record came from: the writing app, the device that measured it, and how it was recorded.",
+  "type": "object",
+  "properties": {
+    "app": {
+      "type": "object",
+      "description": "The application that wrote the record.",
+      "properties": {
+        "id": { "type": "string", "description": "Bundle identifier (iOS) or package name (Android)." },
+        "name": { "type": "string", "description": "Human-readable app name when the platform exposes it." }
+      },
+      "required": ["id"],
+      "additionalProperties": false
+    },
+    "device": {
+      "type": "object",
+      "description": "The device that produced the measurement, when known.",
+      "properties": {
+        "manufacturer": { "type": "string" },
+        "model": { "type": "string" },
+        "type": { "$ref": "../enums/device_type.json" }
+      },
+      "additionalProperties": false
+    },
+    "recordingMethod": { "$ref": "../enums/recording_method.json" }
+  },
+  "required": ["recordingMethod"],
+  "additionalProperties": false
+}

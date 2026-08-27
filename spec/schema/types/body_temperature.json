@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/body_temperature.json",
+  "title": "body_temperature",
+  "description": "Core or surface body temperature measurement.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierBodyTemperature",
+        "unit": "degC",
+        "read": true,
+        "write": true,
+        "notes": [
+          "Measurement location from HKMetadataKeyBodyTemperatureSensorLocation."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "BodyTemperatureRecord",
+        "permission": "BODY_TEMPERATURE",
+        "field": "temperature",
+        "unit": "celsius",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "body-temperature"
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "celsius": {
+      "type": "number",
+      "minimum": 20,
+      "maximum": 50,
+      "x-unit": "°C"
+    },
+    "measurementLocation": {
+      "type": "string",
+      "enum": [
+        "armpit",
+        "finger",
+        "forehead",
+        "mouth",
+        "rectum",
+        "temporal_artery",
+        "toe",
+        "ear",
+        "wrist",
+        "vagina",
+        "unknown"
+      ],
+      "x-platform": "healthconnect"
+    }
+  },
+  "required": [
+    "celsius"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "celsius": 36.7,
+      "measurementLocation": "mouth"
+    }
+  ]
+}

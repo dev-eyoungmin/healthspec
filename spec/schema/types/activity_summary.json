@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/activity_summary.json",
+  "title": "activity_summary",
+  "description": "One day of Apple activity-ring progress and goals.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": false,
+        "kind": "activitySummary",
+        "identifier": "HKActivitySummaryTypeIdentifier"
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "activeEnergyKilocalories": {
+      "type": "number",
+      "x-unit": "kcal",
+      "minimum": 0
+    },
+    "activeEnergyGoalKilocalories": {
+      "type": "number",
+      "x-unit": "kcal",
+      "minimum": 0
+    },
+    "exerciseMinutes": {
+      "type": "number",
+      "x-unit": "min",
+      "minimum": 0
+    },
+    "exerciseGoalMinutes": {
+      "type": "number",
+      "x-unit": "min",
+      "minimum": 0
+    },
+    "standHours": {
+      "type": "number",
+      "x-unit": "count",
+      "minimum": 0
+    },
+    "standGoalHours": {
+      "type": "number",
+      "x-unit": "count",
+      "minimum": 0
+    },
+    "moveMinutes": {
+      "type": "number",
+      "x-unit": "min",
+      "minimum": 0
+    },
+    "moveGoalMinutes": {
+      "type": "number",
+      "x-unit": "min",
+      "minimum": 0
+    },
+    "activityMoveMode": {
+      "type": "string",
+      "enum": [
+        "active_energy",
+        "move_time"
+      ]
+    }
+  },
+  "required": [
+    "date"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "date": "2026-08-21",
+      "activeEnergyKilocalories": 480,
+      "activeEnergyGoalKilocalories": 500,
+      "exerciseMinutes": 32,
+      "exerciseGoalMinutes": 30,
+      "standHours": 11,
+      "standGoalHours": 12
+    }
+  ]
+}

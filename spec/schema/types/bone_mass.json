@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/bone_mass.json",
+  "title": "bone_mass",
+  "description": "Bone mass.",
+  "x-healthspec": {
+    "category": "body",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "BoneMassRecord",
+        "permission": "BONE_MASS",
+        "field": "mass",
+        "unit": "kilograms",
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "kilograms": {
+      "type": "number",
+      "x-unit": "kg",
+      "exclusiveMinimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": [
+    "kilograms"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "kilograms": 3.1
+    }
+  ]
+}

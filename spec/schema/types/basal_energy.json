@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/basal_energy.json",
+  "title": "basal_energy",
+  "description": "Resting (basal) energy burned during the interval (HealthKit). Health Connect exposes the rate instead — see basal_metabolic_rate.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierBasalEnergyBurned",
+        "unit": "kcal",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "counterparts": [
+      {
+        "type": "basal_metabolic_rate",
+        "platform": "healthconnect",
+        "interchangeable": false,
+        "reason": "basal_energy is energy accumulated over an interval (kcal); basal_metabolic_rate is a rate (kcal/day). Converting needs the interval length and assumes a constant rate."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "kilocalories": {
+      "type": "number",
+      "x-unit": "kcal",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "kilocalories"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "kilocalories": 68.2
+    }
+  ]
+}

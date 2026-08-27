@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/swimming_stroke_count.json",
+  "title": "swimming_stroke_count",
+  "description": "Swimming strokes during the interval.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierSwimmingStrokeCount",
+        "unit": "count",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "count": {
+      "type": "number",
+      "x-unit": "count",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "count"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "count": 240
+    }
+  ]
+}

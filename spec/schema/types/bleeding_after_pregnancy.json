@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/bleeding_after_pregnancy.json",
+  "title": "bleeding_after_pregnancy",
+  "description": "Bleeding after pregnancy.",
+  "x-healthspec": {
+    "category": "cycle",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "duration"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierBleedingAfterPregnancy",
+        "values": {
+          "unspecified": 1,
+          "light": 2,
+          "medium": 3,
+          "heavy": 4,
+          "none": 5
+        },
+        "since": "iOS 18",
+        "valueField": "flow",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "flow": {
+      "type": "string",
+      "enum": [
+        "unspecified",
+        "light",
+        "medium",
+        "heavy",
+        "none"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "flow": "light"
+    }
+  ],
+  "required": [
+    "flow"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/hrv_sdnn.json",
+  "title": "hrv_sdnn",
+  "description": "Heart rate variability, SDNN (standard deviation of NN intervals). Apple platforms only.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
+        "unit": "ms",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [
+      "SDNN and RMSSD are different statistics and MUST NOT be converted into each other. See hrv_rmssd for Health Connect."
+    ],
+    "counterparts": [
+      {
+        "type": "hrv_rmssd",
+        "platform": "healthconnect",
+        "interchangeable": false,
+        "reason": "SDNN and RMSSD are different statistics computed from the same intervals; neither can be derived from the other."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "milliseconds": {
+      "type": "number",
+      "minimum": 0,
+      "x-unit": "ms"
+    }
+  },
+  "required": [
+    "milliseconds"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "milliseconds": 48.2
+    }
+  ]
+}

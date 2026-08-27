@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/medication_dose.json",
+  "title": "medication_dose",
+  "description": "A logged medication dose event (iOS 26 Medications). The medication list itself comes from listMedications().",
+  "x-healthspec": {
+    "category": "clinical",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": false,
+        "kind": "medicationDose",
+        "identifier": "HKDataTypeIdentifierMedicationDoseEvent",
+        "since": "iOS 26"
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "medicationId": {
+      "type": "string",
+      "description": "HKMedicationConceptIdentifier"
+    },
+    "medicationName": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_interacted",
+        "notification_not_sent",
+        "snoozed",
+        "taken",
+        "skipped",
+        "not_logged"
+      ]
+    },
+    "scheduleType": {
+      "type": "string",
+      "enum": [
+        "as_needed",
+        "scheduled"
+      ]
+    },
+    "scheduledAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scheduledDose": {
+      "type": "number",
+      "x-unit": "dose",
+      "minimum": 0
+    },
+    "dose": {
+      "type": "number",
+      "x-unit": "dose",
+      "minimum": 0
+    },
+    "unit": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "medicationId",
+    "status",
+    "scheduleType"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "medicationId": "rxnorm:197361",
+      "medicationName": "Amoxicillin 500 mg",
+      "status": "taken",
+      "scheduleType": "scheduled",
+      "scheduledAt": "2026-08-21T08:00:00Z",
+      "dose": 1,
+      "unit": "capsule"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/number_of_alcoholic_beverages.json",
+  "title": "number_of_alcoholic_beverages",
+  "description": "Alcoholic drinks consumed during the interval.",
+  "x-healthspec": {
+    "category": "nutrition",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierNumberOfAlcoholicBeverages",
+        "unit": "count",
+        "since": "iOS 15",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "count": {
+      "type": "number",
+      "x-unit": "count",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "count"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "count": 1
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/resting_heart_rate.json",
+  "title": "resting_heart_rate",
+  "description": "Resting heart rate estimate.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierRestingHeartRate",
+        "unit": "count/min",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "RestingHeartRateRecord",
+        "permission": "RESTING_HEART_RATE",
+        "field": "beatsPerMinute",
+        "unit": "bpm",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "bpm": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 300,
+      "x-unit": "beats/min"
+    }
+  },
+  "required": [
+    "bpm"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "bpm": 52
+    }
+  ]
+}

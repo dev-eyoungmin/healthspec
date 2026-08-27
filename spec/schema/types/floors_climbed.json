@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/floors_climbed.json",
+  "title": "floors_climbed",
+  "description": "Floors (flights of stairs) climbed during the interval.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierFlightsClimbed",
+        "unit": "count",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "FloorsClimbedRecord",
+        "permission": "FLOORS_CLIMBED",
+        "field": "floors",
+        "unit": "count",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "count": {
+      "type": "number",
+      "minimum": 0,
+      "x-unit": "count"
+    }
+  },
+  "required": [
+    "count"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "count": 12
+    }
+  ]
+}

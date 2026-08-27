@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/walking_heart_rate_average.json",
+  "title": "walking_heart_rate_average",
+  "description": "Average heart rate while walking.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": false,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierWalkingHeartRateAverage",
+        "unit": "count/min",
+        "notes": [
+          "HealthKit computes this type; apps can read it but never write it."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "bpm": {
+      "type": "number",
+      "x-unit": "beats/min",
+      "minimum": 0,
+      "maximum": 300
+    }
+  },
+  "required": [
+    "bpm"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "bpm": 98
+    }
+  ]
+}

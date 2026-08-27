@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/body_fat.json",
+  "title": "body_fat",
+  "description": "Body fat as a percentage of body mass.",
+  "x-healthspec": {
+    "category": "body",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierBodyFatPercentage",
+        "unit": "%",
+        "read": true,
+        "write": true,
+        "notes": [
+          "HKUnit.percent() is a fraction (0.21 = 21%); multiply by 100."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "BodyFatRecord",
+        "permission": "BODY_FAT",
+        "field": "percentage",
+        "unit": "percent",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "body-fat-percentage"
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "percent": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "x-unit": "%"
+    }
+  },
+  "required": [
+    "percent"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "percent": 21.3
+    }
+  ]
+}

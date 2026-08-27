@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/hrv_rmssd.json",
+  "title": "hrv_rmssd",
+  "description": "Heart rate variability, RMSSD (root mean square of successive differences). Health Connect only.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "record": "HeartRateVariabilityRmssdRecord",
+        "permission": "HEART_RATE_VARIABILITY",
+        "field": "heartRateVariabilityMillis",
+        "unit": "ms",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [
+      "SDNN and RMSSD are different statistics and MUST NOT be converted into each other. See hrv_sdnn for HealthKit."
+    ],
+    "counterparts": [
+      {
+        "type": "hrv_sdnn",
+        "platform": "healthkit",
+        "interchangeable": false,
+        "reason": "RMSSD and SDNN are different statistics computed from the same intervals; neither can be derived from the other."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "milliseconds": {
+      "type": "number",
+      "minimum": 0,
+      "x-unit": "ms"
+    }
+  },
+  "required": [
+    "milliseconds"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "milliseconds": 36.9
+    }
+  ]
+}

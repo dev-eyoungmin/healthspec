@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/workout_effort_score.json",
+  "title": "workout_effort_score",
+  "description": "User-rated workout effort (1–10).",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierWorkoutEffortScore",
+        "unit": "appleEffortScore",
+        "since": "iOS 18",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "score": {
+      "type": "number",
+      "x-unit": "score",
+      "minimum": 1,
+      "maximum": 10
+    }
+  },
+  "required": [
+    "score"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "score": 7
+    }
+  ]
+}

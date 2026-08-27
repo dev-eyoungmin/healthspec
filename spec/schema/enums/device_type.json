@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/enums/device_type.json",
+  "title": "DeviceType",
+  "description": "Kind of device that produced a measurement. Canonical list follows Health Connect's Device types; HealthKit providers infer it from HKDevice model/name.",
+  "type": "string",
+  "enum": ["unknown", "watch", "phone", "scale", "ring", "head_mounted", "fitness_band", "chest_strap", "smart_display"],
+  "x-healthspec": {
+    "mapping": {
+      "unknown":       { "healthconnect": "TYPE_UNKNOWN" },
+      "watch":         { "healthkit": "HKDevice.model contains \"Watch\"", "healthconnect": "TYPE_WATCH" },
+      "phone":         { "healthkit": "HKDevice.model contains \"iPhone\"", "healthconnect": "TYPE_PHONE" },
+      "scale":         { "healthconnect": "TYPE_SCALE" },
+      "ring":          { "healthconnect": "TYPE_RING" },
+      "head_mounted":  { "healthconnect": "TYPE_HEAD_MOUNTED" },
+      "fitness_band":  { "healthconnect": "TYPE_FITNESS_BAND" },
+      "chest_strap":   { "healthconnect": "TYPE_CHEST_STRAP" },
+      "smart_display": { "healthconnect": "TYPE_SMART_DISPLAY" }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/electrodermal_activity.json",
+  "title": "electrodermal_activity",
+  "description": "Electrodermal activity (skin conductance).",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierElectrodermalActivity",
+        "unit": "mcS",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "microsiemens": {
+      "type": "number",
+      "x-unit": "µS",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "microsiemens"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "microsiemens": 1.8
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/vo2_max.json",
+  "title": "vo2_max",
+  "description": "Maximal oxygen consumption estimate.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierVO2Max",
+        "unit": "ml/(kg*min)",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "Vo2MaxRecord",
+        "permission": "VO2_MAX",
+        "field": "vo2MillilitersPerMinuteKilogram",
+        "unit": "mL/kg/min",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [
+      "HealthKit stores the test method in HKMetadataKeyVO2MaxTestType; Health Connect in measurementMethod."
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "mlPerKgPerMin": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "x-unit": "mL/kg/min"
+    },
+    "measurementMethod": {
+      "type": "string",
+      "enum": [
+        "metabolic_cart",
+        "heart_rate_ratio",
+        "cooper_test",
+        "multistage_fitness_test",
+        "rockport_fitness_test",
+        "other"
+      ],
+      "x-platform": "healthconnect"
+    }
+  },
+  "required": [
+    "mlPerKgPerMin"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "mlPerKgPerMin": 42.1,
+      "measurementMethod": "heart_rate_ratio"
+    }
+  ]
+}

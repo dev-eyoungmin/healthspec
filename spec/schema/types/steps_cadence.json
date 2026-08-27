@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/steps_cadence.json",
+  "title": "steps_cadence",
+  "description": "Step cadence sample (Health Connect only).",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "StepsCadenceRecord",
+        "permission": "STEPS_CADENCE",
+        "field": "samples[].rate",
+        "unit": "steps/min",
+        "series": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "counterparts": [
+      {
+        "type": "cycling_cadence",
+        "platform": "healthkit",
+        "interchangeable": false,
+        "reason": "Step cadence (steps/min) and pedalling cadence (rpm) measure different motions."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "stepsPerMinute": {
+      "type": "number",
+      "x-unit": "steps/min",
+      "minimum": 0,
+      "maximum": 400
+    }
+  },
+  "required": [
+    "stepsPerMinute"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "stepsPerMinute": 112
+    }
+  ]
+}

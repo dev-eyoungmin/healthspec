@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/blood_pressure.json",
+  "title": "blood_pressure",
+  "description": "Systolic and diastolic blood pressure measured together.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "correlation",
+        "identifier": "HKCorrelationTypeIdentifierBloodPressure",
+        "identifiers": [
+          "HKQuantityTypeIdentifierBloodPressureSystolic",
+          "HKQuantityTypeIdentifierBloodPressureDiastolic"
+        ],
+        "unit": "mmHg",
+        "read": true,
+        "write": true,
+        "notes": [
+          "Authorization is requested for both quantity types; reads use the correlation so the pair stays together."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated",
+            "react-native-health"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "BloodPressureRecord",
+        "permission": "BLOOD_PRESSURE",
+        "fields": {
+          "systolicMmHg": "systolic",
+          "diastolicMmHg": "diastolic"
+        },
+        "unit": "millimetersOfMercury",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "blood-pressure"
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "systolicMmHg": {
+      "type": "number",
+      "minimum": 20,
+      "maximum": 300,
+      "x-unit": "mmHg"
+    },
+    "diastolicMmHg": {
+      "type": "number",
+      "minimum": 10,
+      "maximum": 200,
+      "x-unit": "mmHg"
+    },
+    "bodyPosition": {
+      "type": "string",
+      "enum": [
+        "standing_up",
+        "sitting_down",
+        "lying_down",
+        "reclining",
+        "unknown"
+      ],
+      "x-platform": "healthconnect"
+    },
+    "measurementLocation": {
+      "type": "string",
+      "enum": [
+        "left_wrist",
+        "right_wrist",
+        "left_upper_arm",
+        "right_upper_arm",
+        "unknown"
+      ],
+      "x-platform": "healthconnect"
+    }
+  },
+  "required": [
+    "systolicMmHg",
+    "diastolicMmHg"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "systolicMmHg": 118,
+      "diastolicMmHg": 76,
+      "bodyPosition": "sitting_down",
+      "measurementLocation": "left_upper_arm"
+    }
+  ]
+}

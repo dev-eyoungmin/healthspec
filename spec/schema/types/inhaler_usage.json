@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/inhaler_usage.json",
+  "title": "inhaler_usage",
+  "description": "Inhaler puffs.",
+  "x-healthspec": {
+    "category": "respiratory",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierInhalerUsage",
+        "unit": "count",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "count": {
+      "type": "number",
+      "x-unit": "count",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "count"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "count": 2
+    }
+  ]
+}

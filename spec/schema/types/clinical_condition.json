@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/clinical_condition.json",
+  "title": "clinical_condition",
+  "description": "Conditions / diagnoses. FHIR resource, read-only. HealthKit needs the clinical-records entitlement; Health Connect needs the Personal Health Record feature and READ_MEDICAL_DATA_* permissions.",
+  "x-healthspec": {
+    "category": "clinical",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": false,
+        "kind": "clinical",
+        "identifier": "HKClinicalTypeIdentifierConditionRecord",
+        "verifiedBy": {
+          "identifiers": [
+            "react-native-health"
+          ]
+        }
+      },
+      "healthconnect": {
+        "read": true,
+        "write": false,
+        "record": "MedicalResource",
+        "permission": "MEDICAL_DATA_CONDITIONS",
+        "medicalResourceType": "CONDITIONS"
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "resourceType": {
+      "type": "string",
+      "description": "FHIR resource type, e.g. \"Observation\"."
+    },
+    "fhirVersion": {
+      "type": "string",
+      "description": "FHIR release, e.g. \"R4\"."
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "sourceUrl": {
+      "type": "string"
+    },
+    "fhir": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The FHIR resource, verbatim."
+    }
+  },
+  "required": [
+    "resourceType",
+    "fhir"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "resourceType": "Observation",
+      "fhirVersion": "R4",
+      "displayName": "Hemoglobin A1c",
+      "fhir": {
+        "resourceType": "Observation",
+        "status": "final"
+      }
+    }
+  ]
+}

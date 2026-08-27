@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/running_vertical_oscillation.json",
+  "title": "running_vertical_oscillation",
+  "description": "Vertical oscillation sample.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierRunningVerticalOscillation",
+        "unit": "cm",
+        "since": "iOS 16",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "centimeters": {
+      "type": "number",
+      "x-unit": "cm",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "centimeters"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "centimeters": 8.4
+    }
+  ]
+}

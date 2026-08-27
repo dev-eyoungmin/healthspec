@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/cycling_cadence.json",
+  "title": "cycling_cadence",
+  "description": "Pedalling cadence sample.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierCyclingCadence",
+        "unit": "count/min",
+        "since": "iOS 17",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "CyclingPedalingCadenceRecord",
+        "permission": "CYCLING_PEDALING_CADENCE",
+        "field": "samples[].revolutionsPerMinute",
+        "unit": "rpm",
+        "series": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "counterparts": [
+      {
+        "type": "steps_cadence",
+        "platform": "healthconnect",
+        "interchangeable": false,
+        "reason": "Pedalling cadence (rpm) and step cadence (steps/min) measure different motions."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "rpm": {
+      "type": "number",
+      "x-unit": "rpm",
+      "minimum": 0,
+      "maximum": 400
+    }
+  },
+  "required": [
+    "rpm"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "rpm": 88
+    }
+  ]
+}

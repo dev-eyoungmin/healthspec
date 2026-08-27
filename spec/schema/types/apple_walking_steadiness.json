@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/apple_walking_steadiness.json",
+  "title": "apple_walking_steadiness",
+  "description": "Walking steadiness score.",
+  "x-healthspec": {
+    "category": "mobility",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": false,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierAppleWalkingSteadiness",
+        "unit": "%",
+        "notes": [
+          "HealthKit computes this type; apps can read it but never write it."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "percent": {
+      "type": "number",
+      "x-unit": "%",
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": [
+    "percent"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "percent": 85
+    }
+  ]
+}

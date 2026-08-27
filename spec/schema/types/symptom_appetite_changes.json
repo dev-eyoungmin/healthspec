@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/symptom_appetite_changes.json",
+  "title": "symptom_appetite_changes",
+  "description": "Appetite changes.",
+  "x-healthspec": {
+    "category": "symptom",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "duration"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierAppetiteChanges",
+        "values": {
+          "unspecified": 0,
+          "no_change": 1,
+          "decreased": 2,
+          "increased": 3
+        },
+        "valueField": "change",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "change": {
+      "type": "string",
+      "enum": [
+        "unspecified",
+        "no_change",
+        "decreased",
+        "increased"
+      ]
+    }
+  },
+  "required": [
+    "change"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "change": "decreased"
+    }
+  ]
+}

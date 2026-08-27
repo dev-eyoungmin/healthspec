@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/enums/meal_type.json",
+  "title": "MealType",
+  "description": "Meal a nutrition or glucose record relates to.",
+  "type": "string",
+  "enum": ["unknown", "breakfast", "lunch", "dinner", "snack"],
+  "x-healthspec": {
+    "mapping": {
+      "unknown":   { "healthconnect": "MEAL_TYPE_UNKNOWN" },
+      "breakfast": { "healthconnect": "MEAL_TYPE_BREAKFAST" },
+      "lunch":     { "healthconnect": "MEAL_TYPE_LUNCH" },
+      "dinner":    { "healthconnect": "MEAL_TYPE_DINNER" },
+      "snack":     { "healthconnect": "MEAL_TYPE_SNACK" }
+    }
+  }
+}

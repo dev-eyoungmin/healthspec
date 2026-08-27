@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/elevation_gained.json",
+  "title": "elevation_gained",
+  "description": "Elevation gained during the interval (Health Connect only; HealthKit keeps it as workout metadata).",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "ElevationGainedRecord",
+        "permission": "ELEVATION_GAINED",
+        "field": "elevation",
+        "unit": "meters",
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "counterparts": [
+      {
+        "type": "floors_climbed",
+        "platform": "healthkit",
+        "interchangeable": false,
+        "reason": "HealthKit records flights climbed, not metres gained; a flight is a fixed approximation."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "meters": {
+      "type": "number",
+      "x-unit": "m"
+    }
+  },
+  "required": [
+    "meters"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "meters": 140.5
+    }
+  ]
+}

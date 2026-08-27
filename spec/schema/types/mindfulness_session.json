@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/mindfulness_session.json",
+  "title": "mindfulness_session",
+  "description": "A mindfulness / meditation session. Duration is end − start.",
+  "x-healthspec": {
+    "category": "wellness",
+    "kind": "session",
+    "since": "1.0",
+    "aggregate": [
+      "duration",
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierMindfulSession",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "MindfulnessSessionRecord",
+        "permission": "MINDFULNESS",
+        "field": "mindfulnessSessionType",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "sessionType": {
+      "type": "string",
+      "enum": [
+        "meditation",
+        "breathing",
+        "movement",
+        "music",
+        "unguided",
+        "other"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "x-platform": "healthconnect"
+    },
+    "notes": {
+      "type": "string",
+      "x-platform": "healthconnect"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "sessionType": "meditation",
+      "title": "Evening calm"
+    }
+  ]
+}

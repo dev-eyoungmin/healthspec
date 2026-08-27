@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/contraceptive.json",
+  "title": "contraceptive",
+  "description": "Contraceptive in use.",
+  "x-healthspec": {
+    "category": "cycle",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "duration"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierContraceptive",
+        "values": {
+          "unspecified": 1,
+          "implant": 2,
+          "injection": 3,
+          "intrauterine_device": 4,
+          "intravaginal_ring": 5,
+          "oral": 6,
+          "patch": 7
+        },
+        "valueField": "method",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "method": {
+      "type": "string",
+      "enum": [
+        "unspecified",
+        "implant",
+        "injection",
+        "intrauterine_device",
+        "intravaginal_ring",
+        "oral",
+        "patch"
+      ]
+    }
+  },
+  "required": [
+    "method"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "method": "oral"
+    }
+  ]
+}

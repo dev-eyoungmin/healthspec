@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/respiratory_rate.json",
+  "title": "respiratory_rate",
+  "description": "Breaths per minute.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierRespiratoryRate",
+        "unit": "count/min",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "RespiratoryRateRecord",
+        "permission": "RESPIRATORY_RATE",
+        "field": "rate",
+        "unit": "breaths/min",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "respiratory-rate"
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "breathsPerMinute": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "x-unit": "breaths/min"
+    }
+  },
+  "required": [
+    "breathsPerMinute"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "breathsPerMinute": 14.5
+    }
+  ]
+}

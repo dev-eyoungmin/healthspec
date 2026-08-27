@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/enums/recording_method.json",
+  "title": "RecordingMethod",
+  "description": "How a record was captured. Mirrors Health Connect's recording methods; HealthKit only distinguishes user-entered data.",
+  "type": "string",
+  "enum": ["manual", "automatic", "active", "unknown"],
+  "x-healthspec": {
+    "mapping": {
+      "manual":    { "healthkit": "HKMetadataKeyWasUserEntered=true", "healthconnect": "RECORDING_METHOD_MANUAL_ENTRY" },
+      "automatic": { "healthkit": "HKMetadataKeyWasUserEntered≠true", "healthconnect": "RECORDING_METHOD_AUTOMATICALLY_RECORDED" },
+      "active":    { "healthconnect": "RECORDING_METHOD_ACTIVELY_RECORDED" },
+      "unknown":   { "healthconnect": "RECORDING_METHOD_UNKNOWN" }
+    }
+  }
+}

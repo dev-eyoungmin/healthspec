@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/headphone_audio_exposure.json",
+  "title": "headphone_audio_exposure",
+  "description": "Headphone sound level exposure.",
+  "x-healthspec": {
+    "category": "environment",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierHeadphoneAudioExposure",
+        "unit": "dBASPL",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "decibels": {
+      "type": "number",
+      "x-unit": "dB(A)",
+      "minimum": 0,
+      "maximum": 200
+    }
+  },
+  "required": [
+    "decibels"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "decibels": 74
+    }
+  ]
+}

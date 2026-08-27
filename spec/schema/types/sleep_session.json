@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/sleep_session.json",
+  "title": "sleep_session",
+  "description": "A sleep session with optional stage breakdown. Session bounds are the record's start/end; stages partition (part of) that range.",
+  "x-healthspec": {
+    "category": "sleep",
+    "kind": "session",
+    "since": "1.0",
+    "aggregate": [
+      "duration",
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierSleepAnalysis",
+        "read": true,
+        "write": true,
+        "notes": [
+          "HealthKit has no session object: each stage is a separate category sample. Providers derive sessions by grouping consecutive samples from the same source with gaps ≤ 60 minutes; the session id is the first sample's UUID."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "SleepSessionRecord",
+        "permission": "SLEEP",
+        "field": "stages[]",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "sleep-episode"
+    },
+    "notes": [
+      "Stage mapping lives in enums/sleep_stage.json."
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "$ref": "../enums/sleep_stage.json"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "stage",
+          "start",
+          "end"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "title": {
+      "type": "string",
+      "x-platform": "healthconnect"
+    },
+    "notes": {
+      "type": "string",
+      "x-platform": "healthconnect"
+    }
+  },
+  "required": [
+    "stages"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "stages": [
+        {
+          "stage": "light",
+          "start": "2026-08-21T14:10:00Z",
+          "end": "2026-08-21T15:00:00Z"
+        },
+        {
+          "stage": "deep",
+          "start": "2026-08-21T15:00:00Z",
+          "end": "2026-08-21T16:20:00Z"
+        }
+      ]
+    }
+  ]
+}

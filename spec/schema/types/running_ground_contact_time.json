@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/running_ground_contact_time.json",
+  "title": "running_ground_contact_time",
+  "description": "Ground contact time sample.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierRunningGroundContactTime",
+        "unit": "ms",
+        "since": "iOS 16",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "milliseconds": {
+      "type": "number",
+      "x-unit": "ms",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "milliseconds"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "milliseconds": 245
+    }
+  ]
+}

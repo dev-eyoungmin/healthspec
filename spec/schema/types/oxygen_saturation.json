@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/oxygen_saturation.json",
+  "title": "oxygen_saturation",
+  "description": "Blood oxygen saturation (SpO2).",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthkit": {
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierOxygenSaturation",
+        "unit": "%",
+        "read": true,
+        "write": true,
+        "notes": [
+          "HKUnit.percent() is a fraction (0.97 = 97%); multiply by 100."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      },
+      "healthconnect": {
+        "record": "OxygenSaturationRecord",
+        "permission": "OXYGEN_SATURATION",
+        "field": "percentage",
+        "unit": "percent",
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "openmhealth": {
+      "schema": "oxygen-saturation"
+    },
+    "notes": []
+  },
+  "type": "object",
+  "properties": {
+    "percent": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "x-unit": "%"
+    }
+  },
+  "required": [
+    "percent"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "percent": 97
+    }
+  ]
+}

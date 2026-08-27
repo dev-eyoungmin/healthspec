@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/symptom_sleep_changes.json",
+  "title": "symptom_sleep_changes",
+  "description": "Sleep changes.",
+  "x-healthspec": {
+    "category": "symptom",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "duration"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierSleepChanges",
+        "values": {
+          "present": 0,
+          "not_present": 1
+        },
+        "valueField": "presence",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "presence": {
+      "type": "string",
+      "enum": [
+        "present",
+        "not_present"
+      ]
+    }
+  },
+  "required": [
+    "presence"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "presence": "present"
+    }
+  ]
+}

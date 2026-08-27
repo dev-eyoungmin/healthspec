@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/apple_move_time.json",
+  "title": "apple_move_time",
+  "description": "Minutes of movement (Move ring in time mode).",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierAppleMoveTime",
+        "unit": "min",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "minutes": {
+      "type": "number",
+      "x-unit": "min",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "minutes"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "minutes": 4
+    }
+  ]
+}

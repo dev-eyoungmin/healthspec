@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/menstruation_period.json",
+  "title": "menstruation_period",
+  "description": "A menstrual period as a whole (Health Connect only; HealthKit users derive periods from menstruation_flow with cycleStart).",
+  "x-healthspec": {
+    "category": "cycle",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "duration"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "MenstruationPeriodRecord",
+        "permission": "MENSTRUATION",
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "counterparts": [
+      {
+        "type": "menstruation_flow",
+        "platform": "healthkit",
+        "interchangeable": false,
+        "reason": "HealthKit has no period record; derive periods by grouping menstruation_flow entries whose cycleStart is true."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false,
+  "examples": [
+    {}
+  ]
+}

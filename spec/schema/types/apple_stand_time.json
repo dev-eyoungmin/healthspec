@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/apple_stand_time.json",
+  "title": "apple_stand_time",
+  "description": "Minutes standing credited to the Stand ring.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "sum"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": false,
+        "kind": "quantity",
+        "identifier": "HKQuantityTypeIdentifierAppleStandTime",
+        "unit": "min",
+        "notes": [
+          "HealthKit computes this type; apps can read it but never write it."
+        ],
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "minutes": {
+      "type": "number",
+      "x-unit": "min",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "minutes"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "minutes": 3
+    }
+  ]
+}

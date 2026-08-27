@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/skin_temperature.json",
+  "title": "skin_temperature",
+  "description": "Skin temperature expressed as a delta from the user's baseline. Health Connect only.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "record": "SkinTemperatureRecord",
+        "permission": "SKIN_TEMPERATURE",
+        "field": "deltas[].delta",
+        "unit": "celsius (delta)",
+        "series": true,
+        "read": true,
+        "write": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [
+      "HealthKit's HKQuantityTypeIdentifierAppleSleepingWristTemperature is an absolute nightly value, not a delta — a candidate for a separate v1.1 type, not a mapping of this one.",
+      "Each delta in the Health Connect series becomes its own point record."
+    ],
+    "counterparts": [
+      {
+        "type": "apple_sleeping_wrist_temperature",
+        "platform": "healthkit",
+        "interchangeable": false,
+        "reason": "Health Connect stores a delta from the user baseline; HealthKit stores an absolute nightly wrist temperature."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "deltaCelsius": {
+      "type": "number",
+      "minimum": -30,
+      "maximum": 30,
+      "x-unit": "°C"
+    },
+    "baselineCelsius": {
+      "type": "number",
+      "minimum": 20,
+      "maximum": 50,
+      "x-unit": "°C",
+      "x-platform": "healthconnect"
+    },
+    "measurementLocation": {
+      "type": "string",
+      "enum": [
+        "finger",
+        "toe",
+        "wrist",
+        "unknown"
+      ]
+    }
+  },
+  "required": [
+    "deltaCelsius"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "deltaCelsius": -0.3,
+      "baselineCelsius": 33.8,
+      "measurementLocation": "wrist"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/power.json",
+  "title": "power",
+  "description": "Power output sample, activity-agnostic (Health Connect). HealthKit splits power by activity — see cycling_power and running_power.",
+  "x-healthspec": {
+    "category": "activity",
+    "kind": "sample",
+    "since": "1.0",
+    "aggregate": [
+      "avg",
+      "min",
+      "max"
+    ],
+    "platforms": {
+      "healthconnect": {
+        "read": true,
+        "write": true,
+        "record": "PowerRecord",
+        "permission": "POWER",
+        "field": "samples[].power",
+        "unit": "watts",
+        "series": true,
+        "verifiedBy": {
+          "record": [
+            "react-native-health-connect"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "counterparts": [
+      {
+        "type": "cycling_power",
+        "platform": "healthkit",
+        "interchangeable": true,
+        "reason": "HealthKit splits power by activity; use cycling_power for cycling sessions."
+      },
+      {
+        "type": "running_power",
+        "platform": "healthkit",
+        "interchangeable": true,
+        "reason": "HealthKit splits power by activity; use running_power for running sessions."
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {
+    "watts": {
+      "type": "number",
+      "x-unit": "W",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "watts"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "watts": 212
+    }
+  ]
+}

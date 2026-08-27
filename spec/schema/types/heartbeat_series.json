@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/heartbeat_series.json",
+  "title": "heartbeat_series",
+  "description": "Beat-to-beat timing series behind an HRV measurement.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": false,
+        "kind": "heartbeatSeries",
+        "identifier": "HKDataTypeIdentifierHeartbeatSeries",
+        "since": "iOS 13"
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "count": {
+      "type": "integer",
+      "x-unit": "count",
+      "minimum": 0
+    },
+    "beats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "offsetSeconds": {
+            "type": "number",
+            "x-unit": "s",
+            "minimum": 0
+          },
+          "precededByGap": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "offsetSeconds",
+          "precededByGap"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "beats"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "count": 2,
+      "beats": [
+        {
+          "offsetSeconds": 0.81,
+          "precededByGap": false
+        },
+        {
+          "offsetSeconds": 1.63,
+          "precededByGap": false
+        }
+      ]
+    }
+  ]
+}

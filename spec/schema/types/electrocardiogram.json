@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/electrocardiogram.json",
+  "title": "electrocardiogram",
+  "description": "Single-lead ECG recording: classification and summary values. Voltage samples are fetched separately (readEcgVoltages) because a recording holds thousands.",
+  "x-healthspec": {
+    "category": "vitals",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": false,
+        "kind": "electrocardiogram",
+        "identifier": "HKDataTypeIdentifierElectrocardiogram",
+        "since": "iOS 14"
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "classification": {
+      "type": "string",
+      "enum": [
+        "not_set",
+        "sinus_rhythm",
+        "atrial_fibrillation",
+        "inconclusive_low_heart_rate",
+        "inconclusive_high_heart_rate",
+        "inconclusive_poor_reading",
+        "inconclusive_other",
+        "unrecognized"
+      ]
+    },
+    "symptomsStatus": {
+      "type": "string",
+      "enum": [
+        "not_set",
+        "none",
+        "present"
+      ]
+    },
+    "averageBpm": {
+      "type": "number",
+      "x-unit": "beats/min",
+      "minimum": 0,
+      "maximum": 300
+    },
+    "samplingFrequencyHz": {
+      "type": "number",
+      "x-unit": "Hz",
+      "minimum": 0
+    },
+    "voltageCount": {
+      "type": "integer",
+      "x-unit": "count",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "classification"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "classification": "sinus_rhythm",
+      "symptomsStatus": "none",
+      "averageBpm": 64,
+      "samplingFrequencyHz": 512,
+      "voltageCount": 15360
+    }
+  ]
+}

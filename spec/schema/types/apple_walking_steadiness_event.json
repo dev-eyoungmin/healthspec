@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthspec.dev/schema/types/apple_walking_steadiness_event.json",
+  "title": "apple_walking_steadiness_event",
+  "description": "Walking steadiness notification event.",
+  "x-healthspec": {
+    "category": "mobility",
+    "kind": "interval",
+    "since": "1.0",
+    "aggregate": [
+      "count",
+      "duration"
+    ],
+    "platforms": {
+      "healthkit": {
+        "read": true,
+        "write": true,
+        "kind": "category",
+        "identifier": "HKCategoryTypeIdentifierAppleWalkingSteadinessEvent",
+        "values": {
+          "initial_low": 1,
+          "initial_very_low": 2,
+          "repeat_low": 3,
+          "repeat_very_low": 4
+        },
+        "valueField": "level",
+        "verifiedBy": {
+          "identifiers": [
+            "kingstinct-generated"
+          ]
+        }
+      }
+    },
+    "notes": [],
+    "verified": false
+  },
+  "type": "object",
+  "properties": {
+    "level": {
+      "type": "string",
+      "enum": [
+        "initial_low",
+        "initial_very_low",
+        "repeat_low",
+        "repeat_very_low"
+      ]
+    }
+  },
+  "required": [
+    "level"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "level": "initial_low"
+    }
+  ]
+}
