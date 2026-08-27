@@ -1,0 +1,29 @@
+{
+  "name": "healthspec-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Standardized specification for on-device health data across every platform.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.21.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "codegen": "tsx tools/codegen/src/index.ts",
+    "codegen:check": "tsx tools/codegen/src/index.ts --check",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build",
+    "verify": "pnpm codegen:check && pnpm build && pnpm typecheck && pnpm test && pnpm verify:swift",
+    "verify:mappings": "tsx tools/verify/src/healthkit.ts $HEALTHSPEC_SOURCES && tsx tools/verify/src/healthconnect.ts $HEALTHSPEC_SOURCES",
+    "verify:mappings:apply": "tsx tools/verify/src/healthkit.ts $HEALTHSPEC_SOURCES --apply && tsx tools/verify/src/healthconnect.ts $HEALTHSPEC_SOURCES --apply",
+    "verify:swift": "swift build && swift run healthspec-check"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
