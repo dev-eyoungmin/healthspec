@@ -33,10 +33,10 @@
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
-    "expo": "^54.0.0",
-    "expo-modules-core": "^3.0.0",
+    "expo": "^57.0.20",
+    "expo-modules-core": "^57.0.16",
     "react": "^19.0.0",
-    "react-native": "^0.81.0"
+    "react-native": "^0.87.1"
   },
   "author": "HealthSpec contributors",
   "homepage": "https://github.com/dev-eyoungmin/healthspec",
