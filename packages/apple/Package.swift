@@ -14,6 +14,8 @@ let package = Package(
   ],
   targets: [
     .target(name: "HealthSpec", path: "Sources/HealthSpec", swiftSettings: [.swiftLanguageMode(.v5)]),
-    .executableTarget(name: "HealthSpecCheck", dependencies: ["HealthSpec"], path: "Sources/HealthSpecCheck", swiftSettings: [.swiftLanguageMode(.v5)]),
+    // Objective-C, because HealthKit reports misuse by raising exceptions Swift cannot catch.
+    .target(name: "HealthSpecCheckSupport", path: "Sources/HealthSpecCheckSupport"),
+    .executableTarget(name: "HealthSpecCheck", dependencies: ["HealthSpec", "HealthSpecCheckSupport"], path: "Sources/HealthSpecCheck", swiftSettings: [.swiftLanguageMode(.v5)]),
   ]
 )

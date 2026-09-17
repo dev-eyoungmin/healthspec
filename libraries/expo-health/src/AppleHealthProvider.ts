@@ -6,6 +6,7 @@ import {
   SLEEP_STAGE_MAPPING,
   SLEEP_STAGE_VALUES,
   TYPE_MAPPINGS,
+  validateRecord,
   type DeviceType,
   type ExerciseRouteRecord,
   type ExerciseType,
@@ -33,6 +34,7 @@ import {
   startOfBucket,
   toIso,
   zonedParts,
+  zonedToMs,
   type AggregateQuery,
   type AggregateResult,
   type Capabilities,
@@ -73,6 +75,7 @@ const HOUR = 3_600_000;
 /** SPEC §5.4 — sleep samples closer than this belong to one session. */
 const SESSION_GAP_MS = 60 * 60_000;
 const WORKOUT_IDENTIFIER = 'HKWorkoutTypeIdentifier';
+const ROUTE_IDENTIFIER = 'HKWorkoutRouteTypeIdentifier';
 const FOOD_CORRELATION = 'HKCorrelationTypeIdentifierFood';
 const SLEEP_IDENTIFIER = 'HKCategoryTypeIdentifierSleepAnalysis';
 const CHARACTERISTIC_IDENTIFIERS = [
@@ -160,7 +163,13 @@ function categoryToValue(m: HealthKitMapping, s: HKSample): Record<string, unkno
       value[field] = spec.booleanEnum ? (b ? spec.booleanEnum.true : spec.booleanEnum.false) : b;
     } else if (spec.type === 'number') {
       const n = Number(raw);
-      if (!Number.isNaN(n)) value[field] = n;
+      if (Number.isNaN(n)) continue;
+      if (spec.values) {
+        const name = Object.entries(spec.values).find(([, v]) => v === n)?.[0];
+        if (name) value[field] = name;
+      } else {
+        value[field] = n;
+      }
     } else {
       value[field] = raw;
     }
@@ -168,24 +177,38 @@ function categoryToValue(m: HealthKitMapping, s: HKSample): Record<string, unkno
   return value;
 }
 
-/** Spec value → HKCategoryValue raw value plus the metadata entries the schema maps. */
-function valueToCategory(m: HealthKitMapping, value: Record<string, unknown>): { category: number; metadata: Record<string, string> } {
+type HKMetadata = Record<string, string | number | boolean>;
+
+/**
+ * Spec value → HKCategoryValue raw value plus the metadata entries the schema maps, typed as HealthKit expects.
+ * HealthKit refuses some samples without a metadata key (HKMenstrualCycleStart, HKInsulinDeliveryReason); a
+ * required boolean defaults to false, any other missing required key is an argument error, not a crash.
+ */
+function valueToCategory(type: HealthType, m: HealthKitMapping, value: Record<string, unknown>): { category: number; metadata: HKMetadata } {
   let category = 0;
   if (m.valueField && m.values) {
     const v = value[m.valueField];
     category = (typeof v === 'string' ? m.values[v] : undefined) ?? Object.values(m.values)[0] ?? 0;
   }
-  const metadata: Record<string, string> = {};
+  const metadata: HKMetadata = {};
   for (const [field, spec] of Object.entries(m.metadataFields ?? {})) {
     const v = value[field];
-    if (v === undefined) continue;
+    if (v === undefined) {
+      if (spec.required && spec.type === 'boolean') metadata[spec.key] = false;
+      else if (spec.required) throw invalidArgument(`HealthKit requires "${field}" to write "${type}"`);
+      continue;
+    }
     if (spec.type === 'boolean') {
       if (spec.booleanEnum) {
-        if (v === spec.booleanEnum.true) metadata[spec.key] = 'true';
-        else if (v === spec.booleanEnum.false) metadata[spec.key] = 'false';
+        if (v === spec.booleanEnum.true) metadata[spec.key] = true;
+        else if (v === spec.booleanEnum.false) metadata[spec.key] = false;
       } else {
-        metadata[spec.key] = v ? 'true' : 'false';
+        metadata[spec.key] = Boolean(v);
       }
+    } else if (spec.type === 'number') {
+      const n = spec.values && typeof v === 'string' ? spec.values[v] : Number(v);
+      if (n === undefined || Number.isNaN(n)) throw invalidArgument(`"${String(v)}" is not a valid ${type}.${field}`);
+      metadata[spec.key] = n;
     } else {
       metadata[spec.key] = String(v);
     }
@@ -256,9 +279,13 @@ function sortLimit(records: HealthRecord[], query: Pick<ReadQuery, 'order' | 'li
   return query.limit === undefined ? sorted : sorted.slice(0, query.limit);
 }
 
-/** Hide provider-internal keys before handing metadata back to the platform. */
-const externalMetadata = (metadata: Record<string, string> | undefined): Record<string, string> =>
-  Object.fromEntries(Object.entries(metadata ?? {}).filter(([k]) => !k.startsWith('hk.')));
+/**
+ * The caller's own metadata, for writing. Provider keys (`hk.*`) are dropped, and so are HealthKit's keys (`HK*`):
+ * a record read back carries them stringified, and HealthKit rejects most of them in string form. The keys the spec
+ * maps are set again from the record's value.
+ */
+const externalMetadata = (metadata: Record<string, string> | undefined): HKMetadata =>
+  Object.fromEntries(Object.entries(metadata ?? {}).filter(([k]) => !k.startsWith('hk.') && !k.startsWith('HK')));
 
 /** SPEC §5.4: group consecutive stage samples of one source (gap ≤ 60 min) into sessions. */
 export function deriveSleepSessions(samples: HKSample[]): HealthRecord[] {
@@ -303,6 +330,11 @@ interface AnchorTarget {
 export interface AppleHealthProviderOptions {
   /** Background delivery frequency applied to subscriptions once `background` has been requested. Default 'immediate'. */
   backgroundFrequency?: 'immediate' | 'hourly' | 'daily';
+  /**
+   * Register background delivery for subscriptions without calling `requestPermissions({ background: true })` in
+   * this launch. Background delivery also needs the config plugin's `background: true`.
+   */
+  background?: boolean;
 }
 
 export interface Medication {
@@ -323,6 +355,7 @@ export class AppleHealthProvider implements Provider {
   readonly id = 'apple';
   readonly platform = 'ios' as const;
   private backgroundRequested = false;
+  private supported: Set<string> | undefined;
   private listener: { remove(): void } | undefined;
   private readonly subscriptions = new Map<symbol, { handler: ChangeHandler; types: Set<HealthType>; observerIds: string[] }>();
   private readonly typesByIdentifier = new Map<string, HealthType[]>();
@@ -342,10 +375,14 @@ export class AppleHealthProvider implements Provider {
 
   // ---------------------------------------------------------------- contract
 
+  /**
+   * Types this device can serve: every identifier behind the type must be known to the running OS, so a type
+   * newer than the device rejects with NOT_SUPPORTED instead of failing inside HealthKit (SPEC §9).
+   */
   capabilities(): Capabilities {
     const types = HEALTH_TYPES.filter((t) => {
       const m = TYPE_MAPPINGS[t].healthkit;
-      return m !== undefined && m.kind !== 'series' && m.kind !== 'special';
+      return m !== undefined && m.kind !== 'series' && m.kind !== 'special' && this.resolvable(t);
     });
     return {
       types,
@@ -353,7 +390,7 @@ export class AppleHealthProvider implements Provider {
       aggregate: true,
       changes: true,
       subscribe: true,
-      background: true,
+      background: this.nativeModule.backgroundDeliveryConfigured(),
       history: true,
       profile: true,
       routes: true,
@@ -374,9 +411,14 @@ export class AppleHealthProvider implements Provider {
     const write = request.write ?? [];
     for (const t of [...read, ...write]) this.assertType(t);
     for (const t of write) if (!this.mapping(t).write) throw notSupported(`HealthKit cannot write "${t}"`);
-    const readIds = unique([...read.flatMap((t) => this.authorizationIdentifiers(t)), ...(request.profile ? CHARACTERISTIC_IDENTIFIERS : [])]);
+    if (request.background && !this.nativeModule.backgroundDeliveryConfigured()) {
+      throw notSupported('background delivery is not configured — set background: true in the @healthspec/expo config plugin');
+    }
+    // Reading a workout's route needs its own authorization; readRoute is only useful with it.
+    const routeIds = read.some((t) => this.mapping(t).kind === 'workout') ? [ROUTE_IDENTIFIER] : [];
+    const readIds = unique([...read.flatMap((t) => this.authorizationIdentifiers(t)), ...routeIds, ...(request.profile ? CHARACTERISTIC_IDENTIFIERS : [])]);
     const writeIds = unique(write.flatMap((t) => this.authorizationIdentifiers(t)));
-    await native(() => this.nativeModule.requestAuthorization(readIds, writeIds));
+    if (readIds.length || writeIds.length) await native(() => this.nativeModule.requestAuthorization(readIds, writeIds));
     if (read.some((t) => this.mapping(t).kind === 'medicationDose')) await native(() => this.nativeModule.requestMedicationsAuthorization());
     if (request.background) this.backgroundRequested = true;
     return this.permissionResult(read, write, request);
@@ -408,6 +450,9 @@ export class AppleHealthProvider implements Provider {
     const { startMs, endMs } = assertRange(query.start, query.end);
     const zone = defaultZone();
     if (query.zone !== undefined && query.zone !== zone) throw notSupported('HealthKit aggregates in the device time zone only');
+    if (query.field !== undefined && !(query.field in TYPE_MAPPINGS[type].fieldUnits)) {
+      throw invalidArgument(`"${query.field}" is not a numeric field of "${type}"`);
+    }
     const m = this.mapping(type);
     const fn = query.fn;
     const statistical = fn === 'sum' || fn === 'avg' || fn === 'min' || fn === 'max';
@@ -427,6 +472,7 @@ export class AppleHealthProvider implements Provider {
           fn,
           ...(query.bucket ? { interval: { unit: query.bucket, count: 1 }, anchor: toIso(startOfBucket(startMs, query.bucket, zone)) } : {}),
           ...(query.sources?.excludeManual ? { excludeUserEntered: true } : {}),
+          ...(query.sources?.apps ? { sourceBundleIds: query.sources.apps } : {}),
         }),
       );
     const results = await Promise.all(identifiers.map(run));
@@ -443,8 +489,14 @@ export class AppleHealthProvider implements Provider {
     return [...merged.values()].sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   }
 
+  /** SPEC §7: every record is validated before the platform is touched; the native save is all-or-nothing. */
   async write(records: NewRecord[]): Promise<HealthRecord[]> {
     this.assertAvailable();
+    if (records.length === 0) return [];
+    records.forEach((r, i) => {
+      const issues = validateRecord(r, { partial: true }, `records[${i}]`);
+      if (issues.length) throw invalidArgument(issues.map((x) => `${x.path}: ${x.message}`).join('; '));
+    });
     const groups = records.map((r) => {
       this.assertType(r.type);
       if (!this.mapping(r.type).write) throw notSupported(`HealthKit cannot write "${r.type}"`);
@@ -470,7 +522,8 @@ export class AppleHealthProvider implements Provider {
     this.assertType(selector.type);
     const targets = this.deleteTargets(selector.type);
     if ('ids' in selector) {
-      await Promise.all(targets.map((t) => native(() => this.nativeModule.deleteObjects(t.identifier, t.kind, selector.ids))));
+      const ids = await this.expandIds(selector.type, selector.ids);
+      await Promise.all(targets.map((t) => native(() => this.nativeModule.deleteObjects(t.identifier, t.kind, ids))));
     } else {
       const { startMs, endMs } = assertRange(selector.start, selector.end);
       await Promise.all(targets.map((t) => native(() => this.nativeModule.deleteByRange(t.identifier, t.kind, toIso(startMs), toIso(endMs)))));
@@ -540,7 +593,7 @@ export class AppleHealthProvider implements Provider {
       for (const t of targets) {
         if (!this.subscriptions.has(key)) return;
         entry.observerIds.push(await native(() => this.nativeModule.startObserving(t.identifier, t.kind)));
-        if (this.backgroundRequested) {
+        if (this.backgroundEnabled()) {
           await native(() => this.nativeModule.enableBackgroundDelivery(t.identifier, t.kind, this.options.backgroundFrequency ?? 'immediate')).catch(() => undefined);
         }
       }
@@ -601,9 +654,26 @@ export class AppleHealthProvider implements Provider {
     if (m.kind === 'activitySummary') throw notSupported('activity summaries have no ids — read them by date range');
     const opts: Omit<HKQueryOptions, 'identifier' | 'kind'> = { start: toIso(0), end: toIso(Date.now() + 365 * DAY), ascending: true, uuids: [id] };
     const samples = await this.fetch(m, opts);
-    const records = type === 'sleep_session' ? deriveSleepSessions(samples) : this.convert(type, m, samples);
+    if (type === 'sleep_session') return (await this.sleepSessionContaining(id, samples[0])) as HealthRecordOf<T> | undefined;
+    const records = this.convert(type, m, samples);
     if (m.kind === 'heartbeatSeries') await this.attachHeartbeats(records);
     return records[0] as HealthRecordOf<T> | undefined;
+  }
+
+  /**
+   * Stop background delivery for types (it otherwise survives unsubscribing and app restarts, as HealthKit intends).
+   * HealthKit only.
+   */
+  async disableBackgroundDelivery(types: HealthType[]): Promise<void> {
+    this.assertAvailable();
+    for (const t of types) this.assertType(t);
+    const targets = unique(types.flatMap((t) => this.anchorTargets(t).map((x) => `${x.kind}|${x.identifier}`)));
+    await Promise.all(
+      targets.map((s) => {
+        const [kind, identifier] = s.split('|') as [HKKind, string];
+        return native(() => this.nativeModule.disableBackgroundDelivery(identifier, kind));
+      }),
+    );
   }
 
   async openSettings(): Promise<void> {
@@ -652,14 +722,40 @@ export class AppleHealthProvider implements Provider {
     if (!this.nativeModule.isHealthDataAvailable()) throw notAvailable('HealthKit is not available on this device');
   }
 
+  /** Must agree with capabilities().types (SPEC §9). */
   private assertType(type: HealthType): void {
     const m = TYPE_MAPPINGS[type]?.healthkit;
     if (!m) throw notSupported(`HealthKit does not support "${String(type)}"`);
     if (m.kind === 'series' || m.kind === 'special') throw notSupported(`"${String(type)}" is reached through a dedicated operation, not read/write`);
+    if (!this.resolvable(type)) throw notSupported(`"${String(type)}" needs a newer OS${m.since ? ` (${m.since})` : ''}`);
   }
 
-  /** Object types to request authorization for. Correlation types cannot be authorized — their quantities are. */
+  /** Whether the running OS knows every identifier behind a type. Asked once, for all types together. */
+  private resolvable(type: HealthType): boolean {
+    if (!this.supported) {
+      const all = unique(HEALTH_TYPES.flatMap((t) => HEALTHKIT_IDENTIFIERS[t]));
+      try {
+        this.supported = new Set(this.nativeModule.supportedIdentifiers(all));
+      } catch {
+        this.supported = new Set(all);
+      }
+    }
+    const supported = this.supported;
+    return HEALTHKIT_IDENTIFIERS[type].every((id) => supported.has(id));
+  }
+
+  private backgroundEnabled(): boolean {
+    return (this.backgroundRequested || this.options.background === true) && this.nativeModule.backgroundDeliveryConfigured();
+  }
+
+  /**
+   * Object types to request authorization for. Correlation types cannot be authorized — their quantities are — and
+   * medication dose events use per-object authorization (requestMedicationsAuthorization); HealthKit raises if
+   * either appears in a type-wide request.
+   */
   private authorizationIdentifiers(type: HealthType): string[] {
+    const m = this.mapping(type);
+    if (m.kind === 'medicationDose') return [];
     return HEALTHKIT_IDENTIFIERS[type].filter((id) => !id.startsWith('HKCorrelationTypeIdentifier'));
   }
 
@@ -675,7 +771,7 @@ export class AppleHealthProvider implements Provider {
         result.write[t] = states.every((s) => s === 'sharingAuthorized') ? 'granted' : states.some((s) => s === 'sharingDenied') ? 'denied' : 'unknown';
       }
     }
-    if (request.background) result.capabilities.background = 'granted';
+    if (request.background) result.capabilities.background = this.nativeModule.backgroundDeliveryConfigured() ? 'granted' : 'denied';
     if (request.history) result.capabilities.history = 'granted';
     if (request.profile) result.capabilities.profile = 'unknown';
     return result;
@@ -703,8 +799,11 @@ export class AppleHealthProvider implements Provider {
         return [{ identifier: m.identifier as string, kind: 'correlation', units: Object.fromEntries((m.identifiers ?? []).map((id) => [id, m.unit ?? ''])) }];
       case 'workout':
         return [{ identifier: WORKOUT_IDENTIFIER, kind: 'workout' }];
-      case 'multi':
-        return Object.entries(m.fields ?? {}).map(([field, identifier]) => ({ identifier, kind: 'quantity' as const, unit: this.hkUnit(type, field) }));
+      case 'multi': {
+        const quantities = Object.entries(m.fields ?? {}).map(([field, identifier]) => ({ identifier, kind: 'quantity' as const, unit: this.hkUnit(type, field) }));
+        const units = Object.fromEntries(quantities.map((q) => [q.identifier, q.unit]));
+        return [{ identifier: FOOD_CORRELATION, kind: 'correlation' as const, units }, ...quantities];
+      }
       case 'electrocardiogram':
       case 'heartbeatSeries':
       case 'stateOfMind':
@@ -773,9 +872,16 @@ export class AppleHealthProvider implements Provider {
       case 'workout':
         return query(WORKOUT_IDENTIFIER, 'workout');
       case 'multi': {
+        // Food correlations first: they give written meals their ids. Nutrient samples outside any correlation
+        // (written by apps that skip the correlation) are grouped in convert().
         const fields = Object.entries(m.fields ?? {});
         const type = HEALTH_TYPES.find((t) => TYPE_MAPPINGS[t].healthkit === m) ?? 'nutrition';
-        return (await Promise.all(fields.map(([field, id]) => query(id, 'quantity', { unit: this.hkUnit(type, field) }, false)))).flat();
+        const units = Object.fromEntries(fields.map(([field, id]) => [id, this.hkUnit(type, field)]));
+        const [meals, ...nutrients] = await Promise.all([
+          query(FOOD_CORRELATION, 'correlation', { units }, false),
+          ...fields.map(([field, id]) => query(id, 'quantity', { unit: this.hkUnit(type, field) }, false)),
+        ]);
+        return [...meals, ...nutrients.flat()];
       }
       case 'electrocardiogram':
       case 'heartbeatSeries':
@@ -824,8 +930,21 @@ export class AppleHealthProvider implements Provider {
         });
       case 'multi': {
         const fieldById = new Map(Object.entries(m.fields ?? {}).map(([field, id]) => [id, field]));
+        const out: HealthRecord[] = [];
+        const inMeal = new Set<string>();
+        for (const meal of samples.filter((s) => s.identifier === FOOD_CORRELATION)) {
+          const value: Record<string, unknown> = {};
+          for (const o of meal.objects ?? []) {
+            inMeal.add(o.uuid);
+            const field = fieldById.get(o.identifier);
+            if (field && o.value !== undefined) value[field] = o.value;
+          }
+          const name = meal.metadata['HKFoodType'];
+          if (name) value['name'] = name;
+          out.push(record(type, baseOf(meal, { 'hk.sampleIds': (meal.objects ?? []).map((o) => o.uuid).join(',') }), value));
+        }
         const groups = new Map<string, { base: RecordBase; value: Record<string, unknown>; ids: string[] }>();
-        for (const s of [...samples].sort(byStart)) {
+        for (const s of [...samples].filter((x) => x.identifier !== FOOD_CORRELATION && !inMeal.has(x.uuid)).sort(byStart)) {
           const key = `${s.start}|${s.end}|${s.sourceBundleId}`;
           let g = groups.get(key);
           if (!g) {
@@ -838,10 +957,11 @@ export class AppleHealthProvider implements Provider {
           const name = s.metadata['HKFoodType'];
           if (name) g.value['name'] = name;
         }
-        return [...groups.values()].map((g) => {
+        for (const g of groups.values()) {
           if (g.ids.length > 1) g.base.metadata['hk.sampleIds'] = g.ids.join(',');
-          return record(type, g.base, g.value);
-        });
+          out.push(record(type, g.base, g.value));
+        }
+        return out.sort(byStart);
       }
       case 'electrocardiogram':
         return samples.map((s) =>
@@ -934,9 +1054,10 @@ export class AppleHealthProvider implements Provider {
     const summaries = await native(() => this.nativeModule.activitySummaries(toIso(startMs), toIso(endMs)));
     const zone = defaultZone();
     const records = summaries.map((s) => {
+      // A summary covers one calendar day in the device's zone.
       const [y, mo, d] = s.date.split('-').map(Number) as [number, number, number];
-      const start = new Date(Date.UTC(y, mo - 1, d));
-      const end = new Date(Date.UTC(y, mo - 1, d + 1));
+      const start = new Date(zonedToMs(y, mo, d, 0, 0, 0, zone));
+      const end = new Date(zonedToMs(y, mo, d + 1, 0, 0, 0, zone));
       const base: RecordBase = { id: `activity:${s.date}`, start: start.toISOString(), end: end.toISOString(), source: { recordingMethod: 'automatic' }, metadata: { 'hk.identifier': 'HKActivitySummaryTypeIdentifier', 'hk.zone': zone } };
       return record(
         type,
@@ -975,17 +1096,17 @@ export class AppleHealthProvider implements Provider {
   private toSaveSamples(r: NewRecord): HKSaveSample[] {
     const m = this.mapping(r.type);
     const metadata = externalMetadata(r.metadata);
-    if (r.source?.recordingMethod === 'manual') metadata[METADATA_KEYS['HKMetadataKeyWasUserEntered'] ?? 'HKWasUserEntered'] = 'true';
+    if (r.source?.recordingMethod === 'manual') metadata[METADATA_KEYS['HKMetadataKeyWasUserEntered'] ?? 'HKWasUserEntered'] = true;
     const value = r.value as Record<string, unknown>;
     switch (m.kind) {
       case 'quantity': {
         const field = primaryField(r.type) ?? '';
         const raw = Number(value[field]);
-        return [{ kind: 'quantity', identifier: m.identifier as string, unit: m.unit as string, value: m.unit === '%' ? raw / 100 : raw, start: r.start, end: r.end, metadata: { ...metadata, ...valueToCategory(m, value).metadata } }];
+        return [{ kind: 'quantity', identifier: m.identifier as string, unit: m.unit as string, value: m.unit === '%' ? raw / 100 : raw, start: r.start, end: r.end, metadata: { ...metadata, ...valueToCategory(r.type, m, value).metadata } }];
       }
       case 'category': {
         if (r.type !== 'sleep_session') {
-          const c = valueToCategory(m, value);
+          const c = valueToCategory(r.type, m, value);
           return [{ kind: 'category', identifier: m.identifier as string, category: c.category, start: r.start, end: r.end, metadata: { ...metadata, ...c.metadata } }];
         }
         const stages = (value['stages'] as SleepSessionValue['stages'] | undefined) ?? [];
@@ -1061,12 +1182,43 @@ export class AppleHealthProvider implements Provider {
   }
 
   private ensureListener(): void {
-    this.listener ??= this.nativeModule.addListener('onChange', ({ identifier }) => {
-      const affected = this.typesByIdentifier.get(identifier) ?? [];
-      for (const sub of this.subscriptions.values()) {
-        const hit = affected.filter((t) => sub.types.has(t));
-        if (hit.length) sub.handler({ types: hit });
-      }
-    });
+    if (this.listener) return;
+    this.listener = this.nativeModule.addListener('onChange', ({ identifier }) => this.dispatch([identifier]));
+    // Changes observed before anything listened — typically the launch HealthKit woke the app for.
+    const pending = this.nativeModule.pendingChanges();
+    if (pending.length) queueMicrotask(() => this.dispatch(pending));
+  }
+
+  private dispatch(identifiers: string[]): void {
+    const affected = unique(identifiers.flatMap((id) => this.typesByIdentifier.get(id) ?? []));
+    for (const sub of this.subscriptions.values()) {
+      const hit = affected.filter((t) => sub.types.has(t));
+      if (hit.length) sub.handler({ types: hit });
+    }
+  }
+
+  /** Ids to delete: a sleep session or a meal stands for the samples it was derived from. */
+  private async expandIds(type: HealthType, ids: string[]): Promise<string[]> {
+    const kind = this.mapping(type).kind;
+    if (type !== 'sleep_session' && kind !== 'multi') return ids;
+    const records = await Promise.all(ids.map((id) => this.readById(type, id)));
+    return unique([...ids, ...records.flatMap((r) => r?.metadata?.['hk.sampleIds']?.split(',').filter(Boolean) ?? [])]);
+  }
+
+  /** The derived session that contains one sleep sample (SPEC §5.4). */
+  private async sleepSessionContaining(id: string, sample: HKSample | undefined): Promise<HealthRecord | undefined> {
+    if (!sample) return undefined;
+    const window = 36 * HOUR;
+    const neighbours = await native(() =>
+      this.nativeModule.querySamples({
+        identifier: SLEEP_IDENTIFIER,
+        kind: 'category',
+        start: toIso(Date.parse(sample.start) - window),
+        end: toIso(Date.parse(sample.end) + window),
+        ascending: true,
+        sourceBundleIds: [sample.sourceBundleId],
+      }),
+    );
+    return deriveSleepSessions(neighbours).find((r) => r.id === id || (r.metadata?.['hk.sampleIds'] ?? '').split(',').includes(id));
   }
 }

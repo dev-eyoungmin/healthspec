@@ -33,6 +33,9 @@ test('expo-module.config.json points at classes that exist', () => {
   assert.deepEqual(moduleConfig.platforms, ['apple', 'android']);
   const appleClass = moduleConfig.apple.modules[0] as string;
   assert.match(swift, new RegExp(`class ${appleClass}\\b`), `Swift class ${appleClass} must exist`);
+  // Background delivery needs observer queries before JavaScript runs, so a launch-time subscriber is registered.
+  const subscriber = moduleConfig.apple.appDelegateSubscribers[0] as string;
+  assert.match(read('ios/HealthSpecObservers.swift'), new RegExp(`class ${subscriber}: ExpoAppDelegateSubscriber\\b`), `Swift subscriber ${subscriber} must exist`);
 
   const androidClass = moduleConfig.android.modules[0] as string;
   const [, ...rest] = [androidClass.slice(0, androidClass.lastIndexOf('.')), androidClass.slice(androidClass.lastIndexOf('.') + 1)];

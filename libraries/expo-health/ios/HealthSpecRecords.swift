@@ -1,6 +1,6 @@
 import ExpoModulesCore
 
-// Argument records for the HealthSpec module. Field names mirror packages/expo/src/native.ts.
+// Argument records for the HealthSpec module. Field names mirror libraries/expo-health/src/native.ts.
 
 struct QueryOptions: Record {
   @Field var identifier: String = ""
@@ -30,6 +30,7 @@ struct StatisticsOptions: Record {
   @Field var interval: IntervalOptions? = nil
   @Field var anchor: String? = nil
   @Field var excludeUserEntered: Bool = false
+  @Field var sourceBundleIds: [String]? = nil
 }
 
 struct AnchoredOptions: Record {
@@ -56,9 +57,9 @@ struct SaveSample: Record {
   @Field var category: Int? = nil
   @Field var start: String = ""
   @Field var end: String = ""
-  @Field var metadata: [String: String]? = nil
+  /// Strings, numbers and booleans; typed for HealthKit by parseMetadata.
+  @Field var metadata: [String: Any]? = nil
   @Field var objects: [SaveSample]? = nil
   @Field var workoutActivityType: Int? = nil
-  @Field var totals: [String: Double]? = nil
   @Field var stateOfMind: StateOfMindFields? = nil
 }

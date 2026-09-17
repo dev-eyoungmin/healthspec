@@ -143,7 +143,7 @@ test('write builds HK samples: units, percent fractions, sleep stages, correlati
   ]);
   const saved = fake.calls.find((c) => c.fn === 'save')!.args[0] as HKSaveSample[];
   assert.equal(saved.length, 7);
-  assert.deepEqual([saved[0]!.unit, saved[0]!.value, saved[0]!.metadata?.['HKWasUserEntered']], ['kg', 72.4, 'true']);
+  assert.deepEqual([saved[0]!.unit, saved[0]!.value, saved[0]!.metadata?.['HKWasUserEntered']], ['kg', 72.4, true], 'HealthKit validates metadata types, so booleans stay booleans');
   assert.equal(saved[1]!.value, 0.21);
   assert.deepEqual([saved[2]!.category, saved[3]!.category], [3, 0]);
   assert.equal(saved[4]!.objects?.length, 2);
@@ -154,6 +154,44 @@ test('write builds HK samples: units, percent fractions, sleep stages, correlati
   assert.equal(out[0]!.source.app?.id, 'com.example.app');
   await assert.rejects(p.write([{ type: 'total_energy', start: at(0), end: at(1), value: { kilocalories: 1 } }]), code('NOT_SUPPORTED'));
   await assert.rejects(p.write([{ type: 'nutrition', start: at(0), end: at(1), value: { name: 'empty' } }]), code('INVALID_ARGUMENT'));
+
+  // Validation happens before the native call, so nothing is written (SPEC §7).
+  fake.calls.length = 0;
+  await assert.rejects(p.write([{ type: 'weight', start: at(1), end: at(1), value: { kilograms: 70 } }, { type: 'weight', start: at(1), end: at(1), value: { kilograms: -1 } }]), code('INVALID_ARGUMENT'));
+  assert.equal(fake.calls.filter((c) => c.fn === 'save').length, 0);
+
+  // Types Apple reserves are never offered for writing, and a read-back record's HealthKit metadata is not echoed.
+  await assert.rejects(p.write([{ type: 'apple_stand_hour', start: at(0), end: at(1), value: { status: 'stood' } }]), code('NOT_SUPPORTED'));
+  await p.write([{ type: 'steps', start: at(2), end: at(3), value: { count: 10 }, metadata: { HKAverageMETs: '8.2 kcal/hr·kg', 'hk.identifier': 'x', appKey: 'kept' } }]);
+  const echoed = (fake.calls.at(-1)!.args[0] as HKSaveSample[])[0]!.metadata;
+  assert.deepEqual(echoed, { appKey: 'kept' });
+});
+
+test('HealthKit-required metadata: insulin reason is mapped to its raw value, cycle start defaults to false', async () => {
+  const fake = new FakeApple();
+  const p = new AppleHealthProvider(fake);
+  await p.write([
+    { type: 'insulin_delivery', start: at(1), end: at(1), value: { internationalUnits: 4, reason: 'bolus' } },
+    { type: 'menstruation_flow', start: at(0), end: at(24), value: { flow: 'light' } },
+  ]);
+  const saved = fake.calls.find((c) => c.fn === 'save')!.args[0] as HKSaveSample[];
+  assert.equal(saved[0]!.metadata?.['HKInsulinDeliveryReason'], 2);
+  assert.equal(saved[1]!.metadata?.['HKMenstrualCycleStart'], false);
+  fake.add('HKQuantityTypeIdentifierInsulinDelivery', { start: at(5), end: at(5), value: 3, metadata: { HKInsulinDeliveryReason: '1' } });
+  const [dose] = await p.read('insulin_delivery', { start: new Date(at(4)), end: new Date(at(6)) });
+  assert.deepEqual(dose!.value, { internationalUnits: 3, reason: 'basal' });
+});
+
+test('types newer than the OS are unsupported, and background delivery needs the plugin', async () => {
+  const fake = new FakeApple();
+  fake.unsupported.add('HKDataTypeIdentifierStateOfMind');
+  fake.backgroundConfigured = false;
+  const p = new AppleHealthProvider(fake);
+  const caps = p.capabilities();
+  assert.ok(!caps.types.includes('state_of_mind') && caps.types.includes('steps'));
+  assert.equal(caps.background, false);
+  await assert.rejects(p.read('state_of_mind', day), code('NOT_SUPPORTED'));
+  await assert.rejects(p.requestPermissions({ read: ['steps'], background: true }), code('NOT_SUPPORTED'));
 });
 
 test('changes round-trips anchors through the cursor and reports deletions', async () => {
@@ -225,8 +263,8 @@ test('schema-driven category mapping: enum values and metadata fields round-trip
   ]);
   const saved = fake.calls.find((c) => c.fn === 'save')!.args[0] as HKSaveSample[];
   assert.deepEqual(saved.map((s) => s.category), [4, 4, 0, 0]);
-  assert.equal(saved[0]!.metadata?.['HKMenstrualCycleStart'], 'false');
-  assert.equal(saved[2]!.metadata?.['HKSexualActivityProtectionUsed'], 'true');
+  assert.equal(saved[0]!.metadata?.['HKMenstrualCycleStart'], false);
+  assert.equal(saved[2]!.metadata?.['HKSexualActivityProtectionUsed'], true);
 });
 
 test('series types are excluded from generic operations and capabilities', async () => {
@@ -292,4 +330,68 @@ test('activity summaries, profile, routes, readById and preferred units', async 
   assert.deepEqual(await p.preferredUnits(['weight', 'steps']), { weight: 'lb', steps: 'count' });
   await p.openSettings();
   assert.ok(fake.calls.some((c) => c.fn === 'openHealthApp'));
+});
+
+test('a meal keeps one id across write, read, readById and delete', async () => {
+  const fake = new FakeApple();
+  const p = new AppleHealthProvider(fake);
+  // What HealthKit holds after a food correlation was saved: the correlation and, separately, its nutrient samples.
+  const protein = fake.add('HKQuantityTypeIdentifierDietaryProtein', { uuid: 'protein-1', start: at(12), end: at(12), value: 20 });
+  const energy = fake.add('HKQuantityTypeIdentifierDietaryEnergyConsumed', { uuid: 'energy-1', start: at(12), end: at(12), value: 500 });
+  fake.add('HKCorrelationTypeIdentifierFood', { uuid: 'meal-1', start: at(12), end: at(12), objects: [protein, energy], metadata: { HKFoodType: 'Lunch' } });
+  fake.add('HKQuantityTypeIdentifierDietaryCaffeine', { uuid: 'coffee-1', start: at(15), end: at(15), value: 95 });
+  const meals = await p.read('nutrition', day);
+  assert.equal(meals.length, 2, 'the correlation and one standalone nutrient sample');
+  const lunch = meals.find((m) => m.id === 'meal-1')!;
+  assert.deepEqual(lunch.value, { proteinGrams: 20, kilocalories: 500, name: 'Lunch' });
+  assert.ok(!meals.some((m) => m.id === 'protein-1'), 'nutrients inside a meal are not reported twice');
+  assert.equal((await p.readById('nutrition', 'meal-1'))?.value.name, 'Lunch');
+
+  await p.delete({ type: 'nutrition', ids: ['meal-1'] });
+  const deleted = fake.calls.filter((c) => c.fn === 'deleteObjects').map((c) => c.args[2] as string[]);
+  assert.ok(deleted.every((ids) => ['meal-1', 'protein-1', 'energy-1'].every((id) => ids.includes(id))), 'the meal and its nutrient samples are deleted');
+});
+
+test('deleting a sleep session deletes every stage sample it was derived from', async () => {
+  const fake = new FakeApple();
+  fake.add('HKCategoryTypeIdentifierSleepAnalysis', { uuid: 's1', start: at(-2), end: at(0), category: 3 });
+  fake.add('HKCategoryTypeIdentifierSleepAnalysis', { uuid: 's2', start: at(0), end: at(2), category: 4 });
+  fake.add('HKCategoryTypeIdentifierSleepAnalysis', { uuid: 's3', start: at(2), end: at(5), category: 5 });
+  const p = new AppleHealthProvider(fake);
+  const session = await p.readById('sleep_session', 's1');
+  assert.equal(session?.value.stages.length, 3, 'readById returns the whole session, not one stage');
+  assert.equal((await p.readById('sleep_session', 's2'))?.id, 's1', 'any stage id resolves to its session');
+  await p.delete({ type: 'sleep_session', ids: ['s1'] });
+  const ids = fake.calls.find((c) => c.fn === 'deleteObjects')!.args[2] as string[];
+  assert.deepEqual([...ids].sort(), ['s1', 's2', 's3']);
+});
+
+test('changes observed before JavaScript listened are delivered to the first subscription', async () => {
+  const fake = new FakeApple();
+  fake.pending = ['HKQuantityTypeIdentifierStepCount'];
+  const p = new AppleHealthProvider(fake);
+  const events: string[][] = [];
+  const off = p.subscribe(['steps'], (e) => events.push(e.types));
+  await new Promise((r) => setTimeout(r, 5));
+  off();
+  assert.deepEqual(events, [['steps']]);
+});
+
+test('reading workouts also asks for their routes', async () => {
+  const fake = new FakeApple();
+  const p = new AppleHealthProvider(fake);
+  await p.requestPermissions({ read: ['exercise_session', 'medication_dose'].filter((t) => p.capabilities().types.includes(t as never)) as never[] });
+  const read = fake.calls.find((c) => c.fn === 'requestAuthorization')!.args[0] as string[];
+  assert.ok(read.includes('HKWorkoutRouteTypeIdentifier'));
+  assert.ok(!read.includes('HKDataTypeIdentifierMedicationDoseEvent'), 'dose events use per-object authorization');
+});
+
+test('aggregate passes the app filter to HealthKit statistics', async () => {
+  const fake = new FakeApple();
+  fake.statsResponse = [{ start: at(0), end: at(24), value: 100 }];
+  const p = new AppleHealthProvider(fake);
+  await p.aggregate('steps', { ...day, fn: 'sum', sources: { apps: ['com.example.watch'] } });
+  const opts = fake.calls.find((c) => c.fn === 'statistics')!.args[0] as { sourceBundleIds?: string[] };
+  assert.deepEqual(opts.sourceBundleIds, ['com.example.watch']);
+  await assert.rejects(p.aggregate('steps', { ...day, fn: 'sum', field: 'kilometers' }), code('INVALID_ARGUMENT'));
 });

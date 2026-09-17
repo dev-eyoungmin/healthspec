@@ -68,6 +68,8 @@ export interface HKStatisticsOptions {
   /** first bucket start, ISO */
   anchor?: string;
   excludeUserEntered?: boolean;
+  /** only samples from these apps; HealthKit still de-duplicates among them */
+  sourceBundleIds?: string[];
 }
 
 export interface HKStatistic {
@@ -101,10 +103,10 @@ export interface HKSaveSample {
   category?: number;
   start: string;
   end: string;
-  metadata?: Record<string, string>;
+  /** typed for HealthKit natively; booleans and numbers keep their type */
+  metadata?: Record<string, string | number | boolean>;
   objects?: HKSaveSample[];
   workoutActivityType?: number;
-  totals?: { distanceMeters?: number; energyKilocalories?: number };
   /** state of mind writes */
   stateOfMind?: { kind: number; valence: number; labels: number[]; associations: number[] };
 }
@@ -156,11 +158,17 @@ export type HKAuthorizationStatus = 'notDetermined' | 'sharingDenied' | 'sharing
 export interface AppleHealthNative {
   isHealthDataAvailable(): boolean;
   bundleIdentifier(): string;
+  /** The subset of identifiers this OS version resolves. */
+  supportedIdentifiers(identifiers: string[]): string[];
+  /** True when the config plugin enabled background delivery (entitlement + Info.plist marker). */
+  backgroundDeliveryConfigured(): boolean;
+  /** Rejects (instead of crashing) when a type may not be shared or a usage description is missing. */
   requestAuthorization(read: string[], write: string[]): Promise<void>;
   authorizationStatus(identifiers: string[]): Promise<Record<string, HKAuthorizationStatus>>;
   querySamples(options: HKQueryOptions): Promise<HKSample[]>;
   statistics(options: HKStatisticsOptions): Promise<HKStatistic[]>;
   anchoredQuery(options: HKAnchoredOptions): Promise<HKAnchoredResult>;
+  /** Every sample is validated before anything is saved; a failure leaves nothing written. UUIDs in input order. */
   save(samples: HKSaveSample[]): Promise<string[]>;
   deleteObjects(identifier: string, kind: HKKind, uuids: string[]): Promise<number>;
   deleteByRange(identifier: string, kind: HKKind, start: string, end: string): Promise<number>;
@@ -168,6 +176,8 @@ export interface AppleHealthNative {
   disableBackgroundDelivery(identifier: string, kind: HKKind): Promise<boolean>;
   startObserving(identifier: string, kind: HKKind): Promise<string>;
   stopObserving(observerId: string): Promise<void>;
+  /** Identifiers whose observers fired while no JavaScript listener was attached (e.g. a background launch). Clears them. */
+  pendingChanges(): string[];
   // ---- non-sample data
   characteristics(): Promise<HKCharacteristics>;
   preferredUnits(identifiers: string[]): Promise<Record<string, string>>;

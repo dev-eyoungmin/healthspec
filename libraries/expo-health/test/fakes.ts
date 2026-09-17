@@ -84,10 +84,40 @@ export class FakeApple implements AppleHealthNative {
   summaries: HKActivitySummary[] = [];
   meds: HKMedication[] = [];
 
+  /** Per-identifier change log: an anchor is a position in it. */
+  private log = new Map<string, Array<{ upsert?: string; delete?: string }>>();
+
   add(identifier: string, partial: Partial<HKSample> & { start: string; end: string }): HKSample {
     const s: HKSample = { uuid: partial.uuid ?? `uuid-${this.nextUuid++}`, identifier, metadata: {}, sourceBundleId: 'com.example.watch', wasUserEntered: false, ...partial };
     this.samples.set(identifier, [...(this.samples.get(identifier) ?? []), s]);
+    this.log.set(identifier, [...(this.log.get(identifier) ?? []), { upsert: s.uuid }]);
     return s;
+  }
+
+  private remove(identifier: string, uuid: string): boolean {
+    const list = this.samples.get(identifier) ?? [];
+    if (!list.some((s) => s.uuid === uuid)) return false;
+    this.samples.set(identifier, list.filter((s) => s.uuid !== uuid));
+    this.log.set(identifier, [...(this.log.get(identifier) ?? []), { delete: uuid }]);
+    return true;
+  }
+
+  /** What HealthKit stores for a saved object; the app writing it is this one. */
+  private store(sample: HKSaveSample): HKSample {
+    const metadata = Object.fromEntries(Object.entries(sample.metadata ?? {}).map(([k, v]) => [k, String(v)]));
+    const partial: Partial<HKSample> & { start: string; end: string } = {
+      uuid: `saved-${this.nextUuid++}`,
+      start: sample.start,
+      end: sample.end,
+      metadata,
+      sourceBundleId: 'com.example.app',
+      wasUserEntered: sample.metadata?.['HKWasUserEntered'] === true,
+    };
+    if (sample.value !== undefined) partial.value = sample.value;
+    if (sample.category !== undefined) partial.category = sample.category;
+    if (sample.workoutActivityType !== undefined) partial.workoutActivityType = sample.workoutActivityType;
+    if (sample.objects) partial.objects = sample.objects.map((o) => this.store(o));
+    return this.add(sample.identifier, partial);
   }
 
   private rec(fn: string, ...args: unknown[]) {
@@ -100,8 +130,25 @@ export class FakeApple implements AppleHealthNative {
   bundleIdentifier() {
     return 'com.example.app';
   }
+  supportedIdentifiers(identifiers: string[]) {
+    return identifiers.filter((id) => !this.unsupported.has(id));
+  }
+  backgroundDeliveryConfigured() {
+    return this.backgroundConfigured;
+  }
+  pendingChanges() {
+    const out = this.pending;
+    this.pending = [];
+    return out;
+  }
   async requestAuthorization(read: string[], write: string[]) {
     this.rec('requestAuthorization', read, write);
+    for (const id of read) {
+      if (id.startsWith('HKCorrelationTypeIdentifier') || id === 'HKDataTypeIdentifierMedicationDoseEvent') throw codedError('E_INVALID_ARGUMENT', `Authorization to read ${id} is disallowed`);
+    }
+    for (const id of write) {
+      if (!HK_WRITABLE.has(id)) throw codedError('E_INVALID_ARGUMENT', `Authorization to share ${id} is disallowed`);
+    }
     for (const id of write) if (!this.denied.has(id)) this.authorized.add(id);
   }
   async authorizationStatus(identifiers: string[]) {
@@ -122,27 +169,50 @@ export class FakeApple implements AppleHealthNative {
     if (!options.ascending) list.reverse();
     return options.limit === undefined ? list : list.slice(0, options.limit);
   }
+  /** Computed from stored samples like HKStatisticsCollectionQuery, unless a test fixes `statsResponse`. */
   async statistics(options: HKStatisticsOptions) {
     this.rec('statistics', options);
-    return this.statsResponse;
+    if (this.statsResponse.length) return this.statsResponse;
+    const start = Date.parse(options.start);
+    const end = Date.parse(options.end);
+    const samples = (this.samples.get(options.identifier) ?? []).filter((s) => !options.sourceBundleIds || options.sourceBundleIds.includes(s.sourceBundleId));
+    return clippedBuckets(start, end, options.interval?.unit, defaultZone()).map((b) => ({
+      start: new Date(b.start).toISOString(),
+      end: new Date(b.end).toISOString(),
+      value: reduce(options.fn, samples.filter((s) => Date.parse(s.start) >= b.from && Date.parse(s.start) < b.to).map((s) => s.value ?? 0)),
+    }));
   }
   async anchoredQuery(options: HKAnchoredOptions) {
     this.rec('anchoredQuery', options);
-    if (options.anchor === 'bad') {
-      const e = Object.assign(new Error('anchor could not be decoded'), { code: 'E_CURSOR_EXPIRED' });
-      throw e;
-    }
-    const all = this.samples.get(options.identifier) ?? [];
-    const from = options.anchor ? Number(options.anchor) : 0;
-    return { samples: all.slice(from), deleted: this.anchoredResponse.deleted ?? [], anchor: String(all.length) };
+    const log = this.log.get(options.identifier) ?? [];
+    const current = this.samples.get(options.identifier) ?? [];
+    if (options.anchor === undefined) return { samples: current, deleted: this.anchoredResponse.deleted ?? [], anchor: String(log.length) };
+    const from = Number(options.anchor);
+    if (!Number.isInteger(from)) throw codedError('E_CURSOR_EXPIRED', 'anchor could not be decoded');
+    const entries = log.slice(from);
+    const upserted = new Set(entries.flatMap((e) => (e.upsert ? [e.upsert] : [])));
+    return {
+      samples: current.filter((s) => upserted.has(s.uuid)),
+      deleted: [...entries.flatMap((e) => (e.delete ? [e.delete] : [])), ...(this.anchoredResponse.deleted ?? [])],
+      anchor: String(log.length),
+    };
   }
   async save(samples: HKSaveSample[]) {
     this.rec('save', samples);
-    return samples.map(() => `saved-${this.nextUuid++}`);
+    // Metadata HealthKit requires, in the type it requires, or the sample initialiser raises.
+    const required: Record<string, [string, 'boolean' | 'number']> = {
+      HKCategoryTypeIdentifierMenstrualFlow: ['HKMenstrualCycleStart', 'boolean'],
+      HKQuantityTypeIdentifierInsulinDelivery: ['HKInsulinDeliveryReason', 'number'],
+    };
+    for (const sample of samples) {
+      const rule = required[sample.identifier];
+      if (rule && typeof sample.metadata?.[rule[0]] !== rule[1]) throw codedError('E_INVALID_ARGUMENT', `${sample.identifier} requires ${rule[0]} as a ${rule[1]}`);
+    }
+    return samples.map((sample) => this.store(sample).uuid);
   }
   async deleteObjects(identifier: string, kind: HKKind, uuids: string[]) {
     this.rec('deleteObjects', identifier, kind, uuids);
-    return uuids.length;
+    return uuids.filter((uuid) => this.remove(identifier, uuid)).length;
   }
   async deleteByRange(identifier: string, kind: HKKind, start: string, end: string) {
     this.rec('deleteByRange', identifier, kind, start, end);
@@ -205,7 +275,11 @@ export class FakeApple implements AppleHealthNative {
   }
 }
 
-/** In-memory Health Connect bridge returning spec-shaped records. */
+/**
+ * In-memory Health Connect bridge returning spec-shaped records. It enforces the Kotlin module's argument
+ * contract (spec type ids everywhere, one atomic insert, flattened series ids) so a TypeScript mismatch fails here
+ * instead of on a device.
+ */
 export class FakeHealthConnect implements HealthConnectNative {
   status: HCSdkStatus = 'available';
   granted = new Set<string>();

@@ -1,9 +1,19 @@
 {
-  "platforms": ["apple", "android"],
+  "platforms": [
+    "apple",
+    "android"
+  ],
   "apple": {
-    "modules": ["HealthSpecModule"]
+    "modules": [
+      "HealthSpecModule"
+    ],
+    "appDelegateSubscribers": [
+      "HealthSpecAppDelegateSubscriber"
+    ]
   },
   "android": {
-    "modules": ["dev.healthspec.expo.HealthSpecModule"]
+    "modules": [
+      "dev.healthspec.expo.HealthSpecModule"
+    ]
   }
 }

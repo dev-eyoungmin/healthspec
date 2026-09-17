@@ -28,7 +28,9 @@ public func isoString(_ date: Date) -> String {
 }
 
 public func parseDate(_ s: String) throws -> Date {
-  if let d = isoWithFraction.date(from: s) ?? isoPlain.date(from: s) { return d }
+  // RFC 3339 allows a lowercase "t" and "z"; ISO8601DateFormatter does not.
+  let normalized = s.uppercased()
+  if let d = isoWithFraction.date(from: normalized) ?? isoPlain.date(from: normalized) { return d }
   throw HealthSpecError.invalidArgument("not an ISO 8601 date: \(s)")
 }
 
@@ -43,7 +45,10 @@ public func objectType(_ identifier: String) -> HKObjectType? {
     return nil
   }
   if identifier == "HKDataTypeIdentifierMedicationDoseEvent" {
+    // Medications arrived with the iOS 26 SDK; older Xcode versions cannot even name the type.
+    #if compiler(>=6.2)
     if #available(iOS 26.0, macOS 26.0, watchOS 26.0, *) { return HKSeriesType.medicationDoseEventType() }
+    #endif
     return nil
   }
   if identifier.hasPrefix("HKClinicalTypeIdentifier") {
@@ -114,19 +119,29 @@ public func stringifyMetadata(_ metadata: [String: Any]?) -> [String: String] {
   return out
 }
 
-private let booleanMetadataKeys: Set<String> = [HKMetadataKeyWasUserEntered, HKMetadataKeyIndoorWorkout, HKMetadataKeyMenstrualCycleStart, HKMetadataKeySexualActivityProtectionUsed]
-private let integerMetadataKeys: Set<String> = [HKMetadataKeySwimmingLocationType]
+/// HealthKit metadata keys whose values HealthKit validates as booleans or integers. A value of the wrong type is
+/// not an error but an exception, so values are coerced here whatever form they arrive in.
+private let booleanMetadataKeys: Set<String> = [
+  HKMetadataKeyWasUserEntered, HKMetadataKeyIndoorWorkout, HKMetadataKeyMenstrualCycleStart,
+  HKMetadataKeySexualActivityProtectionUsed, HKMetadataKeyCoachedWorkout, HKMetadataKeyWasTakenInLab,
+]
+private let integerMetadataKeys: Set<String> = [
+  HKMetadataKeySwimmingLocationType, HKMetadataKeyInsulinDeliveryReason, HKMetadataKeyBloodGlucoseMealTime,
+  HKMetadataKeyHeartRateMotionContext, HKMetadataKeyVO2MaxTestType, HKMetadataKeySyncVersion,
+  HKMetadataKeyHeartRateSensorLocation, HKMetadataKeyBodyTemperatureSensorLocation, HKMetadataKeyWeatherCondition,
+]
 
-/// String map from JS → typed HealthKit metadata for the keys HealthKit expects typed.
-public func parseMetadata(_ metadata: [String: String]?) -> [String: Any] {
+/// Metadata from JS → the typed values HealthKit expects. Strings, numbers and booleans are accepted for every key.
+public func parseMetadata(_ metadata: [String: Any]?) -> [String: Any] {
   var out: [String: Any] = [:]
   for (key, value) in metadata ?? [:] {
+    let text = (value as? String) ?? (value as? NSNumber)?.stringValue
     if booleanMetadataKeys.contains(key) {
-      out[key] = value == "true" || value == "1"
-    } else if integerMetadataKeys.contains(key), let n = Int(value) {
-      out[key] = n
-    } else {
-      out[key] = value
+      if let b = value as? Bool { out[key] = b } else if let text { out[key] = text == "true" || text == "1" }
+    } else if integerMetadataKeys.contains(key) {
+      if let n = (value as? NSNumber)?.intValue ?? text.flatMap({ Int($0) }) { out[key] = n }
+    } else if let text {
+      out[key] = value is String ? text : value
     }
   }
   return out
@@ -161,7 +176,11 @@ public func serialize(_ sample: HKSample, unit: HKUnit?, units: [String: HKUnit]
     dict["workoutActivityType"] = Int(workout.workoutActivityType.rawValue)
     var totals: [String: Double] = [:]
     if let distance = workout.totalDistance { totals["distanceMeters"] = distance.doubleValue(for: .meter()) }
-    if let energy = workout.totalEnergyBurned { totals["energyKilocalories"] = energy.doubleValue(for: .kilocalorie()) }
+    if #available(iOS 16.0, macOS 13.0, watchOS 9.0, *) {
+      if let energy = workout.statistics(for: HKQuantityType(.activeEnergyBurned))?.sumQuantity() { totals["energyKilocalories"] = energy.doubleValue(for: .kilocalorie()) }
+    } else if let energy = workout.totalEnergyBurned {
+      totals["energyKilocalories"] = energy.doubleValue(for: .kilocalorie())
+    }
     dict["totals"] = totals
   } else if let correlation = sample as? HKCorrelation {
     dict["objects"] = correlation.objects.map { serialize($0, unit: nil, units: units) }
@@ -195,22 +214,42 @@ public func serialize(_ sample: HKSample, unit: HKUnit?, units: [String: HKUnit]
       "associations": mind.associations.map { $0.rawValue },
     ]
   }
+  #if compiler(>=6.2)
   if #available(iOS 26.0, macOS 26.0, watchOS 26.0, *), let dose = sample as? HKMedicationDoseEvent {
     var m: [String: Any] = [
-      "conceptIdentifier": "\(dose.medicationConceptIdentifier)",
+      "conceptIdentifier": conceptIdentifierString(dose.medicationConceptIdentifier),
       "scheduleType": dose.scheduleType.rawValue,
       "logStatus": dose.logStatus.rawValue,
+      "unit": dose.unit.unitString,
     ]
     if let d = dose.scheduledDate { m["scheduledDate"] = isoString(d) }
     if let q = dose.scheduledDoseQuantity { m["scheduledDoseQuantity"] = q }
     if let q = dose.doseQuantity { m["doseQuantity"] = q }
     dict["medication"] = m
   }
+  #endif
   return dict
 }
 
+#if compiler(>=6.2)
+/// HKHealthConceptIdentifier exposes only its domain; its archived form is the stable, comparable identity.
+@available(iOS 26.0, macOS 26.0, watchOS 26.0, *)
+public func conceptIdentifierString(_ identifier: HKHealthConceptIdentifier) -> String {
+  let data = try? NSKeyedArchiver.archivedData(withRootObject: identifier, requiringSecureCoding: true)
+  return "\(identifier.domain.rawValue):\(data?.base64EncodedString() ?? "")"
+}
+#endif
+
+/// SPEC §5.1: samples overlapping [start, end). An interval that ends exactly at `start` does not overlap, but an
+/// instantaneous sample at `start` is inside. HealthKit's own range predicate includes both, hence the OR.
 public func predicateForRange(_ start: Date, _ end: Date, excludeUserEntered: Bool) -> NSPredicate {
-  let range = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+  let range = NSCompoundPredicate(andPredicateWithSubpredicates: [
+    NSPredicate(format: "%K < %@", HKPredicateKeyPathStartDate, end as NSDate),
+    NSCompoundPredicate(orPredicateWithSubpredicates: [
+      NSPredicate(format: "%K > %@", HKPredicateKeyPathEndDate, start as NSDate),
+      NSPredicate(format: "%K >= %@", HKPredicateKeyPathStartDate, start as NSDate),
+    ]),
+  ])
   guard excludeUserEntered else { return range }
   let notManual = HKQuery.predicateForObjects(withMetadataKey: HKMetadataKeyWasUserEntered, operatorType: .notEqualTo, value: true)
   return NSCompoundPredicate(andPredicateWithSubpredicates: [range, notManual])
@@ -223,6 +262,16 @@ public func statisticsOptions(_ fn: String) -> HKStatisticsOptions {
   case "min": return .discreteMin
   default: return .discreteMax
   }
+}
+
+/// Why a statistics query cannot run, or nil. HealthKit raises — it does not fail — when the options disagree with
+/// the type's aggregation style or the unit with its dimension, so this is checked before the query exists.
+public func statisticsProblem(_ type: HKQuantityType, _ fn: String, _ unit: HKUnit) -> String? {
+  if !type.is(compatibleWith: unit) { return "unit \(unit.unitString) is incompatible with \(type.identifier)" }
+  let cumulative = type.aggregationStyle == .cumulative
+  if fn == "sum", !cumulative { return "\(type.identifier) is a discrete quantity; use avg, min or max" }
+  if fn != "sum", cumulative { return "\(type.identifier) is a cumulative quantity; use sum" }
+  return nil
 }
 
 public func statisticValue(_ stats: HKStatistics, _ fn: String, _ unit: HKUnit) -> Any {
