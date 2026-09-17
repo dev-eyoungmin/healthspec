@@ -16,7 +16,8 @@ Pod::Spec.new do |s|
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'
-  s.dependency 'HealthSpec'
+  # Shared/ holds the HealthKit helpers copied from packages/apple by `pnpm codegen`, so the pod needs nothing
+  # beyond what npm installs.
   s.frameworks = 'HealthKit'
 
   # Swift/Objective-C compatibility

@@ -11,9 +11,7 @@ android {
   defaultConfig {
     versionCode 1
     versionName "0.0.0"
-    // Health Connect's client library requires API 26. Apps must raise their own minSdkVersion to match
-    // (expo-build-properties: { android: { minSdkVersion: 26 } }), otherwise the manifest merger fails
-    // with a clear message pointing here.
+    // Health Connect's client library requires API 26. The config plugin raises the app's minSdkVersion to match.
     minSdkVersion 26
   }
   lint {
@@ -23,7 +21,7 @@ android {
 
 dependencies {
   // Kotlin stdlib and kotlinx-coroutines come from expo-modules-core as `api` dependencies.
-  // The Health Connect mapping, serialization and aggregation live in the shared package so that
-  // plain Android projects can use them without React Native.
-  api project(':healthspec')
+  // The dev.healthspec sources next to this module are copied from packages/google by `pnpm codegen`, so the npm
+  // package is self-contained; the Health Connect client they compile against is declared here.
+  api "androidx.health.connect:connect-client:1.1.0"
 }

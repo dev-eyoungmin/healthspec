@@ -52,15 +52,19 @@ test('the podspec only reads package.json fields that exist', () => {
   }
   assert.ok(pkg.repository?.url, 'podspec dereferences repository.url');
   assert.match(podspec, /s\.dependency 'ExpoModulesCore'/);
-  assert.match(podspec, /s\.dependency 'HealthSpec'/, 'the bridge builds on the shared Apple package');
+  // The HealthSpec pod is not published; the shared sources are copied into ios/Shared instead.
+  assert.doesNotMatch(podspec, /s\.dependency 'HealthSpec'/, 'the pod must not depend on an unpublished pod');
+  assert.match(podspec, /s\.source_files = "\*\*\/\*\.\{h,m,mm,swift,hpp,cpp\}"/, 'Shared/ and the Objective-C exception catcher must be compiled');
   assert.match(podspec, /s\.frameworks = 'HealthKit'/);
 });
 
 test('the Gradle module follows current Expo conventions', () => {
   const code = gradle.replace(/\/\/[^\n]*/g, '');
   assert.match(code, /plugins \{[\s\S]*id 'com\.android\.library'[\s\S]*id 'expo-module-gradle-plugin'[\s\S]*\}/, 'must use the plugins block, not apply plugin:');
-  assert.match(code, /project\(':healthspec'\)/, 'must build on the shared Android package');
-  assert.doesNotMatch(code, /connect-client/, 'the Health Connect dependency belongs to packages/google');
+  // Autolinking includes only this module's Gradle project, so there is no project(':healthspec') to depend on.
+  assert.doesNotMatch(code, /project\(/, 'must not depend on a Gradle project autolinking does not include');
+  assert.match(code, /api "androidx\.health\.connect:connect-client:[\d.]+"/, 'the copied sources compile against the Health Connect client');
+  assert.equal(code.match(/connect-client:([\d.]+)/)?.[1], readFileSync(path.resolve(PKG, '../../packages/google/build.gradle'), 'utf8').match(/connect-client:([\d.]+)/)?.[1], 'both builds use one client version');
   assert.doesNotMatch(code, /kotlinx-coroutines/, 'coroutines come from expo-modules-core; declaring them again risks a version clash');
   assert.equal(gradle.match(/minSdkVersion (\d+)/)?.[1], '26', 'Health Connect requires API 26');
 });
@@ -120,20 +124,26 @@ test('the published packages carry no third-party runtime dependencies', () => {
   assert.doesNotMatch(read('ios/HealthSpecExpo.podspec'), /kingstinct|RCTAppleHealthKit/);
 });
 
-test('the bridge layers on the shared platform packages', () => {
-  // Reusable HealthKit and Health Connect logic lives in packages/apple and packages/google so plain
-  // Swift and Kotlin projects can adopt the spec without React Native.
+test('the native sources the bridge needs ship inside the npm package', () => {
+  // packages/apple and packages/google are the source of truth, but neither is published to CocoaPods or Maven, so
+  // `pnpm codegen` copies what the bridge compiles into ios/Shared and android/src/main/java/dev/healthspec, and
+  // `pnpm codegen:check` fails when a copy is stale.
   const apple = path.resolve(PKG, '../../packages/apple/Sources/HealthSpec');
   const google = path.resolve(PKG, '../../packages/google/src/main/kotlin/dev/healthspec');
-  assert.ok(readFileSync(path.join(apple, 'HealthSpecSupport.swift'), 'utf8').includes('public func serialize'), 'shared Swift helpers must be public');
-  assert.ok(readFileSync(path.join(google, 'Serialization.kt'), 'utf8').startsWith('package dev.healthspec\n'), 'shared Kotlin must live in dev.healthspec');
-  assert.match(swift, /^import HealthSpec$/m, 'the Expo module must import the shared Swift package');
-  assert.match(kotlin, /^import dev\.healthspec\.Serialization$/m, 'the Expo module must import the shared Kotlin package');
+  const banner = /^\/\/ COPIED from packages\/(apple|google)\/.+ by `pnpm codegen`/;
+  const swiftCopy = read('ios/Shared/HealthSpecSupport.swift');
+  assert.match(swiftCopy, banner);
+  assert.ok(swiftCopy.endsWith(readFileSync(path.join(apple, 'HealthSpecSupport.swift'), 'utf8')), 'the Swift copy matches its source');
+  for (const file of ['Serialization.kt', 'Aggregation.kt']) {
+    const copy = read(`android/src/main/java/dev/healthspec/${file}`);
+    assert.match(copy, banner);
+    assert.ok(copy.endsWith(readFileSync(path.join(google, file), 'utf8')), `the Kotlin copy of ${file} matches its source`);
+  }
+  assert.doesNotMatch(swift, /^import HealthSpec$/m, 'the shared Swift code is part of this pod, not a separate module');
+  assert.match(kotlin, /^import dev\.healthspec\.Serialization$/m, 'the Expo module uses the shared Kotlin code');
 
   // The shared packages must not depend on Expo — that would defeat the point.
-  for (const file of ['HealthSpecSupport.swift']) {
-    assert.doesNotMatch(readFileSync(path.join(apple, file), 'utf8'), /ExpoModulesCore/, `${file} must not import Expo`);
-  }
+  assert.doesNotMatch(readFileSync(path.join(apple, 'HealthSpecSupport.swift'), 'utf8'), /ExpoModulesCore/);
   for (const file of ['Serialization.kt', 'Aggregation.kt']) {
     assert.doesNotMatch(readFileSync(path.join(google, file), 'utf8'), /expo\.modules/, `${file} must not import Expo`);
   }

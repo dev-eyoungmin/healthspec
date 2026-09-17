@@ -7,7 +7,9 @@ Pod::Spec.new do |s|
   s.version        = versions['apple']
   s.summary        = 'HealthKit implementation of the HealthSpec specification.'
   s.description    = 'Type system, platform mapping tables and HealthKit helpers generated from the HealthSpec specification.'
-  s.license        = { type: 'MIT', file: '../../LICENSE' }
+  # Published from the repository root: `pod trunk push packages/apple/HealthSpec.podspec`. Paths below are relative
+  # to the root of the git source, not to this file.
+  s.license        = { type: 'MIT', file: 'LICENSE' }
   s.author         = 'HealthSpec contributors'
   s.homepage       = 'https://github.com/dev-eyoungmin/healthspec'
   s.platforms      = { :ios => '15.1' }
@@ -15,5 +17,5 @@ Pod::Spec.new do |s|
   s.source         = { git: 'https://github.com/dev-eyoungmin/healthspec.git', tag: "apple-#{s.version}" }
 
   s.frameworks   = 'HealthKit'
-  s.source_files = 'Sources/HealthSpec/**/*.swift'
+  s.source_files = 'packages/apple/Sources/HealthSpec/**/*.swift'
 end
