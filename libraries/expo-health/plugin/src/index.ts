@@ -1,5 +1,5 @@
-import { AndroidConfig, createRunOncePlugin, withAndroidManifest, withEntitlementsPlist, withInfoPlist, type ConfigPlugin } from 'expo/config-plugins';
-import { applyAndroidManifest, applyEntitlements, applyInfoPlist, resolveProps, type HealthSpecPluginProps, type ManifestActivity, type ManifestApplication, type ManifestLike } from './apply';
+import { AndroidConfig, createRunOncePlugin, withAndroidManifest, withEntitlementsPlist, withGradleProperties, withInfoPlist, type ConfigPlugin } from 'expo/config-plugins';
+import { applyAndroidManifest, applyEntitlements, applyGradleProperties, applyInfoPlist, resolveProps, type GradleProperty, type HealthSpecPluginProps, type ManifestActivity, type ManifestApplication, type ManifestLike } from './apply';
 
 export type { HealthSpecPluginProps } from './apply';
 
@@ -11,6 +11,10 @@ const withHealthSpec: ConfigPlugin<HealthSpecPluginProps | void> = (config, prop
   });
   config = withInfoPlist(config, (c) => {
     applyInfoPlist(c.modResults as Record<string, unknown>, resolved);
+    return c;
+  });
+  config = withGradleProperties(config, (c) => {
+    applyGradleProperties(c.modResults as GradleProperty[]);
     return c;
   });
   config = withAndroidManifest(config, (c) => {

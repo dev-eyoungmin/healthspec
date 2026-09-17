@@ -16,6 +16,7 @@ export interface HealthSpecPluginProps {
   healthUpdateUsageDescription?: string;
   /** HealthKit clinical records entitlement. Off by default. */
   clinicalRecords?: boolean;
+  healthClinicalRecordsUsageDescription?: string;
 }
 
 export interface ResolvedProps extends HealthSpecPluginProps {
@@ -29,6 +30,9 @@ export const VIEW_USAGE_ACTION = 'android.intent.action.VIEW_PERMISSION_USAGE';
 export const HEALTH_PERMISSIONS_CATEGORY = 'android.intent.category.HEALTH_PERMISSIONS';
 export const DEFAULT_SHARE_DESCRIPTION = 'This app reads your health data to show your activity, vitals and sleep.';
 export const DEFAULT_UPDATE_DESCRIPTION = 'This app saves the health data you record back to your health store.';
+export const DEFAULT_CLINICAL_DESCRIPTION = 'This app reads your health records to show them alongside your other health data.';
+/** Health Connect's client library requires API 26. */
+export const MIN_SDK_VERSION = 26;
 
 export function resolveProps(props: HealthSpecPluginProps | undefined): ResolvedProps {
   const p = props ?? {};
@@ -66,12 +70,36 @@ export function applyEntitlements(entitlements: Record<string, unknown>, props: 
   return entitlements;
 }
 
+/**
+ * HealthKit raises an uncatchable exception — a crash, not an error — when an app requests access without the
+ * matching usage description. The update description is therefore always present: a write request can come from
+ * code the plugin configuration does not describe.
+ */
 export function applyInfoPlist(plist: Record<string, unknown>, props: ResolvedProps): Record<string, unknown> {
   plist['NSHealthShareUsageDescription'] = props.healthShareUsageDescription ?? plist['NSHealthShareUsageDescription'] ?? DEFAULT_SHARE_DESCRIPTION;
-  if (props.writeTypes.length) {
-    plist['NSHealthUpdateUsageDescription'] = props.healthUpdateUsageDescription ?? plist['NSHealthUpdateUsageDescription'] ?? DEFAULT_UPDATE_DESCRIPTION;
+  plist['NSHealthUpdateUsageDescription'] = props.healthUpdateUsageDescription ?? plist['NSHealthUpdateUsageDescription'] ?? DEFAULT_UPDATE_DESCRIPTION;
+  // Read by the native module: background delivery also needs the entitlement applyEntitlements adds.
+  if (props.background) plist['HealthSpecBackgroundDelivery'] = true;
+  else delete plist['HealthSpecBackgroundDelivery'];
+  if (props.clinicalRecords) {
+    plist['NSHealthClinicalHealthRecordsShareUsageDescription'] =
+      props.healthClinicalRecordsUsageDescription ?? plist['NSHealthClinicalHealthRecordsShareUsageDescription'] ?? DEFAULT_CLINICAL_DESCRIPTION;
   }
   return plist;
+}
+
+/** The subset of expo/config-plugins' gradle.properties model this plugin touches. */
+export type GradleProperty = { type: 'property'; key: string; value: string } | { type: 'comment'; value: string } | { type: 'empty' };
+
+/** Raises `android.minSdkVersion` (the property expo-build-properties also writes) to what Health Connect needs. */
+export function applyGradleProperties(properties: GradleProperty[]): GradleProperty[] {
+  const existing = properties.find((p): p is Extract<GradleProperty, { type: 'property' }> => p.type === 'property' && p.key === 'android.minSdkVersion');
+  if (!existing) {
+    properties.push({ type: 'property', key: 'android.minSdkVersion', value: String(MIN_SDK_VERSION) });
+  } else if (!(Number(existing.value) >= MIN_SDK_VERSION)) {
+    existing.value = String(MIN_SDK_VERSION);
+  }
+  return properties;
 }
 
 // Minimal structural view of the xml2js manifest that expo/config-plugins hands us.
