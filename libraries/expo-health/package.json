@@ -1,7 +1,7 @@
 {
   "name": "@healthspec/expo",
   "version": "0.0.0",
-  "description": "HealthSpec for Expo and React Native \u2014 Apple HealthKit and Android Health Connect behind one spec-conformant API.",
+  "description": "HealthSpec for Expo and React Native — Apple HealthKit and Android Health Connect behind one spec-conformant API.",
   "license": "MIT",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -43,7 +43,8 @@
   "homepage": "https://github.com/dev-eyoungmin/healthspec",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dev-eyoungmin/healthspec.git"
+    "url": "https://github.com/dev-eyoungmin/healthspec.git",
+    "directory": "libraries/expo-health"
   },
   "keywords": [
     "expo",
@@ -54,5 +55,9 @@
     "fitness",
     "ios",
     "android"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }

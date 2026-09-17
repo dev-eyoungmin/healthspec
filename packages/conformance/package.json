@@ -5,8 +5,17 @@
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js" } },
-  "files": ["dist", "README.md"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -15,5 +24,15 @@
   "dependencies": {
     "@healthspec/core": "workspace:*",
     "@healthspec/schema": "workspace:*"
-  }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dev-eyoungmin/healthspec.git",
+    "directory": "packages/conformance"
+  },
+  "homepage": "https://github.com/dev-eyoungmin/healthspec"
 }

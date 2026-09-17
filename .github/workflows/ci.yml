@@ -22,13 +22,18 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # The spec is the source of truth: a stale generated file is a failure, not a warning.
+      # The spec is the source of truth: a stale generated file (or a stale copy of the native sources the Expo
+      # module compiles) is a failure, not a warning.
       - name: Generated code is up to date
         run: pnpm codegen:check
 
       - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm test
+
+      # What an app installs: entry points, pinned workspace versions and the native sources autolinking compiles.
+      - name: npm tarballs are complete
+        run: pnpm --filter @healthspec/release check
 
   swift:
     name: Swift
@@ -38,10 +43,95 @@ jobs:
       - name: Build the Apple package
         run: swift build
 
-      # Asks HealthKit to resolve every identifier the spec names. This is the only check that can catch a
-      # mapping the SDK does not actually recognise — a cross-reference against another library cannot.
+      # Asks HealthKit to resolve every identifier and parse every unit the spec names, and checks that every type
+      # marked writable may be shared. A cross-reference against another library cannot catch those; in an app
+      # each of them is a crash.
       - name: Verify the generated tables against HealthKit
         run: swift run healthspec-check
+
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      # Serialization against the spec's own examples, on the JVM.
+      - name: Health Connect package unit tests
+        working-directory: packages/google
+        run: ./gradlew testDebugUnitTest --console=plain
+
+      # The Expo module has no toolchain-free check: compile it inside a real app.
+      - name: Prebuild the example app
+        working-directory: example
+        run: npx expo prebuild --platform android --no-install
+      - name: Build the example app
+        working-directory: example/android
+        run: ./gradlew :app:assembleDebug -PreactNativeArchitectures=x86_64 --console=plain
+
+  ios:
+    name: iOS (Xcode ${{ matrix.xcode }})
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest supported Xcode compiles without the iOS 26 medication APIs; the newest compiles them.
+        xcode: ['16.4', 'latest-stable']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Prebuild the example app
+        working-directory: example
+        run: npx expo prebuild --platform ios --no-install
+      - name: Install pods
+        working-directory: example/ios
+        run: pod install
+      - name: Build the example app
+        working-directory: example/ios
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace HealthSpecExample.xcworkspace \
+            -scheme HealthSpecExample \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO | xcpretty
+
+  dart:
+    name: Dart
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/dart
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+      - run: dart pub get
+      - run: dart analyze
+      - run: dart test
 
   mappings:
     name: Mapping cross-check
