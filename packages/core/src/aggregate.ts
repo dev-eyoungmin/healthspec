@@ -16,9 +16,9 @@ const NUMERIC_FNS: ReadonlySet<AggregateFn> = new Set(['sum', 'avg', 'min', 'max
 
 /**
  * Reference aggregation over already-fetched records (SPEC §6). Used by MockProvider and the conformance suite.
- * A record belongs to the bucket containing its `start`; buckets are aligned, so a record starting before the
- * first bucket is not counted. No cross-source de-duplication is performed — callers pass one source's records
- * or accept the over-count documented in SPEC §6.3.
+ * Buckets are aligned (§6.2), but a bucket's value covers only its part inside [start, end): a record counts in
+ * the bucket containing its `start`, and only when that start is inside the range. No cross-source
+ * de-duplication is performed — callers pass one source's records or accept the over-count documented in §6.3.
  */
 export function aggregateRecords(type: HealthType, records: readonly HealthRecord[], query: AggregateQuery): AggregateResult[] {
   assertAggregateSupported(type, query.fn);
@@ -39,9 +39,11 @@ export function aggregateRecords(type: HealthType, records: readonly HealthRecor
   const ranges = query.bucket ? bucketRanges(startMs, endMs, query.bucket, zone) : [{ start: startMs, end: endMs }];
 
   return ranges.map((range) => {
+    const from = Math.max(range.start, startMs);
+    const to = Math.min(range.end, endMs);
     const rs = inRange.filter((r) => {
       const s = Date.parse(r.start);
-      return s >= range.start && s < range.end;
+      return s >= from && s < to;
     });
     let value: number | null = null;
     if (rs.length > 0) {

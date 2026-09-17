@@ -149,7 +149,32 @@ test('optional operations: profile, route, readById, revoke, preferred units', a
   await store.revokePermissions();
   await assert.rejects(store.read('weight', { start: new Date(0), end: new Date(NOW) }), code('PERMISSION_DENIED'));
   const android = new HealthStore(mock({ platform: 'android', seed: false }));
-  assert.deepEqual(await android.getProfile(), {}, 'Health Connect has no profile');
+  await assert.rejects(android.getProfile(), code('NOT_SUPPORTED'), 'Health Connect has no profile');
+});
+
+test('a mock given a platform mirrors its types, writable types and optional operations', async () => {
+  const ios = mock({ platform: 'ios', seed: false });
+  const android = mock({ platform: 'android', seed: false });
+  assert.ok(ios.capabilities().types.includes('hrv_sdnn') && !ios.capabilities().types.includes('hrv_rmssd'));
+  assert.ok(android.capabilities().types.includes('hrv_rmssd') && !android.capabilities().types.includes('hrv_sdnn'));
+  assert.ok(!ios.capabilities().write.includes('apple_stand_hour'), 'HealthKit reserves stand hours for Apple');
+  assert.deepEqual([ios.capabilities().profile, ios.capabilities().revokePermissions], [true, false]);
+  assert.deepEqual([android.capabilities().profile, android.capabilities().revokePermissions], [false, true]);
+  await assert.rejects(ios.requestPermissions({ write: ['apple_stand_hour'] }), code('NOT_SUPPORTED'));
+  await assert.rejects(new HealthStore(ios).revokePermissions(), code('NOT_SUPPORTED'));
+});
+
+test('aggregate buckets are aligned but only count data inside the range', async () => {
+  const m = mock({ seed: false });
+  await m.requestPermissions({ read: ['steps'] });
+  m.simulateExternalWrite([
+    { type: 'steps', start: '2026-08-21T01:00:00Z', end: '2026-08-21T02:00:00Z', value: { count: 100 } },
+    { type: 'steps', start: '2026-08-21T07:00:00Z', end: '2026-08-21T08:00:00Z', value: { count: 5 } },
+  ]);
+  const [bucket] = await m.aggregate('steps', { start: '2026-08-21T06:00:00Z', end: '2026-08-21T09:00:00Z', fn: 'sum', bucket: 'day', zone: 'UTC' });
+  assert.equal(bucket!.start, '2026-08-21T00:00:00.000Z', 'the bucket reports its aligned boundary');
+  assert.equal(bucket!.value, 5, 'steps before the range start are not counted');
+  await assert.rejects(new HealthStore(m).aggregate('steps', { start: '2026-08-21T06:00:00Z', end: '2026-08-21T09:00:00Z', fn: 'sum', field: 'meters' }), code('INVALID_ARGUMENT'));
 });
 
 test('support() and describe() report platform differences and point at counterparts', async () => {
