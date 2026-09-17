@@ -1,102 +1,92 @@
-# Native verification checklist (Phase 1.5)
+# Native verification
 
-> **Mapping identifiers are now cross-checked** against three independently maintained libraries — see
-> [VERIFICATION.md](VERIFICATION.md) (HealthKit 159/167, Health Connect 41/53). That establishes the
-> *identifiers, record classes, fields and category raw values* exist. Everything below is about **behaviour**,
-> which still needs a real build on a real device.
+What the native code has been checked against, at which level of evidence (see
+[VERIFICATION.md](VERIFICATION.md#levels-of-evidence)), and what still needs a device.
 
-The Swift and Kotlin modules under `packages/expo/{ios,android}` were written **without a toolchain** (no Xcode, no
-Android SDK on the authoring machine). Everything TypeScript is compiled and unit-tested against fake native modules;
-the items below are the assumptions the native code makes that must be checked on real builds and devices.
+The Expo module lives in [`libraries/expo-health`](../libraries/expo-health). It compiles copies of
+`packages/apple/Sources/HealthSpec/HealthSpecSupport.swift` (into `ios/Shared/`) and of
+`packages/google/src/main/kotlin/dev/healthspec` (into `android/src/main/java/dev/healthspec/`); `pnpm codegen`
+writes the copies and `pnpm codegen:check` fails when one is stale.
 
-## Both platforms
+## Established
 
-- [ ] `npx create-expo-module` scaffolding conventions for the current Expo SDK (podspec fields, `expo-module-gradle-plugin`, `expo-module.config.json` keys) match what is in the repo.
-- [ ] `requireOptionalNativeModule('HealthSpec')` resolves the module and `addListener('onChange', …)` works on the module object.
-- [ ] Example app (`example/`, not yet created) runs on a device and in Expo Go (Mock fallback).
+### Android — compiled and unit-tested
 
-## iOS — `packages/expo/ios`
+| Check | Command | Level |
+|---|---|---|
+| `packages/google` compiles against `androidx.health.connect:connect-client:1.1.0` (AGP 8.11, Kotlin 2.1.20, compileSdk 36) | `cd packages/google && ./gradlew compileDebugKotlin` | compilation |
+| Every Health Connect–writable type survives spec value → `Record` → spec value, using its schema's own example | `./gradlew testDebugUnitTest` | runtime (JVM) |
+| Series samples are clipped to the query range, ordered with it and keep their native index; single samples can be removed | same | runtime (JVM) |
+| Aggregates use each field's canonical unit (grams, milligrams, micrograms, kilograms; durations to the millisecond) | same | runtime (JVM) |
+| Day and week buckets align in the query zone, including a 23-hour DST day | same | runtime (JVM) |
+| The Expo module compiles inside a prebuilt Expo SDK 54 / React Native 0.81 app, with no warnings from HealthSpec code | `example: npx expo prebuild -p android && ./gradlew :app:assembleDebug` | compilation |
+| Autolinking resolves the Gradle project and module class | `npx expo-modules-autolinking resolve --platform android` | compilation |
+| The config plugin emits every health permission, the rationale intent filter, the permission-usage alias, package visibility and `minSdkVersion 26` | `npx healthspec doctor example` | generated files |
 
-- [ ] Expo Modules `Record` structs with nested `[SaveSample]?` arrays decode from JS objects.
-- [ ] `AsyncFunction` closures with a trailing `promise: Promise` parameter and `promise.resolve(nil)` compile on the current ExpoModulesCore.
-- [ ] `HKUnit(from:)` accepts every unit string in `spec/schema` (`"count/min"`, `"ml/(kg*min)"`, `"mmol<180.1558800000541>/L"`, `"%"`, `"degC"`). Fix the schema strings if not.
-- [x] `HKWorkoutActivityType` raw values in `src/hk-workout-types.ts` match the SDK headers — verified against kingstinct's header-generated enum (2026-08-23).
-- [x] `HKCategoryValueSleepAnalysis` raw values (inBed 0, asleepUnspecified 1, awake 2, asleepCore 3, asleepDeep 4, asleepREM 5) and the `HKIndoorWorkout` / `HKSwimmingLocationType` / `HKWasUserEntered` / `HKTimeZone` metadata key strings — verified against kingstinct's generated constants (2026-08-23).
-- [ ] `predicateForObjects(withMetadataKey: HKMetadataKeyWasUserEntered, operatorType: .notEqualTo, value: true)` excludes manual entries without dropping samples that lack the key.
-- [ ] `HKStatisticsCollectionQuery` bucket boundaries line up with `startOfBucket` from `@healthspec/core` in the device zone (DST days).
-- [ ] `HKQueryAnchor` round-trips through `NSKeyedArchiver` base64 and survives app restarts.
-- [ ] Background delivery requires the `com.apple.developer.healthkit.background-delivery` entitlement the plugin adds; observer queries fire while backgrounded.
-- [ ] `HKWorkoutBuilder` flow saves a workout and returns its UUID; `addMetadata` accepts `HKIndoorWorkout` / `HKSwimmingLocationType` as typed values.
-- [ ] Saving an `HKCorrelation` (blood pressure, food) also persists its contained quantity samples.
+Compiling for the first time found and fixed: experimental APIs used without opt-in, `IntervalRecord` /
+`InstantaneousRecord` being internal, eight record constructors called with arguments in the wrong order,
+`Metadata` factories called with a nullable id, a mindfulness constant that does not exist, a FHIR field that does
+not exist, a missing `medicalDataSourceIds` argument, and an unresolvable Gradle project dependency. The unit tests
+then found that nutrient aggregates were reported 1000× (sodium 1,000,000×) too small, and that
+`menstruation_flow` cannot keep its end time on Health Connect (now documented in the type).
 
-### iOS — special data (added 2026-08-25)
+### iOS — runtime-checked and type-checked
 
-- [ ] `HKElectrocardiogram.{classification, symptomsStatus, averageHeartRate, samplingFrequency, numberOfVoltageMeasurements}` and `HKElectrocardiogramQuery` voltage enumeration with `.appleWatchSimilarToLeadI`.
-- [ ] `ECG_CLASSIFICATION` / `ECG_SYMPTOMS_STATUS` raw values in `src/hk-tables.ts` (transcribed from documentation, **not** verified against a generated enum unlike the workout and State of Mind tables).
-- [ ] `HKHeartbeatSeriesQuery` callback signature `(query, timeSinceSeriesStart, precededByGap, done, error)`.
-- [ ] `HKStateOfMind` init parameters and `Kind`/`Label`/`Association` raw values (verified against kingstinct's generated enums, but the initialiser is not).
-- [ ] `HKClinicalRecord.fhirResource.{resourceType, data, sourceURL, fhirVersion.fhirRelease}` and the clinical-records entitlement flow.
-- [ ] `HKActivitySummaryQuery` + `predicate(forActivitySummariesBetweenStart:end:)` with `DateComponents` carrying `.era`, and `summary.dateComponents(for:)`.
-- [ ] iOS 26 medications: `HKUserAnnotatedMedicationQueryDescriptor().result(for:)`, `HKMedicationDoseEvent.{medicationConceptIdentifier, scheduleType, logStatus, scheduledDate, scheduledDoseQuantity, doseQuantity}`, `requestPerObjectReadAuthorization`, and `HKObjectType.userAnnotatedMedicationType()`. **Highest risk item** — written entirely from a third-party spec file.
-- [ ] `store.preferredUnits(for:)` returns units for every requested quantity type.
+| Check | Command | Level |
+|---|---|---|
+| HealthKit resolves all 194 identifiers the spec names | `swift run healthspec-check` | runtime |
+| HealthKit parses all 122 unit strings providers send, and each is compatible with its quantity type | same | runtime |
+| Every `sum` aggregate targets a cumulative quantity and every `avg`/`min`/`max` a discrete one | same | runtime |
+| HealthKit allows sharing every identifier the spec marks writable | same | runtime |
+| The Expo module (Swift + the Objective-C exception catcher) type-checks against the iOS 15.1 and iOS 26 APIs (Mac Catalyst SDK, ExpoModulesCore signatures from `expo-modules-core` 3.0) | Swift type check | compilation (partial) |
+| HealthKit accepts the half-open range predicate providers use, and validates predicates when the query is created | probe against the HealthKit runtime | runtime |
+| HealthKit enum raw values in `src/hk-tables.ts` (ECG, characteristics, medications) | SDK headers | compilation |
+| Autolinking resolves the pod, the Swift module, the module class and the app delegate subscriber | `npx expo-modules-autolinking resolve --platform apple` | compilation |
+| The config plugin emits the HealthKit entitlements and every usage description HealthKit needs | `npx healthspec doctor example` | generated files |
+
+The runtime check found 17 types marked writable that HealthKit reserves for Apple (requesting write access
+to any of them terminates the app) and an ECG raw value that was wrong (`unrecognized` is 100). Type-checking
+found a compile error in the ECG voltage query and iOS 26 APIs that would not compile with Xcode 16; both are
+fixed, the latter behind `#if compiler(>=6.2)`.
+
+### Both — TypeScript providers against the conformance suite
+
+`libraries/expo-health/test/conformance.test.ts` runs every conformance scenario, writes included, against
+`AppleHealthProvider` and `HealthConnectProvider` over fakes that enforce the native modules' contracts (spec
+type ids, atomic inserts, flattened series ids, HealthKit's required metadata and reserved types). The same
+suite runs on a device from the example app's **Conformance** panel.
+
+## Not yet established
+
+These need a real build on a device (or, for iOS, a full Xcode build — CI's `ios` job covers compilation).
+
+### Both platforms
+
+- [ ] The example app's Conformance panel passes, read-only and with writes, on an iPhone and on an Android device.
+- [ ] Permission dialogs appear and their results arrive (Expo activity-result contracts on Android; HealthKit's sheet on iOS).
+
+### iOS
+
+- [ ] `pod install` and `xcodebuild` succeed for the example app with Xcode 16.4 and Xcode 26 (CI job `ios`).
+- [ ] Swift sees `HealthSpecCatchException` through the pod's umbrella header.
+- [ ] `HKStatisticsCollectionQuery` bucket boundaries match `startOfBucket` in the device zone across a DST change.
+- [ ] Background delivery: observers created by `HealthSpecAppDelegateSubscriber` fire while the app is suspended, and `pendingChanges()` hands the change to the first subscription after launch.
+- [ ] `HKSourceQuery` + `predicateForObjects(from:)` filters samples and statistics by app.
+- [ ] A batch that fails in `HKWorkoutBuilder` leaves nothing behind (the samples saved before it are deleted).
+- [ ] `HKElectrocardiogramQuery`, `HKHeartbeatSeriesQuery`, `HKStateOfMind`, `HKClinicalRecord` and iOS 26 medication queries return data in the shapes serialized.
+- [ ] `HKHealthConceptIdentifier` archives to the same string across launches.
 - [ ] `x-apple-health://` opens the Health app.
-- [ ] `deleteObjects(of:predicate:)` refuses other apps' data with `errorAuthorizationDenied` → mapped to `PERMISSION_DENIED`.
+- [ ] `deleteObjects` refuses other apps' data with `errorAuthorizationDenied` → `PERMISSION_DENIED`.
 
-## Android — `packages/expo/android`
+### Android
 
-- [ ] `androidx.health.connect:connect-client:1.1.0` API surface: `Metadata.manualEntry()/autoRecorded()/activelyRecorded()/unknownRecordingMethod()`, `MindfulnessSessionRecord`, `SkinTemperatureRecord`, `TemperatureDelta` all exist at that version (bump the version in `build.gradle` otherwise).
-- [ ] Record constructor parameter order/names used in `Serialization.fromJson` (named arguments are used where signatures are long).
-- [ ] `AggregationResult.get(metric)` with the unchecked `AggregateMetric<Any>` cast compiles and returns typed values (`Length`, `Energy`, `Mass`, `Volume`, `Pressure`, `Duration`, `Long`, `Double`).
-- [ ] `aggregateGroupByPeriod` results: whether empty slices are omitted (the code fills them with `null` either way) and whether `startTime` is aligned to the request start (the code pre-aligns to the bucket boundary).
-- [ ] `PermissionController.createRequestPermissionResultContract().createIntent(...)` + `startActivityForResult` + Expo `OnActivityResult` delivers the result; `getGrantedPermissions()` reflects the new grants immediately.
-- [ ] `READ_HEALTH_DATA_IN_BACKGROUND` / `READ_HEALTH_DATA_HISTORY` are requestable through the same contract.
-- [ ] `getChanges` token expiry surfaces as `changesTokenExpired` (mapped to `CURSOR_EXPIRED`).
-- [ ] Play Console: the Health Connect data-access declaration is required before the permission dialog works on production builds — document in the README.
-- [ ] `minSdkVersion 26` in the module's `build.gradle` merges cleanly with an Expo app whose minSdk is 24 (expect a manifest-merger error that the README must explain how to resolve with `expo-build-properties`).
-
-### Android — dedicated operations (added 2026-08-25)
-
-- [ ] `client.readRecord(recordClass, id)` returns `ReadRecordResponse<T>` with `.record`, and rejects unknown ids with an exception rather than null.
-- [ ] `ExerciseSessionRecord.exerciseRouteResult` is one of `ExerciseRouteResult.Data` / `.NoData` / `.ConsentRequired`, and `ExerciseRoute.Location` exposes `time`, `latitude`, `longitude`, `altitude`, `horizontalAccuracy`, `verticalAccuracy` as `Length?`.
-- [ ] `ExerciseRouteRequestContract().createIntent(activity, sessionId)` + `startActivityForResult` + `parseResult(resultCode, data)` returns `ExerciseRoute?`, and a declined consent yields null rather than throwing.
-- [ ] Personal Health Record: `HealthConnectFeatures.FEATURE_PERSONAL_HEALTH_RECORD` gate, `ReadMedicalResourcesInitialRequest(medicalResourceType = …)` / `ReadMedicalResourcesPageRequest(token)` pagination, and `MedicalResource.{id, dataSourceId, fhirResource}` with `FhirResource.{type, id, data, lastUpdated}`. The API is behind `@ExperimentalPersonalHealthRecordApi` — confirm the annotation name and that `MEDICAL_RESOURCE_TYPE_*` constants live on `MedicalResource`.
-- [ ] `FhirResource.FHIR_RESOURCE_TYPE_*` constant names in `Serialization.fhirTypeNames` match the SDK (the map falls back to `"Unknown"`, so a mismatch degrades rather than crashes).
-- [ ] `READ_MEDICAL_DATA_*` permission strings match `HealthSpecMedicalTypes.permissionById`, and the Play Console declaration for medical data is separate from the fitness one.
-- [ ] `HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS` still exists (newer SDKs may prefer `ACTION_MANAGE_HEALTH_PERMISSIONS`) and resolves on Android 13 and 14+.
-- [ ] `permissionController.revokeAllPermissions()` is callable from a coroutine and takes effect before the next `getGrantedPermissions()`.
-- [ ] Two activity results share `OnActivityResult`; confirm `payload.requestCode` is delivered so the permission and route flows do not cross.
-
-## Spec follow-ups discovered while writing the providers
-
-- Series deletions (`HeartRateRecord`, `SkinTemperatureRecord`) arrive as the parent record id; flattened ids are `<id>#<index>`. SPEC §8.1 should say consumers treat a delete of `<id>` as deleting every `<id>#n`.
-- HealthKit sleep sessions are derived, so `changes('sleep_session')` re-derives sessions in the changed window; deletes carry sample UUIDs, not session ids. SPEC §5.4/§8.1 should document this.
-- Neither platform can aggregate in a zone other than the device zone; SPEC §6.2 should make `zone` override explicitly optional-to-support (`NOT_SUPPORTED`).
-
-
-## Compiled and runtime-checked (`pnpm verify:swift`)
-
-The Apple package now builds on a plain Swift toolchain and `healthspec-check` asks HealthKit to resolve every
-identifier the spec names. 858 checks pass. This closed two classes of risk that no amount of cross-referencing
-could:
-
-- [x] The generated Swift compiles — the emitter's string escaping was wrong (mapping strings contain quotes).
-- [x] Availability annotations name every declared platform, not just iOS.
-- [x] HealthKit resolves all 194 quantity and category identifiers — one was wrong (`environmental_audio_exposure_event`).
-- [ ] `HKUnit(from:)` parsing — the check only asserts unit strings are non-empty, because an unknown unit
-      raises an Objective-C exception rather than returning nil. Needs a device or an exception-catching shim.
-- [ ] Behaviour of every query, save and delete path. Still requires a device.
-
-## Expo integration (asserted by `packages/expo/test/expo-integration.test.ts`)
-
-These were checked against the installed `expo@54` / `expo-modules-core@3` packages and are now regression-tested:
-
-- [x] `requireOptionalNativeModule` is exported from `expo-modules-core`.
-- [x] `expo-module.config.json` matches `RawExpoModuleConfig` and names classes that exist in the Swift and Kotlin sources.
-- [x] Module name agrees across `store.ts`, `Name("HealthSpec")` in Swift and Kotlin.
-- [x] Gradle namespace equals the Kotlin package; `build.gradle` uses the `plugins { }` block like every first-party Expo module.
-- [x] `kotlinx-coroutines` is *not* redeclared — `expo-modules-core` exposes it as an `api` dependency.
-- [x] Podspec only reads `package.json` fields that exist.
-- [x] `package.json` `files` covers `ios`, `android`, `expo-module.config.json` and `app.plugin.js`.
-- [x] `OnActivityResultPayload(requestCode, resultCode, data)`, `Promise.reject(CodedException)`, `CodedException(code, message, cause)`, `appContext.currentActivity` / `reactContext` — signatures confirmed against the installed source.
-- [ ] `pod install` succeeds and the pod builds (needs Xcode).
-- [ ] `expo prebuild` + Gradle sync succeeds (needs Android SDK).
+- [ ] `getSdkStatus` and `features()` report correctly on Android 13 (Health Connect app) and 14+ (framework).
+- [ ] The permission contract returns, and `getGrantedPermissions()` reflects new grants immediately; background and history permissions are requestable through it.
+- [ ] Which exception `readRecord` throws for an unknown id (the module maps `IllegalArgumentException` and `NoSuchElementException` to "not found").
+- [ ] `updateRecords` accepts a series record rewritten without some samples, keeping its id.
+- [ ] Health Connect accepts series records written with a 1 ms span.
+- [ ] `aggregateGroupByPeriod` result `startTime`s line up with the aligned bucket starts.
+- [ ] `getChanges` token expiry surfaces as `changesTokenExpired`.
+- [ ] The exercise route consent dialog returns a route, and a declined consent yields none.
+- [ ] Personal Health Record reads, pagination and the `READ_MEDICAL_DATA_*` permissions.
+- [ ] Play Console: the permission dialog works on a production build only after the health apps declaration is approved.

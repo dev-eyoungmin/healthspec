@@ -18,7 +18,8 @@ HealthSpec은 Apple HealthKit과 Android Health Connect를 한자리에 기술�
 
 타입 의미론은 [IEEE 1752 / Open mHealth](https://www.openmhealth.org/)가 정의한 범위에서 그에 정렬합니다.
 
-> **Pre-release.** 아직 배포되지 않았고, 실기기에서 실행된 적이 없습니다.
+> **Pre-release.** 아직 배포되지 않았습니다. 네이티브 모듈은 컴파일되고(Android는 실제 앱 빌드, iOS는 iOS 15·26 SDK
+> 대상 타입 체크) HealthKit 테이블은 HealthKit 런타임으로 검사하지만, 실기기 동작은 아직 검증 중입니다 —
 > [NATIVE-VERIFICATION.md](docs/NATIVE-VERIFICATION.md) 참조.
 
 ## 패키지
@@ -29,6 +30,7 @@ HealthSpec은 Apple HealthKit과 Android Health Connect를 한자리에 기술�
 | [`@healthspec/schema`](packages/schema) | TypeScript | 타입·검증기·플랫폼 테이블 |
 | [`@healthspec/core`](packages/core) | TypeScript | `Provider` 계약, `HealthStore`, `MockProvider` |
 | [`@healthspec/conformance`](packages/conformance) | TypeScript | conformance 스위트 |
+| [`@healthspec/cli`](packages/cli) | TypeScript | `healthspec doctor` · `healthspec mapping` |
 | [`HealthSpec`](packages/apple) | Swift | HealthKit 매핑 — SPM·CocoaPods |
 | [`dev.healthspec:healthspec`](packages/google) | Kotlin | Health Connect 매핑·직렬화·집계 |
 | [`healthspec`](packages/dart) | Dart | 타입 체계와 매핑 |
@@ -64,6 +66,8 @@ await store.write([{ type: 'weight', start: now, end: now, value: { kilograms: 7
 ["@healthspec/expo", { "read": ["steps", "heart_rate", "sleep_session"], "write": ["weight"], "background": true }]
 ```
 
+`npx expo prebuild` 후 `npx healthspec doctor`가 App Review·Play Console에서 반려될 설정을 네이티브 프로젝트에서 찾아냅니다.
+
 ## 헬스 타입
 
 182개 — 양 플랫폼 **38** · Apple 전용 **129** · Android 전용 **15**.
@@ -88,6 +92,8 @@ const report = await runConformanceSuite(myProvider);
 report.conformant;   // 모든 시나리오가 자신이 강제하는 SPEC 조항을 명시합니다
 ```
 
+Expo 프로바이더는 CI에서 네이티브 모듈 fake 위에서 이 스위트를 통과하며, 예제 앱은 실기기에서 같은 스위트를 실행합니다.
+
 ## 문서
 
 | | |
@@ -97,6 +103,7 @@ report.conformant;   // 모든 시나리오가 자신이 강제하는 SPEC 조�
 | [검증](docs/VERIFICATION.md) | 무엇이 어느 증거 등급으로 확인됐는가 |
 | [네이티브 검증](docs/NATIVE-VERIFICATION.md) | 실기기가 필요한 항목 |
 | [기존 라이브러리 비교](docs/PARITY.md) | 기능 대조 |
+| 마이그레이션 | [react-native-healthkit](docs/migration/from-react-native-healthkit.md) · [react-native-health-connect](docs/migration/from-react-native-health-connect.md) · [react-native-health](docs/migration/from-react-native-health.md)에서 |
 
 ## 개발
 
