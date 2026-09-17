@@ -39,6 +39,7 @@ then found that nutrient aggregates were reported 1000× (sodium 1,000,000×) to
 | Every `sum` aggregate targets a cumulative quantity and every `avg`/`min`/`max` a discrete one | same | runtime |
 | HealthKit allows sharing every identifier the spec marks writable | same | runtime |
 | The Expo module (Swift + the Objective-C exception catcher) type-checks against the iOS 15.1 and iOS 26 APIs (Mac Catalyst SDK, ExpoModulesCore signatures from `expo-modules-core` 3.0) | Swift type check | compilation (partial) |
+| The pod installs and the module compiles inside a prebuilt Expo SDK 54 app, with Xcode 16.4 and with the newest Xcode, warning-free — so Swift also sees the exception catcher through the pod's umbrella header | `example: npx expo prebuild -p ios && pod install && xcodebuild` (CI job `ios`) | compilation |
 | HealthKit accepts the half-open range predicate providers use, and validates predicates when the query is created | probe against the HealthKit runtime | runtime |
 | HealthKit enum raw values in `src/hk-tables.ts` (ECG, characteristics, medications) | SDK headers | compilation |
 | Autolinking resolves the pod, the Swift module, the module class and the app delegate subscriber | `npx expo-modules-autolinking resolve --platform apple` | compilation |
@@ -58,7 +59,7 @@ suite runs on a device from the example app's **Conformance** panel.
 
 ## Not yet established
 
-These need a real build on a device (or, for iOS, a full Xcode build — CI's `ios` job covers compilation).
+These need a real build on a device.
 
 ### Both platforms
 
@@ -67,8 +68,6 @@ These need a real build on a device (or, for iOS, a full Xcode build — CI's `i
 
 ### iOS
 
-- [ ] `pod install` and `xcodebuild` succeed for the example app with Xcode 16.4 and Xcode 26 (CI job `ios`).
-- [ ] Swift sees `HealthSpecCatchException` through the pod's umbrella header.
 - [ ] `HKStatisticsCollectionQuery` bucket boundaries match `startOfBucket` in the device zone across a DST change.
 - [ ] Background delivery: observers created by `HealthSpecAppDelegateSubscriber` fire while the app is suspended, and `pendingChanges()` hands the change to the first subscription after launch.
 - [ ] `HKSourceQuery` + `predicateForObjects(from:)` filters samples and statistics by app.
