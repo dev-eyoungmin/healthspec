@@ -226,12 +226,30 @@ export interface HCAggregateBucket {
 }
 
 export interface HCInsertRecord {
+  /** spec type id — one insert call carries every type in the batch, so it is atomic */
+  type: string;
   start: string;
   end: string;
   zoneOffset?: string;
   value: Record<string, unknown>;
   recordingMethod: 'manual' | 'automatic' | 'active' | 'unknown';
+  device?: { manufacturer?: string; model?: string; type?: string };
+  /** `hc.clientRecordId` / `hc.clientRecordVersion` are written to the record's metadata */
   metadata?: Record<string, string>;
+}
+
+/** HealthConnectFeatures.FEATURE_* this module reports on. */
+export type HCFeature = 'MINDFULNESS_SESSION' | 'SKIN_TEMPERATURE' | 'PERSONAL_HEALTH_RECORD' | 'READ_HEALTH_DATA_IN_BACKGROUND' | 'READ_HEALTH_DATA_HISTORY';
+
+/** A Personal Health Record resource as Health Connect stores it: timestamps and names live inside `fhir`. */
+export interface HCMedicalResource {
+  /** `<dataSourceId>/<fhirResourceType>/<fhirResourceId>` */
+  id: string;
+  resourceType: string;
+  fhirVersion: string;
+  /** FHIR resource JSON, verbatim */
+  fhir: string;
+  dataSourceId: string;
 }
 
 export interface HCChanges {
@@ -245,22 +263,28 @@ export interface HCChanges {
 export interface HealthConnectNative {
   getSdkStatus(): HCSdkStatus;
   packageName(): string;
+  /** Optional features this device offers; all false while Health Connect is unavailable. */
+  features(): Record<HCFeature, boolean>;
   openInstaller(): Promise<void>;
+  /** Shows the permission dialog and resolves with every permission now granted (not only this request's). */
   requestPermissions(permissions: string[]): Promise<string[]>;
   getGrantedPermissions(): Promise<string[]>;
   readRecords(type: string, options: HCReadOptions): Promise<HCRecord[]>;
   aggregate(type: string, options: HCAggregateOptions): Promise<HCAggregateBucket[]>;
-  insertRecords(type: string, records: HCInsertRecord[]): Promise<string[]>;
+  /** Inserts every record in one atomic call; ids in input order (series samples get `<id>#0`). */
+  insertRecords(records: HCInsertRecord[]): Promise<string[]>;
+  /** Plain ids delete records; `<id>#<n>` ids remove single series samples. */
   deleteRecordsByIds(type: string, ids: string[]): Promise<void>;
   deleteRecordsByRange(type: string, start: string, end: string): Promise<void>;
   getChangesToken(type: string): Promise<string>;
   getChanges(type: string, token: string): Promise<HCChanges>;
   // ---- dedicated operations
+  /** One record, or one series sample for a `<id>#<n>` id; null when the id is unknown. */
   readRecord(type: string, id: string): Promise<HCRecord | null>;
   /** Asks the user for this session's route; null when the session has no route or consent was refused. */
   readExerciseRoute(sessionId: string): Promise<HCRoutePoint[] | null>;
-  /** Personal Health Record (FHIR) resources of one medical resource type. */
-  readMedicalResources(medicalResourceType: string, options: HCReadOptions): Promise<HCRecord[]>;
+  /** Personal Health Record (FHIR) resources for a clinical_* spec type. Only `limit` of the options applies. */
+  readMedicalResources(type: string, options: HCReadOptions): Promise<HCMedicalResource[]>;
   openSettings(): Promise<void>;
   revokeAllPermissions(): Promise<void>;
 }

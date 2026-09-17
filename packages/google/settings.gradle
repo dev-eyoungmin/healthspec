@@ -1,0 +1,19 @@
+// Standalone build for the Health Connect package, so it can be compiled, tested and published without
+// React Native. The Expo module compiles a copy of these sources (see tools/codegen/src/vendor.ts).
+pluginManagement {
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
+}
+
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    google()
+    mavenCentral()
+  }
+}
+
+rootProject.name = 'healthspec'

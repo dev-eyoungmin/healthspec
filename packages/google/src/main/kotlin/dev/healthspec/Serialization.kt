@@ -1,48 +1,50 @@
+@file:OptIn(ExperimentalMindfulnessSessionApi::class, ExperimentalPersonalHealthRecordApi::class)
+
 package dev.healthspec
 
+import androidx.health.connect.client.feature.ExperimentalMindfulnessSessionApi
+import androidx.health.connect.client.feature.ExperimentalPersonalHealthRecordApi
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.BasalBodyTemperatureRecord
 import androidx.health.connect.client.records.BasalMetabolicRateRecord
-import androidx.health.connect.client.records.BodyWaterMassRecord
-import androidx.health.connect.client.records.BoneMassRecord
-import androidx.health.connect.client.records.CervicalMucusRecord
-import androidx.health.connect.client.records.CyclingPedalingCadenceRecord
-import androidx.health.connect.client.records.ElevationGainedRecord
-import androidx.health.connect.client.records.IntermenstrualBleedingRecord
-import androidx.health.connect.client.records.MenstruationFlowRecord
-import androidx.health.connect.client.records.MenstruationPeriodRecord
-import androidx.health.connect.client.records.OvulationTestRecord
-import androidx.health.connect.client.records.PowerRecord
-import androidx.health.connect.client.records.SexualActivityRecord
-import androidx.health.connect.client.records.SpeedRecord
-import androidx.health.connect.client.records.StepsCadenceRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.BodyTemperatureMeasurementLocation
 import androidx.health.connect.client.records.BodyTemperatureRecord
+import androidx.health.connect.client.records.BodyWaterMassRecord
+import androidx.health.connect.client.records.BoneMassRecord
+import androidx.health.connect.client.records.CervicalMucusRecord
+import androidx.health.connect.client.records.CyclingPedalingCadenceRecord
 import androidx.health.connect.client.records.DistanceRecord
+import androidx.health.connect.client.records.ElevationGainedRecord
 import androidx.health.connect.client.records.ExerciseRoute
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.FhirResource
 import androidx.health.connect.client.records.FloorsClimbedRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.HydrationRecord
-import androidx.health.connect.client.records.InstantaneousRecord
-import androidx.health.connect.client.records.IntervalRecord
+import androidx.health.connect.client.records.IntermenstrualBleedingRecord
 import androidx.health.connect.client.records.LeanBodyMassRecord
 import androidx.health.connect.client.records.MealType
-import androidx.health.connect.client.records.FhirResource
 import androidx.health.connect.client.records.MedicalResource
+import androidx.health.connect.client.records.MenstruationFlowRecord
+import androidx.health.connect.client.records.MenstruationPeriodRecord
 import androidx.health.connect.client.records.MindfulnessSessionRecord
 import androidx.health.connect.client.records.NutritionRecord
+import androidx.health.connect.client.records.OvulationTestRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
+import androidx.health.connect.client.records.PowerRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
+import androidx.health.connect.client.records.SexualActivityRecord
 import androidx.health.connect.client.records.SkinTemperatureRecord
 import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.SpeedRecord
+import androidx.health.connect.client.records.StepsCadenceRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.Vo2MaxRecord
@@ -66,14 +68,42 @@ import dev.healthspec.generated.HealthSpecNutrition
 import java.time.Instant
 import java.time.ZoneOffset
 
-/**
- * Health Connect records ↔ the spec-shaped maps in packages/expo/src/native.ts (HCRecord / HCInsertRecord).
- * Written before a toolchain was available — compile against connect-client 1.1.0 in Phase 1.5.
- */
 /** Raised when the spec asks for something Health Connect cannot do. */
 class NotSupportedException(message: String) : Exception(message)
 
+/**
+ * Health Connect records ↔ the spec-shaped maps in libraries/expo-health/src/native.ts (HCRecord / HCInsertRecord).
+ *
+ * Series records (heart rate, cadence, power, speed, skin temperature) hold many samples; the spec exposes one
+ * record per sample with id `<recordId>#<index>` (SPEC §5.3). [seriesId] and [parseSeriesId] are the only
+ * places that format is spelled out.
+ */
 object Serialization {
+
+  /** Half-open instant window [start, end), used to clip flattened series samples to a query range. */
+  data class Window(val start: Instant, val end: Instant) {
+    fun contains(t: Instant): Boolean = !t.isBefore(start) && t.isBefore(end)
+  }
+
+  /**
+   * Written series samples become one native record each. Health Connect requires a series record to span a
+   * non-empty interval that contains its samples, while a spec sample has start == end; the native record
+   * therefore ends this long after its only sample.
+   */
+  private val SERIES_SPAN: java.time.Duration = java.time.Duration.ofMillis(1)
+
+  const val CLIENT_RECORD_ID = "hc.clientRecordId"
+  const val CLIENT_RECORD_VERSION = "hc.clientRecordVersion"
+
+  fun seriesId(recordId: String, index: Int): String = "$recordId#$index"
+
+  /** `<recordId>#<index>` → (recordId, index); a plain id → (id, null). */
+  fun parseSeriesId(id: String): Pair<String, Int?> {
+    val hash = id.lastIndexOf('#')
+    if (hash < 0) return id to null
+    val index = id.substring(hash + 1).toIntOrNull() ?: return id to null
+    return id.substring(0, hash) to index
+  }
 
   // ---------------------------------------------------------------- enums defined inline in the type schemas
 
@@ -134,15 +164,14 @@ object Serialization {
     "rockport_fitness_test" to Vo2MaxRecord.MEASUREMENT_METHOD_ROCKPORT_FITNESS_TEST,
     "other" to Vo2MaxRecord.MEASUREMENT_METHOD_OTHER,
   )
+  /** Health Connect has no "other" session type; the spec's "other" is written as UNKNOWN and UNKNOWN is read back as absent. */
   private val mindfulnessType = mapOf(
     "meditation" to MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MEDITATION,
     "breathing" to MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_BREATHING,
     "movement" to MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MOVEMENT,
     "music" to MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MUSIC,
     "unguided" to MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_UNGUIDED,
-    "other" to MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_OTHER,
   )
-
   private val menstruationFlow = mapOf(
     "unknown" to MenstruationFlowRecord.FLOW_UNKNOWN,
     "light" to MenstruationFlowRecord.FLOW_LIGHT,
@@ -225,8 +254,11 @@ object Serialization {
   }
 
   private fun envelope(record: Record, id: String, start: Instant, end: Instant, offset: ZoneOffset?, value: Map<String, Any?>): Map<String, Any?> {
-    val extra = mutableMapOf<String, String>("hc.record" to record::class.simpleName.orEmpty())
-    record.metadata.clientRecordId?.let { extra["hc.clientRecordId"] = it }
+    val extra = mutableMapOf("hc.record" to record::class.simpleName.orEmpty())
+    record.metadata.clientRecordId?.let {
+      extra[CLIENT_RECORD_ID] = it
+      extra[CLIENT_RECORD_VERSION] = record.metadata.clientRecordVersion.toString()
+    }
     extra["hc.lastModified"] = record.metadata.lastModifiedTime.toString()
     return mapOf(
       "id" to id,
@@ -239,166 +271,215 @@ object Serialization {
     ).filterValues { it != null }
   }
 
-  private fun interval(record: IntervalRecord, value: Map<String, Any?>) =
-    envelope(record, record.metadata.id, record.startTime, record.endTime, record.startZoneOffset, value)
+  private fun interval(record: Record, start: Instant, end: Instant, offset: ZoneOffset?, value: Map<String, Any?>) =
+    listOf(envelope(record, record.metadata.id, start, end, offset, value))
 
-  private fun instantaneous(record: InstantaneousRecord, value: Map<String, Any?>) =
-    envelope(record, record.metadata.id, record.time, record.time, record.zoneOffset, value)
+  private fun instantaneous(record: Record, time: Instant, offset: ZoneOffset?, value: Map<String, Any?>) =
+    listOf(envelope(record, record.metadata.id, time, time, offset, value))
 
-  // ---------------------------------------------------------------- Record → JSON (series flatten to one entry per sample)
+  /** One sample record per series element inside [window]; ids keep the element's index in the native record. */
+  private fun <S> series(
+    record: Record,
+    samples: List<S>,
+    offset: ZoneOffset?,
+    window: Window?,
+    ascending: Boolean,
+    time: (S) -> Instant,
+    value: (S) -> Map<String, Any?>,
+  ): List<Map<String, Any?>> {
+    val out = samples.mapIndexedNotNull { index, sample ->
+      val t = time(sample)
+      if (window != null && !window.contains(t)) null else envelope(record, seriesId(record.metadata.id, index), t, t, offset, value(sample))
+    }
+    return if (ascending) out else out.asReversed()
+  }
 
-  fun toJson(record: Record): List<Map<String, Any?>> = when (record) {
-    is StepsRecord -> listOf(interval(record, mapOf("count" to record.count)))
-    is DistanceRecord -> listOf(interval(record, mapOf("meters" to record.distance.inMeters)))
-    is ActiveCaloriesBurnedRecord -> listOf(interval(record, mapOf("kilocalories" to record.energy.inKilocalories)))
-    is TotalCaloriesBurnedRecord -> listOf(interval(record, mapOf("kilocalories" to record.energy.inKilocalories)))
-    is FloorsClimbedRecord -> listOf(interval(record, mapOf("count" to record.floors)))
-    is WheelchairPushesRecord -> listOf(interval(record, mapOf("count" to record.count)))
-    is ExerciseSessionRecord -> listOf(
-      interval(
-        record,
-        mapOf(
-          "activity" to (HealthSpecEnums.exerciseTypeById[record.exerciseType] ?: "other"),
-          "title" to record.title,
-          "notes" to record.notes,
-        ).filterValues { it != null },
-      ),
+  // ---------------------------------------------------------------- Record → JSON
+
+  /**
+   * Spec-shaped maps for one native record. Series records flatten to one entry per sample; [window] drops
+   * samples outside a query range, and [ascending] orders them like the enclosing query.
+   */
+  fun toJson(record: Record, window: Window? = null, ascending: Boolean = true): List<Map<String, Any?>> = when (record) {
+    is StepsRecord -> interval(record, record.startTime, record.endTime, record.startZoneOffset, mapOf("count" to record.count))
+    is DistanceRecord -> interval(record, record.startTime, record.endTime, record.startZoneOffset, mapOf("meters" to record.distance.inMeters))
+    is ActiveCaloriesBurnedRecord -> interval(record, record.startTime, record.endTime, record.startZoneOffset, mapOf("kilocalories" to record.energy.inKilocalories))
+    is TotalCaloriesBurnedRecord -> interval(record, record.startTime, record.endTime, record.startZoneOffset, mapOf("kilocalories" to record.energy.inKilocalories))
+    is FloorsClimbedRecord -> interval(record, record.startTime, record.endTime, record.startZoneOffset, mapOf("count" to record.floors))
+    is WheelchairPushesRecord -> interval(record, record.startTime, record.endTime, record.startZoneOffset, mapOf("count" to record.count))
+    is ExerciseSessionRecord -> interval(
+      record, record.startTime, record.endTime, record.startZoneOffset,
+      mapOf(
+        "activity" to (HealthSpecEnums.exerciseTypeById[record.exerciseType] ?: "other"),
+        "title" to record.title,
+        "notes" to record.notes,
+      ).filterValues { it != null },
     )
-    is Vo2MaxRecord -> listOf(
-      instantaneous(
-        record,
-        mapOf("mlPerKgPerMin" to record.vo2MillilitersPerMinuteKilogram, "measurementMethod" to vo2MethodById[record.measurementMethod]).filterValues { it != null },
-      ),
+    is Vo2MaxRecord -> instantaneous(
+      record, record.time, record.zoneOffset,
+      mapOf("mlPerKgPerMin" to record.vo2MillilitersPerMinuteKilogram, "measurementMethod" to vo2MethodById[record.measurementMethod]).filterValues { it != null },
     )
-    is HeartRateRecord -> record.samples.mapIndexed { index, sample ->
-      envelope(record, "${record.metadata.id}#$index", sample.time, sample.time, record.startZoneOffset, mapOf("bpm" to sample.beatsPerMinute))
+    is HeartRateRecord -> series(record, record.samples, record.startZoneOffset, window, ascending, { it.time }) { mapOf("bpm" to it.beatsPerMinute) }
+    is RestingHeartRateRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("bpm" to record.beatsPerMinute))
+    is HeartRateVariabilityRmssdRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("milliseconds" to record.heartRateVariabilityMillis))
+    is OxygenSaturationRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("percent" to record.percentage.value))
+    is RespiratoryRateRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("breathsPerMinute" to record.rate))
+    is BodyTemperatureRecord -> instantaneous(
+      record, record.time, record.zoneOffset,
+      mapOf("celsius" to record.temperature.inCelsius, "measurementLocation" to bodyTemperatureLocationById[record.measurementLocation]).filterValues { it != null },
+    )
+    is SkinTemperatureRecord -> series(record, record.deltas, record.startZoneOffset, window, ascending, { it.time }) { delta ->
+      mapOf(
+        "deltaCelsius" to delta.delta.inCelsius,
+        "baselineCelsius" to record.baseline?.inCelsius,
+        "measurementLocation" to skinLocationById[record.measurementLocation],
+      ).filterValues { it != null }
     }
-    is RestingHeartRateRecord -> listOf(instantaneous(record, mapOf("bpm" to record.beatsPerMinute)))
-    is HeartRateVariabilityRmssdRecord -> listOf(instantaneous(record, mapOf("milliseconds" to record.heartRateVariabilityMillis)))
-    is OxygenSaturationRecord -> listOf(instantaneous(record, mapOf("percent" to record.percentage.value)))
-    is RespiratoryRateRecord -> listOf(instantaneous(record, mapOf("breathsPerMinute" to record.rate)))
-    is BodyTemperatureRecord -> listOf(
-      instantaneous(
-        record,
-        mapOf("celsius" to record.temperature.inCelsius, "measurementLocation" to bodyTemperatureLocationById[record.measurementLocation]).filterValues { it != null },
-      ),
+    is BloodPressureRecord -> instantaneous(
+      record, record.time, record.zoneOffset,
+      mapOf(
+        "systolicMmHg" to record.systolic.inMillimetersOfMercury,
+        "diastolicMmHg" to record.diastolic.inMillimetersOfMercury,
+        "bodyPosition" to bodyPositionById[record.bodyPosition],
+        "measurementLocation" to bpLocationById[record.measurementLocation],
+      ).filterValues { it != null },
     )
-    is SkinTemperatureRecord -> record.deltas.mapIndexed { index, delta ->
-      envelope(
-        record,
-        "${record.metadata.id}#$index",
-        delta.time,
-        delta.time,
-        record.startZoneOffset,
-        mapOf(
-          "deltaCelsius" to delta.delta.inCelsius,
-          "baselineCelsius" to record.baseline?.inCelsius,
-          "measurementLocation" to skinLocationById[record.measurementLocation],
-        ).filterValues { it != null },
-      )
-    }
-    is BloodPressureRecord -> listOf(
-      instantaneous(
-        record,
-        mapOf(
-          "systolicMmHg" to record.systolic.inMillimetersOfMercury,
-          "diastolicMmHg" to record.diastolic.inMillimetersOfMercury,
-          "bodyPosition" to bodyPositionById[record.bodyPosition],
-          "measurementLocation" to bpLocationById[record.measurementLocation],
-        ).filterValues { it != null },
-      ),
+    is BloodGlucoseRecord -> instantaneous(
+      record, record.time, record.zoneOffset,
+      mapOf(
+        "millimolesPerLiter" to record.level.inMillimolesPerLiter,
+        "specimenSource" to specimenSourceById[record.specimenSource],
+        "mealType" to HealthSpecEnums.mealTypeById[record.mealType],
+        "relationToMeal" to relationToMealById[record.relationToMeal],
+      ).filterValues { it != null },
     )
-    is BloodGlucoseRecord -> listOf(
-      instantaneous(
-        record,
-        mapOf(
-          "millimolesPerLiter" to record.level.inMillimolesPerLiter,
-          "specimenSource" to specimenSourceById[record.specimenSource],
-          "mealType" to HealthSpecEnums.mealTypeById[record.mealType],
-          "relationToMeal" to relationToMealById[record.relationToMeal],
-        ).filterValues { it != null },
-      ),
+    is WeightRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("kilograms" to record.weight.inKilograms))
+    is HeightRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("meters" to record.height.inMeters))
+    is BodyFatRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("percent" to record.percentage.value))
+    is LeanBodyMassRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("kilograms" to record.mass.inKilograms))
+    is SleepSessionRecord -> interval(
+      record, record.startTime, record.endTime, record.startZoneOffset,
+      mapOf(
+        "stages" to record.stages.map { stage ->
+          mapOf(
+            "stage" to (HealthSpecEnums.sleepStageById[stage.stage] ?: "unknown"),
+            "start" to stage.startTime.toString(),
+            "end" to stage.endTime.toString(),
+          )
+        },
+        "title" to record.title,
+        "notes" to record.notes,
+      ).filterValues { it != null },
     )
-    is WeightRecord -> listOf(instantaneous(record, mapOf("kilograms" to record.weight.inKilograms)))
-    is HeightRecord -> listOf(instantaneous(record, mapOf("meters" to record.height.inMeters)))
-    is BodyFatRecord -> listOf(instantaneous(record, mapOf("percent" to record.percentage.value)))
-    is LeanBodyMassRecord -> listOf(instantaneous(record, mapOf("kilograms" to record.mass.inKilograms)))
-    is SleepSessionRecord -> listOf(
-      interval(
-        record,
-        mapOf(
-          "stages" to record.stages.map { stage ->
-            mapOf(
-              "stage" to (HealthSpecEnums.sleepStageById[stage.stage] ?: "unknown"),
-              "start" to stage.startTime.toString(),
-              "end" to stage.endTime.toString(),
-            )
-          },
-          "title" to record.title,
-          "notes" to record.notes,
-        ).filterValues { it != null },
-      ),
+    is HydrationRecord -> interval(record, record.startTime, record.endTime, record.startZoneOffset, mapOf("liters" to record.volume.inLiters))
+    is NutritionRecord -> interval(
+      record, record.startTime, record.endTime, record.startZoneOffset,
+      HealthSpecNutrition.nutrients(record) + mapOf("mealType" to HealthSpecEnums.mealTypeById[record.mealType], "name" to record.name).filterValues { it != null },
     )
-    is HydrationRecord -> listOf(interval(record, mapOf("liters" to record.volume.inLiters)))
-    is NutritionRecord -> listOf(
-      interval(
-        record,
-        HealthSpecNutrition.nutrients(record) + mapOf("mealType" to HealthSpecEnums.mealTypeById[record.mealType], "name" to record.name).filterValues { it != null },
-      ),
+    is MindfulnessSessionRecord -> interval(
+      record, record.startTime, record.endTime, record.startZoneOffset,
+      mapOf(
+        "sessionType" to mindfulnessTypeById[record.mindfulnessSessionType],
+        "title" to record.title,
+        "notes" to record.notes,
+      ).filterValues { it != null },
     )
-    is MindfulnessSessionRecord -> listOf(
-      interval(
-        record,
-        mapOf(
-          "sessionType" to mindfulnessTypeById[record.mindfulnessSessionType],
-          "title" to record.title,
-          "notes" to record.notes,
-        ).filterValues { it != null },
-      ),
+    is MenstruationFlowRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("flow" to (menstruationFlowById[record.flow] ?: "unknown")))
+    is MenstruationPeriodRecord -> interval(record, record.startTime, record.endTime, record.startZoneOffset, emptyMap())
+    is OvulationTestRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("result" to (ovulationResultById[record.result] ?: "inconclusive")))
+    is CervicalMucusRecord -> instantaneous(
+      record, record.time, record.zoneOffset,
+      mapOf("appearance" to mucusAppearanceById[record.appearance], "sensation" to mucusSensationById[record.sensation]).filterValues { it != null },
     )
-    is MenstruationFlowRecord -> listOf(instantaneous(record, mapOf("flow" to (menstruationFlowById[record.flow] ?: "unknown"))))
-    is MenstruationPeriodRecord -> listOf(interval(record, emptyMap()))
-    is OvulationTestRecord -> listOf(instantaneous(record, mapOf("result" to (ovulationResultById[record.result] ?: "inconclusive"))))
-    is CervicalMucusRecord -> listOf(
-      instantaneous(record, mapOf("appearance" to mucusAppearanceById[record.appearance], "sensation" to mucusSensationById[record.sensation]).filterValues { it != null }),
+    is IntermenstrualBleedingRecord -> instantaneous(record, record.time, record.zoneOffset, emptyMap())
+    is SexualActivityRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("protectionUsed" to protectionUsedById[record.protectionUsed]).filterValues { it != null })
+    is BasalBodyTemperatureRecord -> instantaneous(
+      record, record.time, record.zoneOffset,
+      mapOf("celsius" to record.temperature.inCelsius, "measurementLocation" to bodyTemperatureLocationById[record.measurementLocation]).filterValues { it != null },
     )
-    is IntermenstrualBleedingRecord -> listOf(instantaneous(record, emptyMap()))
-    is SexualActivityRecord -> listOf(instantaneous(record, mapOf("protectionUsed" to protectionUsedById[record.protectionUsed]).filterValues { it != null }))
-    is BasalBodyTemperatureRecord -> listOf(
-      instantaneous(
-        record,
-        mapOf("celsius" to record.temperature.inCelsius, "measurementLocation" to bodyTemperatureLocationById[record.measurementLocation]).filterValues { it != null },
-      ),
-    )
-    is BasalMetabolicRateRecord -> listOf(instantaneous(record, mapOf("kilocaloriesPerDay" to record.basalMetabolicRate.inKilocaloriesPerDay)))
-    is BodyWaterMassRecord -> listOf(instantaneous(record, mapOf("kilograms" to record.mass.inKilograms)))
-    is BoneMassRecord -> listOf(instantaneous(record, mapOf("kilograms" to record.mass.inKilograms)))
-    is CyclingPedalingCadenceRecord -> record.samples.mapIndexed { index, sample ->
-      envelope(record, "${record.metadata.id}#$index", sample.time, sample.time, record.startZoneOffset, mapOf("rpm" to sample.revolutionsPerMinute))
-    }
-    is StepsCadenceRecord -> record.samples.mapIndexed { index, sample ->
-      envelope(record, "${record.metadata.id}#$index", sample.time, sample.time, record.startZoneOffset, mapOf("stepsPerMinute" to sample.rate))
-    }
-    is ElevationGainedRecord -> listOf(interval(record, mapOf("meters" to record.elevation.inMeters)))
-    is PowerRecord -> record.samples.mapIndexed { index, sample ->
-      envelope(record, "${record.metadata.id}#$index", sample.time, sample.time, record.startZoneOffset, mapOf("watts" to sample.power.inWatts))
-    }
-    is SpeedRecord -> record.samples.mapIndexed { index, sample ->
-      envelope(record, "${record.metadata.id}#$index", sample.time, sample.time, record.startZoneOffset, mapOf("metersPerSecond" to sample.speed.inMetersPerSecond))
-    }
+    is BasalMetabolicRateRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("kilocaloriesPerDay" to record.basalMetabolicRate.inKilocaloriesPerDay))
+    is BodyWaterMassRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("kilograms" to record.mass.inKilograms))
+    is BoneMassRecord -> instantaneous(record, record.time, record.zoneOffset, mapOf("kilograms" to record.mass.inKilograms))
+    is CyclingPedalingCadenceRecord -> series(record, record.samples, record.startZoneOffset, window, ascending, { it.time }) { mapOf("rpm" to it.revolutionsPerMinute) }
+    is StepsCadenceRecord -> series(record, record.samples, record.startZoneOffset, window, ascending, { it.time }) { mapOf("stepsPerMinute" to it.rate) }
+    is ElevationGainedRecord -> interval(record, record.startTime, record.endTime, record.startZoneOffset, mapOf("meters" to record.elevation.inMeters))
+    is PowerRecord -> series(record, record.samples, record.startZoneOffset, window, ascending, { it.time }) { mapOf("watts" to it.power.inWatts) }
+    is SpeedRecord -> series(record, record.samples, record.startZoneOffset, window, ascending, { it.time }) { mapOf("metersPerSecond" to it.speed.inMetersPerSecond) }
     else -> throw IllegalArgumentException("unsupported record ${record::class.simpleName}")
+  }
+
+  /**
+   * The same series record without the samples at [indices], for deleting individual flattened samples.
+   * Returns null when nothing would remain (delete the record instead). The record's metadata, and so its id,
+   * is kept so the result can be passed to `updateRecords`.
+   */
+  fun withoutSamples(record: Record, indices: Set<Int>): Record? {
+    fun <S> keep(samples: List<S>): List<S> = samples.filterIndexed { i, _ -> i !in indices }
+    return when (record) {
+      is HeartRateRecord -> keep(record.samples).takeIf { it.isNotEmpty() }?.let {
+        HeartRateRecord(record.startTime, record.startZoneOffset, record.endTime, record.endZoneOffset, it, record.metadata)
+      }
+      is CyclingPedalingCadenceRecord -> keep(record.samples).takeIf { it.isNotEmpty() }?.let {
+        CyclingPedalingCadenceRecord(record.startTime, record.startZoneOffset, record.endTime, record.endZoneOffset, it, record.metadata)
+      }
+      is StepsCadenceRecord -> keep(record.samples).takeIf { it.isNotEmpty() }?.let {
+        StepsCadenceRecord(record.startTime, record.startZoneOffset, record.endTime, record.endZoneOffset, it, record.metadata)
+      }
+      is PowerRecord -> keep(record.samples).takeIf { it.isNotEmpty() }?.let {
+        PowerRecord(record.startTime, record.startZoneOffset, record.endTime, record.endZoneOffset, it, record.metadata)
+      }
+      is SpeedRecord -> keep(record.samples).takeIf { it.isNotEmpty() }?.let {
+        SpeedRecord(record.startTime, record.startZoneOffset, record.endTime, record.endZoneOffset, it, record.metadata)
+      }
+      is SkinTemperatureRecord -> keep(record.deltas).takeIf { it.isNotEmpty() }?.let {
+        SkinTemperatureRecord(
+          startTime = record.startTime,
+          startZoneOffset = record.startZoneOffset,
+          endTime = record.endTime,
+          endZoneOffset = record.endZoneOffset,
+          metadata = record.metadata,
+          deltas = it,
+          baseline = record.baseline,
+          measurementLocation = record.measurementLocation,
+        )
+      }
+      else -> throw IllegalArgumentException("${record::class.simpleName} is not a series record")
+    }
   }
 
   // ---------------------------------------------------------------- JSON → Record (writes)
 
+  private fun deviceOf(input: Map<String, Any?>): Device? {
+    val device = input["device"] as? Map<*, *> ?: return null
+    return Device(
+      type = HealthSpecEnums.deviceType[device["type"] as? String ?: ""] ?: Device.TYPE_UNKNOWN,
+      manufacturer = device["manufacturer"] as? String,
+      model = device["model"] as? String,
+    )
+  }
+
+  /**
+   * Health Connect requires a device for automatically and actively recorded data; the phone running the app is
+   * the honest default when the caller did not name one.
+   */
   private fun metadataOf(input: Map<String, Any?>): Metadata {
-    val clientRecordId = (input["metadata"] as? Map<*, *>)?.get("clientRecordId") as? String
-    val device = Device(type = Device.TYPE_PHONE)
+    val extra = input["metadata"] as? Map<*, *>
+    val clientRecordId = extra?.get(CLIENT_RECORD_ID) as? String
+    val clientRecordVersion = (extra?.get(CLIENT_RECORD_VERSION) as? String)?.toLongOrNull() ?: 0L
+    val device = deviceOf(input)
     return when (input["recordingMethod"] as? String) {
-      "automatic" -> Metadata.autoRecorded(device = device, clientRecordId = clientRecordId)
-      "active" -> Metadata.activelyRecorded(device = device, clientRecordId = clientRecordId)
-      "unknown" -> Metadata.unknownRecordingMethod(clientRecordId = clientRecordId)
-      else -> Metadata.manualEntry(clientRecordId = clientRecordId)
+      "automatic" -> {
+        val d = device ?: Device(type = Device.TYPE_PHONE)
+        if (clientRecordId != null) Metadata.autoRecorded(d, clientRecordId, clientRecordVersion) else Metadata.autoRecorded(d)
+      }
+      "active" -> {
+        val d = device ?: Device(type = Device.TYPE_PHONE)
+        if (clientRecordId != null) Metadata.activelyRecorded(d, clientRecordId, clientRecordVersion) else Metadata.activelyRecorded(d)
+      }
+      "unknown" ->
+        if (clientRecordId != null) Metadata.unknownRecordingMethod(clientRecordId, clientRecordVersion, device) else Metadata.unknownRecordingMethod(device)
+      else ->
+        if (clientRecordId != null) Metadata.manualEntry(clientRecordId, clientRecordVersion, device) else Metadata.manualEntry(device)
     }
   }
 
@@ -409,76 +490,88 @@ object Serialization {
     val end = instant(input["end"])
     val offset = parseOffset(input["zoneOffset"])
     val metadata = metadataOf(input)
+    val seriesEnd = start.plus(SERIES_SPAN)
     fun req(key: String): Double = num(value, key) ?: throw IllegalArgumentException("$type.$key is required")
     fun enum(map: Map<String, Int>, key: String, default: Int): Int = str(value, key)?.let { map[it] } ?: default
 
     return when (type) {
-      "steps" -> StepsRecord(start, offset, end, offset, req("count").toLong(), metadata)
-      "distance" -> DistanceRecord(start, offset, end, offset, Length.meters(req("meters")), metadata)
-      "active_energy" -> ActiveCaloriesBurnedRecord(start, offset, end, offset, Energy.kilocalories(req("kilocalories")), metadata)
-      "total_energy" -> TotalCaloriesBurnedRecord(start, offset, end, offset, Energy.kilocalories(req("kilocalories")), metadata)
-      "floors_climbed" -> FloorsClimbedRecord(start, offset, end, offset, req("count"), metadata)
-      "wheelchair_pushes" -> WheelchairPushesRecord(start, offset, end, offset, req("count").toLong(), metadata)
+      "steps" -> StepsRecord(startTime = start, startZoneOffset = offset, endTime = end, endZoneOffset = offset, count = req("count").toLong(), metadata = metadata)
+      "distance" -> DistanceRecord(startTime = start, startZoneOffset = offset, endTime = end, endZoneOffset = offset, distance = Length.meters(req("meters")), metadata = metadata)
+      "active_energy" -> ActiveCaloriesBurnedRecord(startTime = start, startZoneOffset = offset, endTime = end, endZoneOffset = offset, energy = Energy.kilocalories(req("kilocalories")), metadata = metadata)
+      "total_energy" -> TotalCaloriesBurnedRecord(startTime = start, startZoneOffset = offset, endTime = end, endZoneOffset = offset, energy = Energy.kilocalories(req("kilocalories")), metadata = metadata)
+      "floors_climbed" -> FloorsClimbedRecord(startTime = start, startZoneOffset = offset, endTime = end, endZoneOffset = offset, floors = req("count"), metadata = metadata)
+      "wheelchair_pushes" -> WheelchairPushesRecord(startTime = start, startZoneOffset = offset, endTime = end, endZoneOffset = offset, count = req("count").toLong(), metadata = metadata)
       "exercise_session" -> ExerciseSessionRecord(
         startTime = start,
         startZoneOffset = offset,
         endTime = end,
         endZoneOffset = offset,
+        metadata = metadata,
         exerciseType = enum(HealthSpecEnums.exerciseType, "activity", ExerciseSessionRecord.EXERCISE_TYPE_OTHER_WORKOUT),
         title = str(value, "title"),
         notes = str(value, "notes"),
+      )
+      "vo2_max" -> Vo2MaxRecord(
+        time = start,
+        zoneOffset = offset,
+        metadata = metadata,
+        vo2MillilitersPerMinuteKilogram = req("mlPerKgPerMin"),
+        measurementMethod = enum(vo2Method, "measurementMethod", Vo2MaxRecord.MEASUREMENT_METHOD_OTHER),
+      )
+      "heart_rate" -> HeartRateRecord(
+        startTime = start, startZoneOffset = offset, endTime = seriesEnd, endZoneOffset = offset,
+        samples = listOf(HeartRateRecord.Sample(time = start, beatsPerMinute = req("bpm").toLong())),
         metadata = metadata,
       )
-      "vo2_max" -> Vo2MaxRecord(start, offset, req("mlPerKgPerMin"), enum(vo2Method, "measurementMethod", Vo2MaxRecord.MEASUREMENT_METHOD_OTHER), metadata)
-      "heart_rate" -> HeartRateRecord(start, offset, end, offset, listOf(HeartRateRecord.Sample(start, req("bpm").toLong())), metadata)
-      "resting_heart_rate" -> RestingHeartRateRecord(start, offset, req("bpm").toLong(), metadata)
-      "hrv_rmssd" -> HeartRateVariabilityRmssdRecord(start, offset, req("milliseconds"), metadata)
-      "oxygen_saturation" -> OxygenSaturationRecord(start, offset, Percentage(req("percent")), metadata)
-      "respiratory_rate" -> RespiratoryRateRecord(start, offset, req("breathsPerMinute"), metadata)
+      "resting_heart_rate" -> RestingHeartRateRecord(time = start, zoneOffset = offset, beatsPerMinute = req("bpm").toLong(), metadata = metadata)
+      "hrv_rmssd" -> HeartRateVariabilityRmssdRecord(time = start, zoneOffset = offset, heartRateVariabilityMillis = req("milliseconds"), metadata = metadata)
+      "oxygen_saturation" -> OxygenSaturationRecord(time = start, zoneOffset = offset, percentage = Percentage(req("percent")), metadata = metadata)
+      "respiratory_rate" -> RespiratoryRateRecord(time = start, zoneOffset = offset, rate = req("breathsPerMinute"), metadata = metadata)
       "body_temperature" -> BodyTemperatureRecord(
-        start,
-        offset,
-        Temperature.celsius(req("celsius")),
-        enum(bodyTemperatureLocation, "measurementLocation", BodyTemperatureMeasurementLocation.MEASUREMENT_LOCATION_UNKNOWN),
-        metadata,
+        time = start,
+        zoneOffset = offset,
+        metadata = metadata,
+        temperature = Temperature.celsius(req("celsius")),
+        measurementLocation = enum(bodyTemperatureLocation, "measurementLocation", BodyTemperatureMeasurementLocation.MEASUREMENT_LOCATION_UNKNOWN),
       )
       "skin_temperature" -> SkinTemperatureRecord(
         startTime = start,
         startZoneOffset = offset,
-        endTime = end,
+        endTime = seriesEnd,
         endZoneOffset = offset,
-        deltas = listOf(SkinTemperatureRecord.Delta(start, TemperatureDelta.celsius(req("deltaCelsius")))),
+        metadata = metadata,
+        deltas = listOf(SkinTemperatureRecord.Delta(time = start, delta = TemperatureDelta.celsius(req("deltaCelsius")))),
         baseline = num(value, "baselineCelsius")?.let { Temperature.celsius(it) },
         measurementLocation = enum(skinLocation, "measurementLocation", SkinTemperatureRecord.MEASUREMENT_LOCATION_UNKNOWN),
-        metadata = metadata,
       )
       "blood_pressure" -> BloodPressureRecord(
-        start,
-        offset,
-        Pressure.millimetersOfMercury(req("systolicMmHg")),
-        Pressure.millimetersOfMercury(req("diastolicMmHg")),
-        enum(bodyPosition, "bodyPosition", BloodPressureRecord.BODY_POSITION_UNKNOWN),
-        enum(bpLocation, "measurementLocation", BloodPressureRecord.MEASUREMENT_LOCATION_UNKNOWN),
-        metadata,
+        time = start,
+        zoneOffset = offset,
+        metadata = metadata,
+        systolic = Pressure.millimetersOfMercury(req("systolicMmHg")),
+        diastolic = Pressure.millimetersOfMercury(req("diastolicMmHg")),
+        bodyPosition = enum(bodyPosition, "bodyPosition", BloodPressureRecord.BODY_POSITION_UNKNOWN),
+        measurementLocation = enum(bpLocation, "measurementLocation", BloodPressureRecord.MEASUREMENT_LOCATION_UNKNOWN),
       )
       "blood_glucose" -> BloodGlucoseRecord(
-        start,
-        offset,
-        BloodGlucose.millimolesPerLiter(req("millimolesPerLiter")),
-        enum(specimenSource, "specimenSource", BloodGlucoseRecord.SPECIMEN_SOURCE_UNKNOWN),
-        enum(HealthSpecEnums.mealType, "mealType", MealType.MEAL_TYPE_UNKNOWN),
-        enum(relationToMeal, "relationToMeal", BloodGlucoseRecord.RELATION_TO_MEAL_UNKNOWN),
-        metadata,
+        time = start,
+        zoneOffset = offset,
+        metadata = metadata,
+        level = BloodGlucose.millimolesPerLiter(req("millimolesPerLiter")),
+        specimenSource = enum(specimenSource, "specimenSource", BloodGlucoseRecord.SPECIMEN_SOURCE_UNKNOWN),
+        mealType = enum(HealthSpecEnums.mealType, "mealType", MealType.MEAL_TYPE_UNKNOWN),
+        relationToMeal = enum(relationToMeal, "relationToMeal", BloodGlucoseRecord.RELATION_TO_MEAL_UNKNOWN),
       )
-      "weight" -> WeightRecord(start, offset, Mass.kilograms(req("kilograms")), metadata)
-      "height" -> HeightRecord(start, offset, Length.meters(req("meters")), metadata)
-      "body_fat" -> BodyFatRecord(start, offset, Percentage(req("percent")), metadata)
-      "lean_body_mass" -> LeanBodyMassRecord(start, offset, Mass.kilograms(req("kilograms")), metadata)
+      "weight" -> WeightRecord(time = start, zoneOffset = offset, weight = Mass.kilograms(req("kilograms")), metadata = metadata)
+      "height" -> HeightRecord(time = start, zoneOffset = offset, height = Length.meters(req("meters")), metadata = metadata)
+      "body_fat" -> BodyFatRecord(time = start, zoneOffset = offset, percentage = Percentage(req("percent")), metadata = metadata)
+      "lean_body_mass" -> LeanBodyMassRecord(time = start, zoneOffset = offset, mass = Mass.kilograms(req("kilograms")), metadata = metadata)
       "sleep_session" -> SleepSessionRecord(
         startTime = start,
         startZoneOffset = offset,
         endTime = end,
         endZoneOffset = offset,
+        metadata = metadata,
         title = str(value, "title"),
         notes = str(value, "notes"),
         stages = (value["stages"] as? List<Map<String, Any?>> ?: emptyList()).map { stage ->
@@ -488,54 +581,74 @@ object Serialization {
             stage = HealthSpecEnums.sleepStage[stage["stage"] as? String ?: ""] ?: SleepSessionRecord.STAGE_TYPE_UNKNOWN,
           )
         },
-        metadata = metadata,
       )
-      "hydration" -> HydrationRecord(start, offset, end, offset, Volume.liters(req("liters")), metadata)
+      "hydration" -> HydrationRecord(startTime = start, startZoneOffset = offset, endTime = end, endZoneOffset = offset, volume = Volume.liters(req("liters")), metadata = metadata)
       "nutrition" -> HealthSpecNutrition.record(start, offset, end, offset, value, str(value, "name"), enum(HealthSpecEnums.mealType, "mealType", MealType.MEAL_TYPE_UNKNOWN), metadata)
       "mindfulness_session" -> MindfulnessSessionRecord(
         startTime = start,
         startZoneOffset = offset,
         endTime = end,
         endZoneOffset = offset,
-        mindfulnessSessionType = enum(mindfulnessType, "sessionType", MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_OTHER),
+        metadata = metadata,
+        mindfulnessSessionType = enum(mindfulnessType, "sessionType", MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_UNKNOWN),
         title = str(value, "title"),
         notes = str(value, "notes"),
+      )
+      "menstruation_flow" -> MenstruationFlowRecord(time = start, zoneOffset = offset, metadata = metadata, flow = enum(menstruationFlow, "flow", MenstruationFlowRecord.FLOW_UNKNOWN))
+      "menstruation_period" -> MenstruationPeriodRecord(startTime = start, startZoneOffset = offset, endTime = end, endZoneOffset = offset, metadata = metadata)
+      "ovulation_test" -> OvulationTestRecord(time = start, zoneOffset = offset, result = enum(ovulationResult, "result", OvulationTestRecord.RESULT_INCONCLUSIVE), metadata = metadata)
+      "cervical_mucus" -> CervicalMucusRecord(
+        time = start,
+        zoneOffset = offset,
+        metadata = metadata,
+        appearance = enum(mucusAppearance, "appearance", CervicalMucusRecord.APPEARANCE_UNKNOWN),
+        sensation = enum(mucusSensation, "sensation", CervicalMucusRecord.SENSATION_UNKNOWN),
+      )
+      "intermenstrual_bleeding" -> IntermenstrualBleedingRecord(time = start, zoneOffset = offset, metadata = metadata)
+      "sexual_activity" -> SexualActivityRecord(
+        time = start,
+        zoneOffset = offset,
+        metadata = metadata,
+        protectionUsed = enum(protectionUsed, "protectionUsed", SexualActivityRecord.PROTECTION_USED_UNKNOWN),
+      )
+      "basal_body_temperature" -> BasalBodyTemperatureRecord(
+        time = start,
+        zoneOffset = offset,
+        metadata = metadata,
+        temperature = Temperature.celsius(req("celsius")),
+        measurementLocation = enum(bodyTemperatureLocation, "measurementLocation", BodyTemperatureMeasurementLocation.MEASUREMENT_LOCATION_UNKNOWN),
+      )
+      "basal_metabolic_rate" -> BasalMetabolicRateRecord(time = start, zoneOffset = offset, basalMetabolicRate = Power.kilocaloriesPerDay(req("kilocaloriesPerDay")), metadata = metadata)
+      "body_water_mass" -> BodyWaterMassRecord(time = start, zoneOffset = offset, mass = Mass.kilograms(req("kilograms")), metadata = metadata)
+      "bone_mass" -> BoneMassRecord(time = start, zoneOffset = offset, mass = Mass.kilograms(req("kilograms")), metadata = metadata)
+      "cycling_cadence" -> CyclingPedalingCadenceRecord(
+        startTime = start, startZoneOffset = offset, endTime = seriesEnd, endZoneOffset = offset,
+        samples = listOf(CyclingPedalingCadenceRecord.Sample(time = start, revolutionsPerMinute = req("rpm"))),
         metadata = metadata,
       )
-      "menstruation_flow" -> MenstruationFlowRecord(start, offset, enum(menstruationFlow, "flow", MenstruationFlowRecord.FLOW_UNKNOWN), metadata)
-      "menstruation_period" -> MenstruationPeriodRecord(start, offset, end, offset, metadata)
-      "ovulation_test" -> OvulationTestRecord(start, offset, enum(ovulationResult, "result", OvulationTestRecord.RESULT_INCONCLUSIVE), metadata)
-      "cervical_mucus" -> CervicalMucusRecord(
-        start,
-        offset,
-        enum(mucusAppearance, "appearance", CervicalMucusRecord.APPEARANCE_UNKNOWN),
-        enum(mucusSensation, "sensation", CervicalMucusRecord.SENSATION_UNKNOWN),
-        metadata,
+      "steps_cadence" -> StepsCadenceRecord(
+        startTime = start, startZoneOffset = offset, endTime = seriesEnd, endZoneOffset = offset,
+        samples = listOf(StepsCadenceRecord.Sample(time = start, rate = req("stepsPerMinute"))),
+        metadata = metadata,
       )
-      "intermenstrual_bleeding" -> IntermenstrualBleedingRecord(start, offset, metadata)
-      "sexual_activity" -> SexualActivityRecord(start, offset, enum(protectionUsed, "protectionUsed", SexualActivityRecord.PROTECTION_USED_UNKNOWN), metadata)
-      "basal_body_temperature" -> BasalBodyTemperatureRecord(
-        start,
-        offset,
-        Temperature.celsius(req("celsius")),
-        enum(bodyTemperatureLocation, "measurementLocation", BodyTemperatureMeasurementLocation.MEASUREMENT_LOCATION_UNKNOWN),
-        metadata,
+      "elevation_gained" -> ElevationGainedRecord(startTime = start, startZoneOffset = offset, endTime = end, endZoneOffset = offset, elevation = Length.meters(req("meters")), metadata = metadata)
+      "power" -> PowerRecord(
+        startTime = start, startZoneOffset = offset, endTime = seriesEnd, endZoneOffset = offset,
+        samples = listOf(PowerRecord.Sample(time = start, power = Power.watts(req("watts")))),
+        metadata = metadata,
       )
-      "basal_metabolic_rate" -> BasalMetabolicRateRecord(start, offset, Power.kilocaloriesPerDay(req("kilocaloriesPerDay")), metadata)
-      "body_water_mass" -> BodyWaterMassRecord(start, offset, Mass.kilograms(req("kilograms")), metadata)
-      "bone_mass" -> BoneMassRecord(start, offset, Mass.kilograms(req("kilograms")), metadata)
-      "cycling_cadence" -> CyclingPedalingCadenceRecord(start, offset, end, offset, listOf(CyclingPedalingCadenceRecord.Sample(start, req("rpm"))), metadata)
-      "steps_cadence" -> StepsCadenceRecord(start, offset, end, offset, listOf(StepsCadenceRecord.Sample(start, req("stepsPerMinute"))), metadata)
-      "elevation_gained" -> ElevationGainedRecord(start, offset, end, offset, Length.meters(req("meters")), metadata)
-      "power" -> PowerRecord(start, offset, end, offset, listOf(PowerRecord.Sample(start, Power.watts(req("watts")))), metadata)
-      "speed" -> SpeedRecord(start, offset, end, offset, listOf(SpeedRecord.Sample(start, Velocity.metersPerSecond(req("metersPerSecond")))), metadata)
-      else -> throw IllegalArgumentException("Health Connect cannot write type '$type'")
+      "speed" -> SpeedRecord(
+        startTime = start, startZoneOffset = offset, endTime = seriesEnd, endZoneOffset = offset,
+        samples = listOf(SpeedRecord.Sample(time = start, speed = Velocity.metersPerSecond(req("metersPerSecond")))),
+        metadata = metadata,
+      )
+      else -> throw NotSupportedException("Health Connect cannot write type '$type'")
     }
   }
 
   // ---------------------------------------------------------------- dedicated operations
 
-  /** ExerciseRoute.Location list → the point shape in packages/expo/src/native.ts (HCRoutePoint). */
+  /** ExerciseRoute.Location list → the point shape in libraries/expo-health/src/native.ts (HCRoutePoint). */
   fun routePoints(route: ExerciseRoute): List<Map<String, Any?>> = route.route.map { location ->
     mapOf(
       "time" to location.time.toString(),
@@ -548,30 +661,29 @@ object Serialization {
   }
 
   /**
-   * MedicalResource → the spec's clinical_* value shape. The FHIR payload arrives as a JSON string and is
-   * passed through verbatim; the TypeScript layer parses it (Serialization has no JSON parser dependency).
+   * MedicalResource → the raw pieces of a clinical_* record. Health Connect stores no timestamps or display
+   * names outside the FHIR payload, so the TypeScript layer parses `fhir` (a JSON string) and derives them —
+   * the same way on every platform that hands over FHIR.
    */
-  fun medicalResourceToJson(resource: MedicalResource, type: String): Map<String, Any?> {
+  fun medicalResourceToJson(resource: MedicalResource): Map<String, Any?> {
     val fhir = resource.fhirResource
-    val value = mapOf(
-      "resourceType" to fhirResourceTypeName(fhir.type),
-      "displayName" to (fhir.id ?: ""),
-      "fhir" to fhir.data,
-    ).filterValues { it != null }
+    val id = resource.id
     return mapOf(
-      "id" to resource.id.toString(),
-      "start" to fhir.lastUpdated?.toString(),
-      "end" to fhir.lastUpdated?.toString(),
-      "value" to value,
-      "source" to mapOf(
-        "app" to mapOf("id" to resource.dataSourceId.toString()),
-        "recordingMethod" to "unknown",
-      ),
-      "metadata" to mapOf(
-        "hc.medicalResourceType" to type,
-        "hc.dataSourceId" to resource.dataSourceId.toString(),
-      ),
+      // Stable across reads: the data source and the FHIR resource's own type and id identify it.
+      "id" to "${id.dataSourceId}/${id.fhirResourceType}/${id.fhirResourceId}",
+      "resourceType" to fhirResourceTypeName(fhir.type),
+      "fhirVersion" to fhirRelease(resource.fhirVersion.major, resource.fhirVersion.minor, resource.fhirVersion.patch),
+      "fhir" to fhir.data,
+      "dataSourceId" to resource.dataSourceId,
     )
+  }
+
+  /** FHIR version → the release name HealthKit also reports ("R4", "R4B"). */
+  fun fhirRelease(major: Int, minor: Int, patch: Int): String = when {
+    major == 4 && minor == 3 -> "R4B"
+    major == 4 -> "R4"
+    major == 5 -> "R5"
+    else -> "$major.$minor.$patch"
   }
 
   /** FHIR resource type constant → the FHIR name the spec stores in `resourceType`. */

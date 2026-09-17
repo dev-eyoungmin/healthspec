@@ -52,6 +52,7 @@ test('read adds the type and forwards filters', async () => {
 
 test('aggregate forwards zone, bucket and field', async () => {
   const fake = new FakeHealthConnect();
+  fake.aggregateResponse = [{ start: day.start.toISOString(), end: day.end.toISOString(), value: 42 }];
   const p = new HealthConnectProvider(fake);
   const out = await p.aggregate('blood_pressure', { ...day, fn: 'avg', bucket: 'day', zone: 'Asia/Seoul', field: 'diastolicMmHg' });
   assert.equal(out[0]!.value, 42);
@@ -60,19 +61,44 @@ test('aggregate forwards zone, bucket and field', async () => {
   await assert.rejects(p.aggregate('steps', { ...day, fn: 'avg' }), code('NOT_SUPPORTED'));
 });
 
-test('write groups by type and returns records with ids and source', async () => {
+test('write validates first, then inserts the whole batch in one atomic call', async () => {
   const fake = new FakeHealthConnect();
   const p = new HealthConnectProvider(fake);
   const out = await p.write([
-    { type: 'weight', start: at(7), end: at(7), value: { kilograms: 70 }, source: { recordingMethod: 'manual' } },
+    { type: 'weight', start: at(7), end: at(7), value: { kilograms: 70 }, source: { recordingMethod: 'automatic', device: { type: 'scale' } } },
     { type: 'steps', start: at(8), end: at(9), value: { count: 100 } },
-    { type: 'weight', start: at(20), end: at(20), value: { kilograms: 69.5 }, zoneOffset: '+09:00' },
+    { type: 'heart_rate', start: at(20), end: at(20), value: { bpm: 61 }, zoneOffset: '+09:00' },
   ]);
-  assert.equal(fake.calls.filter((c) => c.fn === 'insertRecords').length, 2);
-  assert.deepEqual(out.map((r) => r.type), ['weight', 'steps', 'weight']);
+  const inserts = fake.calls.filter((c) => c.fn === 'insertRecords');
+  assert.equal(inserts.length, 1, 'one native call for every type');
+  const payload = inserts[0]!.args[0] as Array<{ type: string; recordingMethod: string; zoneOffset?: string; device?: { type?: string } }>;
+  assert.deepEqual(payload.map((r) => [r.type, r.recordingMethod, r.zoneOffset, r.device?.type]), [['weight', 'automatic', undefined, 'scale'], ['steps', 'manual', undefined, undefined], ['heart_rate', 'manual', '+09:00', undefined]]);
+  assert.deepEqual(out.map((r) => r.type), ['weight', 'steps', 'heart_rate']);
   assert.ok(out.every((r) => r.id.startsWith('hc-') && r.source.app?.id === 'com.example.app'));
-  const payload = fake.calls.find((c) => c.fn === 'insertRecords' && c.args[0] === 'weight')!.args[1] as Array<{ recordingMethod: string; zoneOffset?: string }>;
-  assert.deepEqual(payload.map((r) => [r.recordingMethod, r.zoneOffset]), [['manual', undefined], ['manual', '+09:00']]);
+  assert.ok(out[2]!.id.endsWith('#0'), 'a written series sample carries the id a read returns');
+  assert.equal(out[0]!.source.device?.type, 'scale');
+
+  fake.calls.length = 0;
+  await assert.rejects(p.write([{ type: 'weight', start: at(7), end: at(7), value: { kilograms: 70 } }, { type: 'steps', start: at(8), end: at(9), value: { count: -5 } }]), code('INVALID_ARGUMENT'));
+  assert.equal(fake.calls.filter((c) => c.fn === 'insertRecords').length, 0, 'an invalid record stops the batch before the platform is called');
+});
+
+test('device features gate types and capabilities', async () => {
+  const fake = new FakeHealthConnect();
+  fake.deviceFeatures = { ...fake.deviceFeatures, SKIN_TEMPERATURE: false, PERSONAL_HEALTH_RECORD: false, READ_HEALTH_DATA_IN_BACKGROUND: false };
+  const p = new HealthConnectProvider(fake);
+  const caps = p.capabilities();
+  assert.ok(!caps.types.includes('skin_temperature') && !caps.types.includes('clinical_immunization'));
+  assert.ok(caps.types.includes('mindfulness_session'));
+  assert.equal(caps.background, false);
+  assert.equal(caps.history, true);
+  await assert.rejects(p.read('skin_temperature', day), code('NOT_SUPPORTED'));
+  await assert.rejects(p.requestPermissions({ read: ['steps'], background: true }), code('NOT_SUPPORTED'));
+});
+
+test('aggregate rejects a field the type does not have', async () => {
+  const p = new HealthConnectProvider(new FakeHealthConnect());
+  await assert.rejects(p.aggregate('nutrition', { ...day, fn: 'sum', field: 'kilojoules' }), code('INVALID_ARGUMENT'));
 });
 
 test('changes: snapshot honours the history window, deltas carry deletes, expired tokens reject', async () => {
@@ -132,17 +158,32 @@ test('Batch A types are declared; exercise_route is reached only through a dedic
 
 test('Personal Health Record types, routes, readById, settings and revocation', async () => {
   const fake = new FakeHealthConnect();
-  fake.medical.set('VACCINES', [{ id: 'ds1/Immunization/1', start: at(0), end: at(0), value: { resourceType: 'Immunization', fhir: { resourceType: 'Immunization', status: 'completed' } }, source: { recordingMethod: 'unknown' }, metadata: {} }]);
+  fake.medical.set('clinical_immunization', [
+    {
+      id: 'ds1/1/imm-1',
+      resourceType: 'Immunization',
+      fhirVersion: 'R4',
+      dataSourceId: 'ds1',
+      fhir: JSON.stringify({ resourceType: 'Immunization', id: 'imm-1', status: 'completed', occurrenceDateTime: at(3), vaccineCode: { coding: [{ display: 'Influenza' }] } }),
+    },
+    { id: 'ds1/1/imm-2', resourceType: 'Immunization', fhirVersion: 'R4', dataSourceId: 'ds1', fhir: JSON.stringify({ resourceType: 'Immunization', occurrenceDateTime: '2019' }) },
+  ]);
   fake.add('exercise_session', { id: 'sess-1', start: at(7), end: at(8), value: { activity: 'running' } });
   fake.routes.set('sess-1', [{ time: at(7), latitude: 37.5, longitude: 127 }, { time: at(8), latitude: 37.51, longitude: 127.01, altitudeMeters: 12 }]);
   const p = new HealthConnectProvider(fake);
   const caps = p.capabilities();
   assert.ok(caps.types.includes('clinical_immunization') && caps.types.includes('clinical_visit') && !caps.types.includes('clinical_coverage'));
   assert.ok(!caps.profile && caps.routes && caps.revokePermissions);
-  const [vaccine] = await p.read('clinical_immunization', day);
+  const vaccines = await p.read('clinical_immunization', day);
+  assert.equal(vaccines.length, 1, 'the resource dated 2019 is outside the range');
+  const [vaccine] = vaccines;
   assert.equal(vaccine!.type, 'clinical_immunization');
+  assert.equal(vaccine!.start, at(3), 'the envelope date comes from the FHIR resource');
+  assert.equal(vaccine!.value.displayName, 'Influenza');
   assert.equal((vaccine!.value.fhir as { status: string }).status, 'completed');
-  assert.equal((fake.calls.at(-1)!.args[0] as string), 'VACCINES');
+  assert.equal(fake.calls.at(-1)!.args[0], 'clinical_immunization', 'the Kotlin module resolves spec type ids');
+  const older = await p.read('clinical_immunization', { start: new Date(0), end: new Date(T0) });
+  assert.equal(older[0]!.start, '2019-01-01T00:00:00.000Z');
   await assert.rejects(p.changes('clinical_immunization'), code('NOT_SUPPORTED'));
   assert.throws(() => p.subscribe(['clinical_immunization'], () => {}), code('NOT_SUPPORTED'));
   const route = await p.readRoute('sess-1');
@@ -150,6 +191,9 @@ test('Personal Health Record types, routes, readById, settings and revocation', 
   assert.equal(await p.readRoute('sess-2'), undefined);
   assert.equal((await p.readById('exercise_session', 'sess-1'))?.value.activity, 'running');
   assert.equal(await p.readById('exercise_session', 'sess-9'), undefined);
+  const [hr] = await p.write([{ type: 'heart_rate', start: at(5), end: at(5), value: { bpm: 70 } }]);
+  assert.equal((await p.readById('heart_rate', hr!.id))?.value.bpm, 70);
+  assert.equal(fake.calls.at(-1)!.args[1], hr!.id, 'series ids reach the native module intact');
   await p.openSettings();
   await p.requestPermissions({ read: ['steps'] });
   await p.revokePermissions();
