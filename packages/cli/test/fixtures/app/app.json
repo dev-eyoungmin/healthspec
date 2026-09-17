@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Fixture",
+    "slug": "fixture",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "ios": {
+      "bundleIdentifier": "dev.healthspec.example",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "dev.healthspec.example"
+    },
+    "plugins": [
+      [
+        "@healthspec/expo",
+        {
+          "read": [
+            "steps",
+            "distance",
+            "active_energy",
+            "heart_rate",
+            "sleep_session",
+            "weight",
+            "exercise_session"
+          ],
+          "write": [
+            "weight"
+          ],
+          "background": true,
+          "history": true,
+          "healthShareUsageDescription": "This example reads your activity, heart rate and sleep to show a daily summary.",
+          "healthUpdateUsageDescription": "This example saves a weight entry so you can see writing work."
+        }
+      ]
+    ]
+  }
+}

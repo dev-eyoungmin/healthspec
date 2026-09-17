@@ -1,0 +1,39 @@
+{
+  "name": "@healthspec/cli",
+  "version": "0.0.0",
+  "description": "healthspec doctor — finds HealthKit and Health Connect configuration mistakes before App Review or Play Console does; healthspec mapping — one type's platform mapping.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "healthspec": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/api.d.ts",
+      "import": "./dist/api.js",
+      "default": "./dist/api.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@healthspec/schema": "workspace:*"
+  },
+  "homepage": "https://github.com/dev-eyoungmin/healthspec",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dev-eyoungmin/healthspec.git",
+    "directory": "packages/cli"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
