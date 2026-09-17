@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { SCHEMA_BUNDLE, validateRecord, validateValue, type HealthType } from '../src/index.js';
+import { SCHEMA_BUNDLE } from '../src/bundle.js';
+import { TYPE_EXAMPLES, validateRecord, validateValue, type HealthType } from '../src/index.js';
 
 test('validateValue accepts valid values and rejects bad ones with paths', () => {
   assert.deepEqual(validateValue('steps', { count: 10 }), []);
@@ -43,5 +44,13 @@ test('every schema example validates through the generated validators', () => {
   for (const entry of SCHEMA_BUNDLE.types) {
     const s = entry.schema as { title: HealthType; examples: unknown[] };
     for (const ex of s.examples) assert.deepEqual(validateValue(s.title, ex), [], s.title);
+  }
+});
+
+test('TYPE_EXAMPLES carries every schema example, and each validates', () => {
+  for (const entry of SCHEMA_BUNDLE.types) {
+    const schema = entry.schema as { title: HealthType; examples: unknown[] };
+    assert.deepEqual(TYPE_EXAMPLES[schema.title], schema.examples);
+    for (const example of TYPE_EXAMPLES[schema.title]) assert.deepEqual(validateValue(schema.title, example), [], schema.title);
   }
 });

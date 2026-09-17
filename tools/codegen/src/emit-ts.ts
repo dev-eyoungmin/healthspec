@@ -249,6 +249,17 @@ export interface TypeMapping {
   return out.join('\n');
 }
 
+/** One valid value per type, from the schema's own examples — small enough to ship where the full bundle is not. */
+export function emitExamples(b: SpecBundle): string {
+  const examples = Object.fromEntries(b.types.map((t) => [t.json.title, t.json.examples ?? []]));
+  return (
+    HEADER +
+    `\nimport type { HealthType, HealthValueOf } from './types.js';\n\n` +
+    `/** Example values from each type's JSON Schema; every one validates. Used by the conformance suite to write real data. */\n` +
+    `export const TYPE_EXAMPLES: { [T in HealthType]: HealthValueOf<T>[] } = ${JSON.stringify(examples, null, 2)} as never;\n`
+  );
+}
+
 export function emitBundle(b: SpecBundle): string {
   const strip = (s: { file: string; json: unknown }) => ({ file: s.file, schema: s.json });
   return (
