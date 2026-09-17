@@ -30,7 +30,9 @@ export function createDefaultProvider(options: DefaultProviderOptions = {}): Pro
       console.warn('[healthspec] native module "HealthSpec" not found (Expo Go or missing prebuild) — using MockProvider with seed data.');
     }
   }
-  return new MockProvider(options.mock);
+  // Mirror the platform Expo Go runs on, so a type or operation the device lacks is missing in the mock too.
+  const platform = Platform.OS === 'ios' || Platform.OS === 'android' ? { platform: Platform.OS } : {};
+  return new MockProvider({ ...platform, ...options.mock });
 }
 
 export class HealthStore extends CoreHealthStore {
