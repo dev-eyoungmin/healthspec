@@ -1772,7 +1772,8 @@ const check_insulin_delivery: Check = (v, path, out) => {
       }
     }
     const v293 = o291["reason"];
-    if (v293 !== undefined) {
+    if (v293 === undefined) out.push({ path: path + ".reason", message: 'required' });
+    else {
       if (typeof v293 !== 'string' || !["basal","bolus"].includes(v293)) out.push({ path: path + ".reason", message: "must be one of basal, bolus" });
     }
   }

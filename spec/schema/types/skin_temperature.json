@@ -16,6 +16,7 @@
       "healthconnect": {
         "record": "SkinTemperatureRecord",
         "permission": "SKIN_TEMPERATURE",
+        "feature": "SKIN_TEMPERATURE",
         "field": "deltas[].delta",
         "unit": "celsius (delta)",
         "series": true,

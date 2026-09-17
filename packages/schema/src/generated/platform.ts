@@ -149,8 +149,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -169,9 +172,12 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
+      "write": false,
       "generic": true,
-      "since": "iOS 18"
+      "since": "iOS 18",
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -190,9 +196,12 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
+      "write": false,
       "generic": true,
-      "since": "iOS 16"
+      "since": "iOS 16",
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -211,8 +220,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -277,8 +289,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -1568,10 +1583,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
+      "write": false,
       "generic": true,
       "notes": [
-        "Apple renamed the Swift case to `environmentalAudioExposureEvent` in iOS 14 but kept the raw value `HKCategoryTypeIdentifierAudioExposureEvent`. Verified at runtime — the renamed string does not resolve."
+        "Apple renamed the Swift case to `environmentalAudioExposureEvent` in iOS 14 but kept the raw value `HKCategoryTypeIdentifierAudioExposureEvent`. Verified at runtime — the renamed string does not resolve.",
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
     },
     "android": {
@@ -1781,8 +1797,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -1882,8 +1901,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -1957,8 +1979,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -2031,8 +2056,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -2046,8 +2074,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -2096,8 +2127,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -2111,8 +2145,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -2184,7 +2221,8 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
       "write": true,
       "generic": true,
       "notes": [
-        "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN."
+        "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN.",
+        "MenstruationFlowRecord is instantaneous: Health Connect keeps only start, so end reads back equal to start."
       ]
     },
     "fields": {
@@ -2609,8 +2647,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -2720,8 +2761,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -2969,9 +3013,12 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
+      "write": false,
       "generic": true,
-      "since": "iOS 18"
+      "since": "iOS 18",
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,
@@ -4097,8 +4144,11 @@ export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = {
     "ios": {
       "supported": true,
       "read": true,
-      "write": true,
-      "generic": true
+      "write": false,
+      "generic": true,
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "android": {
       "supported": false,

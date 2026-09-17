@@ -16,7 +16,18 @@ export interface HealthKitMapping {
   /** category: the value field that carries the enum */
   valueField?: string;
   /** value field → HealthKit metadata key, with the coercion applied on read/write */
-  metadataFields?: Record<string, { key: string; type: 'boolean' | 'number' | 'string'; booleanEnum?: { true: string; false: string } }>;
+  metadataFields?: Record<
+    string,
+    {
+      key: string;
+      type: 'boolean' | 'number' | 'string';
+      booleanEnum?: { true: string; false: string };
+      /** number keys holding an enum: spec value → HealthKit raw value */
+      values?: Record<string, number>;
+      /** HealthKit refuses the sample without this key; a boolean defaults to false, anything else must be given */
+      required?: boolean;
+    }
+  >;
   /** minimum OS version when newer than the baseline */
   since?: string;
   read: boolean;
@@ -42,6 +53,8 @@ export interface HealthConnectMapping {
   special?: boolean;
   /** Personal Health Record (FHIR) resource type — read through readMedicalResources */
   medicalResourceType?: string;
+  /** HealthConnectFeatures.FEATURE_* the device must report available; the type is unsupported otherwise */
+  feature?: 'MINDFULNESS_SESSION' | 'SKIN_TEMPERATURE' | 'PERSONAL_HEALTH_RECORD';
   read: boolean;
   write: boolean;
   notes?: string[];
@@ -166,7 +179,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierAppleMoveTime",
       "unit": "min",
@@ -174,7 +187,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {
@@ -193,7 +209,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances",
       "unit": "count",
@@ -202,7 +218,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {
@@ -221,7 +240,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierAppleSleepingWristTemperature",
       "unit": "degC",
@@ -230,7 +249,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {
@@ -248,7 +270,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierAppleStandHour",
       "values": {
@@ -260,7 +282,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -334,7 +359,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierAppleWalkingSteadinessEvent",
       "values": {
@@ -348,7 +373,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -919,6 +947,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_ALLERGIES_INTOLERANCES",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "ALLERGIES_INTOLERANCES"
     },
     "notes": [],
@@ -948,6 +977,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_CONDITIONS",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "CONDITIONS"
     },
     "notes": [],
@@ -999,6 +1029,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_VACCINES",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "VACCINES"
     },
     "notes": [],
@@ -1028,6 +1059,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_LABORATORY_RESULTS",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "LABORATORY_RESULTS"
     },
     "notes": [],
@@ -1057,6 +1089,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_MEDICATIONS",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "MEDICATIONS"
     },
     "notes": [],
@@ -1096,6 +1129,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_PERSONAL_DETAILS",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "PERSONAL_DETAILS"
     },
     "notes": [],
@@ -1114,6 +1148,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_PRACTITIONER_DETAILS",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "PRACTITIONER_DETAILS"
     },
     "notes": [],
@@ -1132,6 +1167,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_PREGNANCY",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "PREGNANCY"
     },
     "notes": [],
@@ -1161,6 +1197,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_PROCEDURES",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "PROCEDURES"
     },
     "notes": [],
@@ -1179,6 +1216,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_SOCIAL_HISTORY",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "SOCIAL_HISTORY"
     },
     "notes": [],
@@ -1197,6 +1235,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_VISITS",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "VISITS"
     },
     "notes": [],
@@ -1226,6 +1265,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "record": "MedicalResource",
       "permission": "MEDICAL_DATA_VITAL_SIGNS",
+      "feature": "PERSONAL_HEALTH_RECORD",
       "medicalResourceType": "VITAL_SIGNS"
     },
     "notes": [],
@@ -1778,12 +1818,13 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierAudioExposureEvent",
       "values": {},
       "notes": [
-        "Apple renamed the Swift case to `environmentalAudioExposureEvent` in iOS 14 but kept the raw value `HKCategoryTypeIdentifierAudioExposureEvent`. Verified at runtime — the renamed string does not resolve."
+        "Apple renamed the Swift case to `environmentalAudioExposureEvent` in iOS 14 but kept the raw value `HKCategoryTypeIdentifierAudioExposureEvent`. Verified at runtime — the renamed string does not resolve.",
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
     },
     "notes": [],
@@ -2070,7 +2111,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierHeadphoneAudioExposureEvent",
       "values": {},
@@ -2078,7 +2119,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -2232,7 +2276,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierHighHeartRateEvent",
       "values": {},
@@ -2240,7 +2284,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -2353,7 +2400,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierInfrequentMenstrualCycles",
       "values": {},
@@ -2361,7 +2408,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -2408,7 +2458,12 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "metadataFields": {
         "reason": {
           "key": "HKInsulinDeliveryReason",
-          "type": "number"
+          "type": "number",
+          "values": {
+            "basal": 1,
+            "bolus": 2
+          },
+          "required": true
         }
       },
       "verifiedBy": {
@@ -2467,7 +2522,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierIrregularHeartRhythmEvent",
       "values": {},
@@ -2475,7 +2530,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -2491,7 +2549,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierIrregularMenstrualCycles",
       "values": {},
@@ -2499,7 +2557,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -2579,7 +2640,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierLowCardioFitnessEvent",
       "values": {},
@@ -2587,7 +2648,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -2603,7 +2667,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierLowHeartRateEvent",
       "values": {},
@@ -2611,7 +2675,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -2661,7 +2728,8 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "metadataFields": {
         "cycleStart": {
           "key": "HKMenstrualCycleStart",
-          "type": "boolean"
+          "type": "boolean",
+          "required": true
         }
       },
       "verifiedBy": {
@@ -2677,7 +2745,8 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "permission": "MENSTRUATION",
       "field": "flow",
       "notes": [
-        "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN."
+        "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN.",
+        "MenstruationFlowRecord is instantaneous: Health Connect keeps only start, so end reads back equal to start."
       ],
       "verifiedBy": {
         "record": [
@@ -2734,6 +2803,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     "healthconnect": {
       "record": "MindfulnessSessionRecord",
       "permission": "MINDFULNESS",
+      "feature": "MINDFULNESS_SESSION",
       "field": "mindfulnessSessionType",
       "read": true,
       "write": true,
@@ -3170,7 +3240,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierPersistentIntermenstrualBleeding",
       "values": {},
@@ -3178,7 +3248,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -3331,7 +3404,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierProlongedMenstrualPeriods",
       "values": {},
@@ -3339,7 +3412,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -3680,6 +3756,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     "healthconnect": {
       "record": "SkinTemperatureRecord",
       "permission": "SKIN_TEMPERATURE",
+      "feature": "SKIN_TEMPERATURE",
       "field": "deltas[].delta",
       "unit": "celsius (delta)",
       "series": true,
@@ -3711,7 +3788,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierSleepApneaEvent",
       "values": {},
@@ -3720,7 +3797,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -5403,7 +5483,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
     ],
     "healthkit": {
       "read": true,
-      "write": true,
+      "write": false,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierWalkingAsymmetryPercentage",
       "unit": "%",
@@ -5411,7 +5491,10 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "identifiers": [
           "kingstinct-generated"
         ]
-      }
+      },
+      "notes": [
+        "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+      ]
     },
     "notes": [],
     "fieldUnits": {

@@ -974,7 +974,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "quantity",
               "identifier": "HKQuantityTypeIdentifierAppleMoveTime",
               "unit": "min",
@@ -982,7 +982,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -1026,7 +1029,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "quantity",
               "identifier": "HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances",
               "unit": "count",
@@ -1035,7 +1038,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -1079,7 +1085,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "quantity",
               "identifier": "HKQuantityTypeIdentifierAppleSleepingWristTemperature",
               "unit": "degC",
@@ -1088,7 +1094,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -1139,7 +1148,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierAppleStandHour",
               "values": {
@@ -1151,7 +1160,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -1305,7 +1317,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierAppleWalkingSteadinessEvent",
               "values": {
@@ -1319,7 +1331,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -2437,6 +2452,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_ALLERGIES_INTOLERANCES",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "ALLERGIES_INTOLERANCES"
             }
           },
@@ -2514,6 +2530,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_CONDITIONS",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "CONDITIONS"
             }
           },
@@ -2661,6 +2678,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_VACCINES",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "VACCINES"
             }
           },
@@ -2738,6 +2756,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_LABORATORY_RESULTS",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "LABORATORY_RESULTS"
             }
           },
@@ -2815,6 +2834,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_MEDICATIONS",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "MEDICATIONS"
             }
           },
@@ -2950,6 +2970,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_PERSONAL_DETAILS",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "PERSONAL_DETAILS"
             }
           },
@@ -3016,6 +3037,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_PRACTITIONER_DETAILS",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "PRACTITIONER_DETAILS"
             }
           },
@@ -3082,6 +3104,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_PREGNANCY",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "PREGNANCY"
             }
           },
@@ -3159,6 +3182,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_PROCEDURES",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "PROCEDURES"
             }
           },
@@ -3225,6 +3249,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_SOCIAL_HISTORY",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "SOCIAL_HISTORY"
             }
           },
@@ -3291,6 +3316,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_VISITS",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "VISITS"
             }
           },
@@ -3368,6 +3394,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "write": false,
               "record": "MedicalResource",
               "permission": "MEDICAL_DATA_VITAL_SIGNS",
+              "feature": "PERSONAL_HEALTH_RECORD",
               "medicalResourceType": "VITAL_SIGNS"
             }
           },
@@ -4560,12 +4587,13 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierAudioExposureEvent",
               "values": {},
               "notes": [
-                "Apple renamed the Swift case to `environmentalAudioExposureEvent` in iOS 14 but kept the raw value `HKCategoryTypeIdentifierAudioExposureEvent`. Verified at runtime — the renamed string does not resolve."
+                "Apple renamed the Swift case to `environmentalAudioExposureEvent` in iOS 14 but kept the raw value `HKCategoryTypeIdentifierAudioExposureEvent`. Verified at runtime — the renamed string does not resolve.",
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
               ]
             }
           },
@@ -5146,7 +5174,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierHeadphoneAudioExposureEvent",
               "values": {},
@@ -5154,7 +5182,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -5456,7 +5487,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierHighHeartRateEvent",
               "values": {},
@@ -5464,7 +5495,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -5681,7 +5715,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierInfrequentMenstrualCycles",
               "values": {},
@@ -5689,7 +5723,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -5777,7 +5814,12 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "metadataFields": {
                 "reason": {
                   "key": "HKInsulinDeliveryReason",
-                  "type": "number"
+                  "type": "number",
+                  "values": {
+                    "basal": 1,
+                    "bolus": 2
+                  },
+                  "required": true
                 }
               },
               "verifiedBy": {
@@ -5806,12 +5848,14 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           }
         },
         "required": [
-          "internationalUnits"
+          "internationalUnits",
+          "reason"
         ],
         "additionalProperties": false,
         "examples": [
           {
-            "internationalUnits": 4.5
+            "internationalUnits": 4.5,
+            "reason": "bolus"
           }
         ]
       }
@@ -5883,7 +5927,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierIrregularHeartRhythmEvent",
               "values": {},
@@ -5891,7 +5935,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -5923,7 +5970,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierIrregularMenstrualCycles",
               "values": {},
@@ -5931,7 +5978,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -6068,7 +6118,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierLowCardioFitnessEvent",
               "values": {},
@@ -6076,7 +6126,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -6108,7 +6161,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierLowHeartRateEvent",
               "values": {},
@@ -6116,7 +6169,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -6251,7 +6307,8 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "metadataFields": {
                 "cycleStart": {
                   "key": "HKMenstrualCycleStart",
-                  "type": "boolean"
+                  "type": "boolean",
+                  "required": true
                 }
               },
               "verifiedBy": {
@@ -6267,7 +6324,8 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
               "permission": "MENSTRUATION",
               "field": "flow",
               "notes": [
-                "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN."
+                "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN.",
+                "MenstruationFlowRecord is instantaneous: Health Connect keeps only start, so end reads back equal to start."
               ],
               "verifiedBy": {
                 "record": [
@@ -6384,6 +6442,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
             "healthconnect": {
               "record": "MindfulnessSessionRecord",
               "permission": "MINDFULNESS",
+              "feature": "MINDFULNESS_SESSION",
               "field": "mindfulnessSessionType",
               "read": true,
               "write": true,
@@ -7261,7 +7320,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierPersistentIntermenstrualBleeding",
               "values": {},
@@ -7269,7 +7328,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -7577,7 +7639,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierProlongedMenstrualPeriods",
               "values": {},
@@ -7585,7 +7647,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -8209,6 +8274,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
             "healthconnect": {
               "record": "SkinTemperatureRecord",
               "permission": "SKIN_TEMPERATURE",
+              "feature": "SKIN_TEMPERATURE",
               "field": "deltas[].delta",
               "unit": "celsius (delta)",
               "series": true,
@@ -8290,7 +8356,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "category",
               "identifier": "HKCategoryTypeIdentifierSleepApneaEvent",
               "values": {},
@@ -8299,7 +8365,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],
@@ -11786,7 +11855,7 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
           "platforms": {
             "healthkit": {
               "read": true,
-              "write": true,
+              "write": false,
               "kind": "quantity",
               "identifier": "HKQuantityTypeIdentifierWalkingAsymmetryPercentage",
               "unit": "%",
@@ -11794,7 +11863,10 @@ export const SCHEMA_BUNDLE: { common: SchemaEntry[]; enums: SchemaEntry[]; types
                 "identifiers": [
                   "kingstinct-generated"
                 ]
-              }
+              },
+              "notes": [
+                "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+              ]
             }
           },
           "notes": [],

@@ -27,6 +27,7 @@
         "write": false,
         "record": "MedicalResource",
         "permission": "MEDICAL_DATA_PROCEDURES",
+        "feature": "PERSONAL_HEALTH_RECORD",
         "medicalResourceType": "PROCEDURES"
       }
     },

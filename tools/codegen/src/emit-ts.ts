@@ -142,7 +142,18 @@ export function emitMapping(b: SpecBundle): string {
   /** category: the value field that carries the enum */
   valueField?: string;
   /** value field → HealthKit metadata key, with the coercion applied on read/write */
-  metadataFields?: Record<string, { key: string; type: 'boolean' | 'number' | 'string'; booleanEnum?: { true: string; false: string } }>;
+  metadataFields?: Record<
+    string,
+    {
+      key: string;
+      type: 'boolean' | 'number' | 'string';
+      booleanEnum?: { true: string; false: string };
+      /** number keys holding an enum: spec value → HealthKit raw value */
+      values?: Record<string, number>;
+      /** HealthKit refuses the sample without this key; a boolean defaults to false, anything else must be given */
+      required?: boolean;
+    }
+  >;
   /** minimum OS version when newer than the baseline */
   since?: string;
   read: boolean;
@@ -168,6 +179,8 @@ export interface HealthConnectMapping {
   special?: boolean;
   /** Personal Health Record (FHIR) resource type — read through readMedicalResources */
   medicalResourceType?: string;
+  /** HealthConnectFeatures.FEATURE_* the device must report available; the type is unsupported otherwise */
+  feature?: 'MINDFULNESS_SESSION' | 'SKIN_TEMPERATURE' | 'PERSONAL_HEALTH_RECORD';
   read: boolean;
   write: boolean;
   notes?: string[];

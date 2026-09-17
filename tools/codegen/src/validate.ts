@@ -22,6 +22,8 @@ export function buildValidator(bundle: SpecBundle): Ajv {
 }
 
 const REQUIRED_X = ['category', 'kind', 'since'] as const;
+/** HealthConnectFeatures.FEATURE_* constants a type can depend on. */
+const HC_FEATURES = new Set(['MINDFULNESS_SESSION', 'SKIN_TEMPERATURE', 'PERSONAL_HEALTH_RECORD']);
 const KINDS = new Set(['sample', 'interval', 'session']);
 const AGGREGATES = new Set(['sum', 'avg', 'min', 'max', 'count', 'duration']);
 const ID_PREFIX = 'https://healthspec.dev/schema/';
@@ -55,11 +57,28 @@ export function lintSpec(bundle: SpecBundle): Issue[] {
     for (const [platform, m] of Object.entries<any>(p)) {
       if (typeof m.read !== 'boolean' || typeof m.write !== 'boolean') push(t.file, `platforms.${platform}.read/write must be booleans`);
     }
+    for (const [field, meta] of Object.entries<any>(p.healthkit?.metadataFields ?? {})) {
+      const prop = j.properties?.[field];
+      if (!prop) push(t.file, `healthkit.metadataFields.${field} names no value field`);
+      if (meta.values && Array.isArray(prop?.enum)) {
+        for (const v of prop.enum) if (meta.values[v] === undefined) push(t.file, `healthkit.metadataFields.${field}.values lacks "${v}"`);
+      }
+      if (prop?.enum && meta.type === 'number' && !meta.values) push(t.file, `healthkit.metadataFields.${field}: an enum stored as a number needs values`);
+      if (meta.required && meta.type !== 'boolean' && !(j.required ?? []).includes(field)) {
+        push(t.file, `healthkit.metadataFields.${field} is required by HealthKit, so the value schema must require it`);
+      }
+    }
     if (p.healthkit && !p.healthkit.identifier && !p.healthkit.identifiers && !p.healthkit.fields) {
       push(t.file, 'healthkit mapping needs identifier, identifiers or fields');
     }
     if (p.healthconnect && (!p.healthconnect.record || !p.healthconnect.permission)) {
       push(t.file, 'healthconnect mapping needs record and permission');
+    }
+    if (p.healthconnect?.feature !== undefined && !HC_FEATURES.has(p.healthconnect.feature)) {
+      push(t.file, `healthconnect.feature "${p.healthconnect.feature}" must be one of ${[...HC_FEATURES].join(', ')}`);
+    }
+    if (p.healthconnect?.medicalResourceType && p.healthconnect.feature !== 'PERSONAL_HEALTH_RECORD') {
+      push(t.file, 'medical resource types need healthconnect.feature PERSONAL_HEALTH_RECORD');
     }
     if (j.type !== 'object' || j.additionalProperties !== false) push(t.file, 'value schema must be an object with additionalProperties:false');
     if (!Array.isArray(j.examples) || j.examples.length === 0) push(t.file, 'at least one example required');

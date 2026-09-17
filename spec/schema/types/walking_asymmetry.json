@@ -15,7 +15,7 @@
     "platforms": {
       "healthkit": {
         "read": true,
-        "write": true,
+        "write": false,
         "kind": "quantity",
         "identifier": "HKQuantityTypeIdentifierWalkingAsymmetryPercentage",
         "unit": "%",
@@ -23,7 +23,10 @@
           "identifiers": [
             "kingstinct-generated"
           ]
-        }
+        },
+        "notes": [
+          "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
+        ]
       }
     },
     "notes": [],

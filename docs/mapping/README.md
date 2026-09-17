@@ -85,13 +85,13 @@ counterpart, and `store.support(type).counterparts` returns this table at runtim
 | `active_energy` | activity | interval | `ActiveEnergyBurned` · `kcal` | `ActiveCaloriesBurnedRecord` · energy · `kilocalories` | kilocalories: kcal |  |
 | `activity_summary` ◐ | activity | interval | `HKActivitySummaryTypeIdentifier` · read-only | — | activeEnergyKilocalories: kcal<br>activeEnergyGoalKilocalories: kcal<br>exerciseMinutes: min<br>exerciseGoalMinutes: min<br>standHours: count<br>standGoalHours: count<br>moveMinutes: min<br>moveGoalMinutes: min |  |
 | `apple_exercise_time` ◐ | activity | interval | `AppleExerciseTime` · `min` · read-only | — | minutes: min | HK: HealthKit computes this type; apps can read it but never write it. |
-| `apple_move_time` ◐ | activity | interval | `AppleMoveTime` · `min` | — | minutes: min |  |
-| `apple_sleeping_breathing_disturbances` ◐ | vitals | sample | `AppleSleepingBreathingDisturbances` · `count` | — | count: count |  |
-| `apple_sleeping_wrist_temperature` ◐ | vitals | sample | `AppleSleepingWristTemperature` · `degC` | — | celsius: °C |  |
-| `apple_stand_hour` ◐ | activity | interval | `AppleStandHour` | — | — |  |
+| `apple_move_time` ◐ | activity | interval | `AppleMoveTime` · `min` · read-only | — | minutes: min | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
+| `apple_sleeping_breathing_disturbances` ◐ | vitals | sample | `AppleSleepingBreathingDisturbances` · `count` · read-only | — | count: count | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
+| `apple_sleeping_wrist_temperature` ◐ | vitals | sample | `AppleSleepingWristTemperature` · `degC` · read-only | — | celsius: °C | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
+| `apple_stand_hour` ◐ | activity | interval | `AppleStandHour` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `apple_stand_time` ◐ | activity | interval | `AppleStandTime` · `min` · read-only | — | minutes: min | HK: HealthKit computes this type; apps can read it but never write it. |
 | `apple_walking_steadiness` ◐ | mobility | sample | `AppleWalkingSteadiness` · `%` · read-only | — | percent: % | HK: HealthKit computes this type; apps can read it but never write it. |
-| `apple_walking_steadiness_event` ◐ | mobility | interval | `AppleWalkingSteadinessEvent` | — | — |  |
+| `apple_walking_steadiness_event` ◐ | mobility | interval | `AppleWalkingSteadinessEvent` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `atrial_fibrillation_burden` ◐ | vitals | sample | `AtrialFibrillationBurden` · `%` · read-only | — | percent: % | HK: HealthKit computes this type; apps can read it but never write it. |
 | `basal_body_temperature` | cycle | sample | `BasalBodyTemperature` · `degC` | `BasalBodyTemperatureRecord` · temperature · `celsius` | celsius: °C |  |
 | `basal_energy` ◐ | activity | interval | `BasalEnergyBurned` · `kcal` | — | kilocalories: kcal |  |
@@ -140,7 +140,7 @@ counterpart, and `store.support(type).counterparts` returns this table at runtim
 | `electrodermal_activity` ◐ | vitals | sample | `ElectrodermalActivity` · `mcS` | — | microsiemens: µS |  |
 | `elevation_gained` ◐ | activity | interval | — | `ElevationGainedRecord` · elevation · `meters` | meters: m |  |
 | `environmental_audio_exposure` ◐ | environment | sample | `EnvironmentalAudioExposure` · `dBASPL` | — | decibels: dB(A) |  |
-| `environmental_audio_exposure_event` ◐ | environment | interval | `AudioExposureEvent` | — | — | HK: Apple renamed the Swift case to `environmentalAudioExposureEvent` in iOS 14 but kept the raw value `HKCategoryTypeIdentifierAudioExposureEvent`. Verified at runtime — the renamed string does not resolve. |
+| `environmental_audio_exposure_event` ◐ | environment | interval | `AudioExposureEvent` · read-only | — | — | HK: Apple renamed the Swift case to `environmentalAudioExposureEvent` in iOS 14 but kept the raw value `HKCategoryTypeIdentifierAudioExposureEvent`. Verified at runtime — the renamed string does not resolve. HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `environmental_sound_reduction` ◐ | environment | sample | `EnvironmentalSoundReduction` · `dBASPL` | — | decibels: dB(A) |  |
 | `estimated_workout_effort_score` ◐ | activity | sample | `EstimatedWorkoutEffortScore` · `appleEffortScore` | — | score: score |  |
 | `exercise_route` | activity | interval | `HKWorkoutRouteTypeIdentifier` | `ExerciseRoute` | — | HK: HKSeriesType.workoutRoute(); points arrive as CLLocation batches. HC: Read consent is per session via requestExerciseRoute (no READ permission exists); WRITE_EXERCISE_ROUTE covers writes. |
@@ -150,27 +150,27 @@ counterpart, and `store.support(type).counterparts` returns this table at runtim
 | `forced_vital_capacity` ◐ | respiratory | sample | `ForcedVitalCapacity` · `L` | — | liters: L |  |
 | `handwashing_event` ◐ | wellness | interval | `HandwashingEvent` | — | — |  |
 | `headphone_audio_exposure` ◐ | environment | sample | `HeadphoneAudioExposure` · `dBASPL` | — | decibels: dB(A) |  |
-| `headphone_audio_exposure_event` ◐ | environment | interval | `HeadphoneAudioExposureEvent` | — | — |  |
+| `headphone_audio_exposure_event` ◐ | environment | interval | `HeadphoneAudioExposureEvent` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `heart_rate` | vitals | sample | `HeartRate` · `count/min` | `HeartRateRecord` · samples[].beatsPerMinute · `bpm` · series | bpm: beats/min | Health Connect stores a series of samples per record; providers flatten each sample into its own point record whose id is `<recordId>#<index>`. |
 | `heart_rate_recovery_one_minute` ◐ | vitals | sample | `HeartRateRecoveryOneMinute` · `count/min` | — | bpm: beats/min |  |
 | `heartbeat_series` ◐ | vitals | interval | `HKDataTypeIdentifierHeartbeatSeries` · read-only | — | count: count |  |
 | `height` | body | sample | `Height` · `m` | `HeightRecord` · height · `meters` | meters: m |  |
-| `high_heart_rate_event` ◐ | vitals | interval | `HighHeartRateEvent` | — | — |  |
+| `high_heart_rate_event` ◐ | vitals | interval | `HighHeartRateEvent` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `hrv_rmssd` ◐ | vitals | sample | — | `HeartRateVariabilityRmssdRecord` · heartRateVariabilityMillis · `ms` | milliseconds: ms | SDNN and RMSSD are different statistics and MUST NOT be converted into each other. See hrv_sdnn for HealthKit. |
 | `hrv_sdnn` ◐ | vitals | sample | `HeartRateVariabilitySDNN` · `ms` | — | milliseconds: ms | SDNN and RMSSD are different statistics and MUST NOT be converted into each other. See hrv_rmssd for Health Connect. |
 | `hydration` | nutrition | interval | `DietaryWater` · `L` | `HydrationRecord` · volume · `liters` | liters: L |  |
-| `infrequent_menstrual_cycles` ◐ | cycle | interval | `InfrequentMenstrualCycles` | — | — |  |
+| `infrequent_menstrual_cycles` ◐ | cycle | interval | `InfrequentMenstrualCycles` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `inhaler_usage` ◐ | respiratory | interval | `InhalerUsage` · `count` | — | count: count |  |
 | `insulin_delivery` ◐ | vitals | interval | `InsulinDelivery` · `IU` | — | internationalUnits: IU |  |
 | `intermenstrual_bleeding` | cycle | sample | `IntermenstrualBleeding` | `IntermenstrualBleedingRecord` | — |  |
-| `irregular_heart_rhythm_event` ◐ | vitals | interval | `IrregularHeartRhythmEvent` | — | — |  |
-| `irregular_menstrual_cycles` ◐ | cycle | interval | `IrregularMenstrualCycles` | — | — |  |
+| `irregular_heart_rhythm_event` ◐ | vitals | interval | `IrregularHeartRhythmEvent` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
+| `irregular_menstrual_cycles` ◐ | cycle | interval | `IrregularMenstrualCycles` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `lactation` ◐ | cycle | interval | `Lactation` | — | — |  |
 | `lean_body_mass` | body | sample | `LeanBodyMass` · `kg` | `LeanBodyMassRecord` · mass · `kilograms` | kilograms: kg |  |
-| `low_cardio_fitness_event` ◐ | vitals | interval | `LowCardioFitnessEvent` | — | — |  |
-| `low_heart_rate_event` ◐ | vitals | interval | `LowHeartRateEvent` | — | — |  |
+| `low_cardio_fitness_event` ◐ | vitals | interval | `LowCardioFitnessEvent` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
+| `low_heart_rate_event` ◐ | vitals | interval | `LowHeartRateEvent` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `medication_dose` ◐ | clinical | sample | `HKDataTypeIdentifierMedicationDoseEvent` · read-only | — | scheduledDose: dose<br>dose: dose |  |
-| `menstruation_flow` | cycle | interval | `MenstrualFlow` | `MenstruationFlowRecord` · flow | — | HC: Health Connect has no "none" flow; it is written as FLOW_UNKNOWN. |
+| `menstruation_flow` | cycle | interval | `MenstrualFlow` | `MenstruationFlowRecord` · flow | — | HC: Health Connect has no "none" flow; it is written as FLOW_UNKNOWN. HC: MenstruationFlowRecord is instantaneous: Health Connect keeps only start, so end reads back equal to start. |
 | `menstruation_period` ◐ | cycle | interval | — | `MenstruationPeriodRecord` | — |  |
 | `mindfulness_session` | wellness | session | `MindfulSession` | `MindfulnessSessionRecord` · mindfulnessSessionType | — |  |
 | `nike_fuel` ◐ | activity | interval | `NikeFuel` · `count` | — | count: count |  |
@@ -182,13 +182,13 @@ counterpart, and `store.support(type).counterparts` returns this table at runtim
 | `paddle_sports_speed` ◐ | activity | sample | `PaddleSportsSpeed` · `m/s` | — | metersPerSecond: m/s |  |
 | `peak_expiratory_flow_rate` ◐ | respiratory | sample | `PeakExpiratoryFlowRate` · `L/min` | — | litersPerMinute: L/min |  |
 | `peripheral_perfusion_index` ◐ | vitals | sample | `PeripheralPerfusionIndex` · `%` | — | percent: % |  |
-| `persistent_intermenstrual_bleeding` ◐ | cycle | interval | `PersistentIntermenstrualBleeding` | — | — |  |
+| `persistent_intermenstrual_bleeding` ◐ | cycle | interval | `PersistentIntermenstrualBleeding` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `physical_effort` ◐ | activity | sample | `PhysicalEffort` · `kcal/(kg*hr)` | — | metsEquivalent: kcal/(kg·h) |  |
 | `power` ◐ | activity | sample | — | `PowerRecord` · samples[].power · `watts` · series | watts: W |  |
 | `pregnancy` ◐ | cycle | interval | `Pregnancy` | — | — |  |
 | `pregnancy_test` ◐ | cycle | sample | `PregnancyTestResult` | — | — |  |
 | `progesterone_test` ◐ | cycle | sample | `ProgesteroneTestResult` | — | — |  |
-| `prolonged_menstrual_periods` ◐ | cycle | interval | `ProlongedMenstrualPeriods` | — | — |  |
+| `prolonged_menstrual_periods` ◐ | cycle | interval | `ProlongedMenstrualPeriods` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `respiratory_rate` | vitals | sample | `RespiratoryRate` · `count/min` | `RespiratoryRateRecord` · rate · `breaths/min` | breathsPerMinute: breaths/min |  |
 | `resting_heart_rate` | vitals | sample | `RestingHeartRate` · `count/min` | `RestingHeartRateRecord` · beatsPerMinute · `bpm` | bpm: beats/min |  |
 | `rowing_speed` ◐ | activity | sample | `RowingSpeed` · `m/s` | — | metersPerSecond: m/s |  |
@@ -200,7 +200,7 @@ counterpart, and `store.support(type).counterparts` returns this table at runtim
 | `sexual_activity` | cycle | sample | `SexualActivity` | `SexualActivityRecord` · protectionUsed | — |  |
 | `six_minute_walk_distance` ◐ | mobility | sample | `SixMinuteWalkTestDistance` · `m` | — | meters: m |  |
 | `skin_temperature` ◐ | vitals | sample | — | `SkinTemperatureRecord` · deltas[].delta · `celsius (delta)` · series | deltaCelsius: °C<br>baselineCelsius: °C | HealthKit's HKQuantityTypeIdentifierAppleSleepingWristTemperature is an absolute nightly value, not a delta — a candidate for a separate v1.1 type, not a mapping of this one. Each delta in the Health Connect series becomes its own point record. |
-| `sleep_apnea_event` ◐ | sleep | interval | `SleepApneaEvent` | — | — |  |
+| `sleep_apnea_event` ◐ | sleep | interval | `SleepApneaEvent` · read-only | — | — | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `sleep_session` | sleep | session | `SleepAnalysis` | `SleepSessionRecord` · stages[] | — | Stage mapping lives in enums/sleep_stage.json. HK: HealthKit has no session object: each stage is a separate category sample. Providers derive sessions by grouping consecutive samples from the same source with gaps ≤ 60 minutes; the session id is the first sample's UUID. |
 | `speed` ◐ | activity | sample | — | `SpeedRecord` · samples[].speed · `metersPerSecond` · series | metersPerSecond: m/s |  |
 | `stair_ascent_speed` ◐ | mobility | sample | `StairAscentSpeed` · `m/s` | — | metersPerSecond: m/s |  |
@@ -255,7 +255,7 @@ counterpart, and `store.support(type).counterparts` returns this table at runtim
 | `uv_exposure` ◐ | environment | sample | `UVExposure` · `count` | — | uvIndex: UV index |  |
 | `vo2_max` | activity | sample | `VO2Max` · `ml/(kg*min)` | `Vo2MaxRecord` · vo2MillilitersPerMinuteKilogram · `mL/kg/min` | mlPerKgPerMin: mL/kg/min | HealthKit stores the test method in HKMetadataKeyVO2MaxTestType; Health Connect in measurementMethod. |
 | `waist_circumference` ◐ | body | sample | `WaistCircumference` · `m` | — | meters: m |  |
-| `walking_asymmetry` ◐ | mobility | sample | `WalkingAsymmetryPercentage` · `%` | — | percent: % |  |
+| `walking_asymmetry` ◐ | mobility | sample | `WalkingAsymmetryPercentage` · `%` · read-only | — | percent: % | HK: HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check). |
 | `walking_double_support` ◐ | mobility | sample | `WalkingDoubleSupportPercentage` · `%` | — | percent: % |  |
 | `walking_heart_rate_average` ◐ | vitals | sample | `WalkingHeartRateAverage` · `count/min` · read-only | — | bpm: beats/min | HK: HealthKit computes this type; apps can read it but never write it. |
 | `walking_speed` ◐ | mobility | sample | `WalkingSpeed` · `m/s` | — | metersPerSecond: m/s |  |
