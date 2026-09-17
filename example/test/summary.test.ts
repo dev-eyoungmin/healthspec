@@ -54,3 +54,10 @@ test('an empty store yields empty days rather than throwing', async () => {
   assert.deepEqual(summary.workouts, []);
   assert.deepEqual(summary.unavailable, []);
 });
+
+test('days are labelled with the local calendar date, not the UTC one', async () => {
+  const s = await store();
+  // Midnight in Seoul is 15:00 UTC the day before; a UTC label would put every day one day early.
+  const summary = await loadSummary(s, { now: NOW, days: 3, zone: 'Asia/Seoul' });
+  assert.deepEqual(summary.days.map((d) => d.date), ['2026-08-18', '2026-08-19', '2026-08-20', '2026-08-21']);
+});
