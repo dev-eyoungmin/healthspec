@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Checks the npm tarballs before publishing: entry points, native sources and resolved workspace versions.",
   "scripts": {
-    "check": "tsx src/check-packages.ts",
-    "typecheck": "tsc -p tsconfig.json"
+    "check": "tsx src/check-packages.ts && tsx src/check-size.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "size": "tsx src/check-size.ts"
   }
 }
