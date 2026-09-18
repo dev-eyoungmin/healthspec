@@ -33,7 +33,7 @@ jobs:
 
       # What an app installs: entry points, pinned workspace versions and the native sources autolinking compiles.
       - name: npm tarballs are complete
-        run: pnpm --filter @healthspec/release check
+        run: pnpm release:check
 
   swift:
     name: Swift

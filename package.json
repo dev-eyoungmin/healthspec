@@ -18,6 +18,8 @@
     "verify:mappings": "tsx tools/verify/src/healthkit.ts $HEALTHSPEC_SOURCES && tsx tools/verify/src/healthconnect.ts $HEALTHSPEC_SOURCES",
     "verify:mappings:apply": "tsx tools/verify/src/healthkit.ts $HEALTHSPEC_SOURCES --apply && tsx tools/verify/src/healthconnect.ts $HEALTHSPEC_SOURCES --apply",
     "verify:swift": "swift build && swift run healthspec-check",
+    "release:check": "pnpm --filter @healthspec/release check",
+    "release:version": "pnpm --filter @healthspec/release set-version",
     "example": "pnpm --filter healthspec-example"
   },
   "devDependencies": {

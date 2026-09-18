@@ -33,7 +33,7 @@ jobs:
       - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm test
-      - run: pnpm --filter @healthspec/release check
+      - run: pnpm release:check
 
       # pnpm replaces workspace:* with the packages' versions when publishing.
       - name: Publish

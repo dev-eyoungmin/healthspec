@@ -70,9 +70,10 @@ you do not do is what it is there to catch.
 
 ## Releasing
 
-1. Bump `version` in the npm packages (`packages/schema`, `core`, `conformance`, `cli`, `libraries/expo-health`) and
-   `healthspec-versions.json`; add the release to `CHANGELOG.md`.
-2. `pnpm verify && pnpm --filter @healthspec/release check`.
+1. `pnpm release:version <x.y.z>` — one version across the five npm packages and `healthspec-versions.json`. Add
+   the release to `CHANGELOG.md`.
+2. `pnpm verify && pnpm release:check` — the second one packs every tarball and checks entry points, licences,
+   module formats, bundle size and that the versions agree.
 3. Tag `npm-v<version>` and push the tag. The release workflow publishes to npm with provenance.
 4. The Swift and Kotlin packages are released separately: `pod trunk push packages/apple/HealthSpec.podspec` after
    tagging `apple-<version>`; Maven Central publishing of `dev.healthspec:healthspec` needs signing credentials and
