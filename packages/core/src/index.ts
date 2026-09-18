@@ -5,5 +5,6 @@ export * from './time.js';
 export { aggregateRecords, assertAggregateSupported, primaryField } from './aggregate.js';
 export { describeType, counterpartHint, type TypeSupport, type SupportReport } from './support.js';
 export { HealthStore } from './store.js';
+export { syncTypes, resetCursors, isCursorExpired, type CursorStorage, type SyncBatch, type SyncOptions, type SyncReport } from './sync.js';
 export { MockProvider, type MockProviderOptions, type PermissionPolicy } from './mock/MockProvider.js';
 export { generateSeedRecords, mulberry32, DEFAULT_SEED_TYPES, MOCK_APP_ID, type SeedOptions } from './mock/seed.js';
