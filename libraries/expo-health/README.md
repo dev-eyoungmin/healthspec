@@ -84,6 +84,9 @@ A type's cursor is stored only after its batch is handled, so a crash repeats a 
 See the [incremental sync guide](../../docs/guides/incremental-sync.md), including background work on both
 platforms.
 
+For a wide range — importing history, not following it — `readChunks(store, type, query)` yields a window at a
+time instead of one array with a year of samples in it.
+
 ## Hooks
 
 ```ts

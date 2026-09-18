@@ -10,6 +10,7 @@ Platform-independent half of the HealthSpec SDK:
 - `encodeCursor` / `decodeCursor` — opaque sync cursors
 - `bucketRanges` and friends — zone-aware hour/day/week/month buckets via `Intl`
 - `aggregateRecords` — reference aggregation (aligned buckets, values clipped to the range) used by the mock and providers' record fallbacks
+- `readChunks` / `readAll` — walk a wide range a window at a time, so a year of heart rate never lands in one array
 - `syncTypes` — incremental sync with cursor storage: at-least-once delivery, resync when a cursor expires
 - `HealthError` — the only error type that crosses the provider boundary
 

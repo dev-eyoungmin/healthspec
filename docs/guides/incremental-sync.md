@@ -86,6 +86,20 @@ Health Connect only returns the last 30 days unless the user grants `history: tr
 (`READ_HEALTH_DATA_HISTORY`); HealthKit has no such limit. The first `syncTypes` run therefore returns as much
 history as the user has granted, and `store.support(type)` tells you what this platform can do before you ask.
 
+A first sync of a dense type is large — a year of heart rate is hundreds of thousands of samples, and `read`
+returns them in one array. When you are importing history rather than following changes, walk the range instead:
+
+```ts
+import { readChunks } from '@healthspec/expo';
+
+for await (const page of readChunks(store, 'heart_rate', { start: new Date('2025-01-01'), end: new Date() })) {
+  await db.insertMany('heart_rate', page); // one week at a time; records on a boundary arrive once
+}
+```
+
+`window` sets the slice (7 days by default), `limit` stops the walk, and a `signal` stops it between windows when
+the user leaves the screen.
+
 ## Series and derived records
 
 Two shapes need care in a mirror, both specified (SPEC §5.3, §5.4):
