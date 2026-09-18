@@ -115,15 +115,6 @@ export function emitTypes(b: SpecBundle): string {
   return out.join('\n') + '\n';
 }
 
-function healthKitIdentifiers(hk: any): string[] {
-  if (!hk) return [];
-  const ids = new Set<string>();
-  if (hk.identifier) ids.add(hk.identifier);
-  for (const i of hk.identifiers ?? []) ids.add(i);
-  for (const i of Object.values<string>(hk.fields ?? {})) ids.add(i);
-  return [...ids];
-}
-
 export function emitMapping(b: SpecBundle): string {
   const enumTitles: string[] = b.enums.filter((e) => e.json['x-healthspec']?.mapping).map((e) => e.json.title);
   const out: string[] = [HEADER];
@@ -159,8 +150,6 @@ export function emitMapping(b: SpecBundle): string {
   read: boolean;
   write: boolean;
   notes?: string[];
-  /** Sources that independently confirmed this mapping — see tools/verify and docs/VERIFICATION.md. */
-  verifiedBy?: { identifiers?: string[]; record?: string[] };
 }
 export interface HealthConnectMapping {
   /** androidx.health.connect.client.records class name */
@@ -173,8 +162,6 @@ export interface HealthConnectMapping {
   unit?: string;
   /** Record holds a series of samples; providers flatten to one record per sample */
   series?: boolean;
-  /** Sources that independently confirmed this mapping — see tools/verify and docs/VERIFICATION.md. */
-  verifiedBy?: { identifiers?: string[]; record?: string[] };
   /** Not a Record class — reached through a dedicated operation (e.g. readRoute), never readRecords */
   special?: boolean;
   /** Personal Health Record (FHIR) resource type — read through readMedicalResources */
@@ -204,9 +191,12 @@ export interface TypeMapping {
     const fieldUnits = Object.fromEntries(
       Object.entries<any>(t.json.properties ?? {}).filter(([, v]) => v['x-unit']).map(([k, v]) => [k, v['x-unit']]),
     );
+    // `verifiedBy` records which library confirmed a mapping (docs/VERIFICATION.md). Tooling reads it from the
+    // spec files; shipping it to apps would be a few kilobytes of provenance in every bundle.
+    const withoutProvenance = ({ verifiedBy: _provenance, ...mapping }: Record<string, unknown>) => mapping;
     const m: Record<string, unknown> = { type: t.json.title, category: x.category, kind: x.kind, since: x.since, aggregate: x.aggregate ?? [] };
-    if (x.platforms?.healthkit) m.healthkit = x.platforms.healthkit;
-    if (x.platforms?.healthconnect) m.healthconnect = x.platforms.healthconnect;
+    if (x.platforms?.healthkit) m.healthkit = withoutProvenance(x.platforms.healthkit);
+    if (x.platforms?.healthconnect) m.healthconnect = withoutProvenance(x.platforms.healthconnect);
     if (x.openmhealth) m.openmhealth = x.openmhealth;
     m.notes = x.notes ?? [];
     m.fieldUnits = fieldUnits;
@@ -214,31 +204,6 @@ export interface TypeMapping {
   });
 
   out.push(`export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = ${JSON.stringify(Object.fromEntries(entries.map((e) => [e.type, e])), null, 2)};\n`);
-  out.push(`export const HEALTH_CONNECT_PERMISSION_PREFIX = 'android.permission.health.';\n`);
-  out.push(`/** Health Connect runtime permissions per type. Empty object when Health Connect does not support the type. */`);
-  out.push(
-    `export const HEALTH_CONNECT_PERMISSIONS: Record<HealthType, { read?: string; write?: string }> = ${JSON.stringify(
-      Object.fromEntries(
-        entries.map((e) => {
-          const hc = e.healthconnect;
-          const p: Record<string, string> = {};
-          if (hc?.read) p.read = `android.permission.health.READ_${hc.permission}`;
-          if (hc?.write) p.write = `android.permission.health.WRITE_${hc.permission}`;
-          return [e.type, p];
-        }),
-      ),
-      null,
-      2,
-    )};\n`,
-  );
-  out.push(`/** Every HealthKit object type identifier that must be authorized for a type. Empty when HealthKit does not support the type. */`);
-  out.push(
-    `export const HEALTHKIT_IDENTIFIERS: Record<HealthType, string[]> = ${JSON.stringify(
-      Object.fromEntries(entries.map((e) => [e.type, healthKitIdentifiers(e.healthkit)])),
-      null,
-      2,
-    )};\n`,
-  );
   for (const e of b.enums) {
     const mapping = e.json['x-healthspec']?.mapping;
     if (!mapping) continue;

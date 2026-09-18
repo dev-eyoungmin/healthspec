@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { SCHEMA_BUNDLE } from '../src/bundle.js';
-import { TYPE_EXAMPLES, validateRecord, validateValue, type HealthType } from '../src/index.js';
+import { TYPE_EXAMPLES } from '../src/examples.js';
+import { validateRecord, validateValue, type HealthType } from '../src/index.js';
 
 test('validateValue accepts valid values and rejects bad ones with paths', () => {
   assert.deepEqual(validateValue('steps', { count: 10 }), []);

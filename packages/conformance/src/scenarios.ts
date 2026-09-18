@@ -1,4 +1,5 @@
-import { TYPE_EXAMPLES, TYPE_MAPPINGS, validateRecord, type HealthRecord, type HealthType } from '@healthspec/schema';
+import { TYPE_EXAMPLES } from '@healthspec/schema/examples';
+import { TYPE_MAPPINGS, validateRecord, type HealthRecord, type HealthType } from '@healthspec/schema';
 import { HealthStore, isHealthError, type NewRecord, type Provider } from '@healthspec/core';
 
 export interface ScenarioContext {

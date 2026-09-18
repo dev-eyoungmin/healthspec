@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "outDir": "dist/cjs",
+    "declaration": false,
+    "declarationMap": false,
+    // Node 10 resolution cannot follow subpath exports; the emitted require() still resolves them at runtime.
+    "paths": { "@healthspec/schema/examples": ["../schema/dist/examples.d.ts"] }
+  }
+}

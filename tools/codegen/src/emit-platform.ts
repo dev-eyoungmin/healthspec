@@ -44,61 +44,25 @@ const isReachable = (m: any): boolean => Boolean(m) && !m.special && m.kind !== 
 
 export function emitPlatform(b: SpecBundle): string {
   const infos = b.types.map((t) => ({ t, id: t.json.title as string, x: t.json['x-healthspec'] }));
-  const support = (x: any) => ({ hk: x.platforms?.healthkit, hc: x.platforms?.healthconnect });
 
-  const cross: string[] = [];
-  const iosOnly: string[] = [];
-  const androidOnly: string[] = [];
-  for (const { id, x } of infos) {
-    const { hk, hc } = support(x);
-    if (hk && hc) cross.push(id);
-    else if (hk) iosOnly.push(id);
-    else androidOnly.push(id);
-  }
-
-  const platforms = Object.fromEntries(
-    infos.map(({ id, x }) => {
-      const { hk, hc } = support(x);
-      const entry = (m: any) =>
-        m
-          ? {
-              supported: true,
-              read: m.read !== false,
-              write: m.write === true,
-              /** false when the type needs a dedicated operation (routes) rather than read()/write() */
-              generic: isReachable(m),
-              ...(m.since ? { since: m.since } : {}),
-              ...(m.notes?.length ? { notes: m.notes } : {}),
-            }
-          : { supported: false, read: false, write: false, generic: false };
-      return [id, { ios: entry(hk), android: entry(hc), fields: fieldSupport(infos.find((i) => i.id === id)!.t) }];
-    }),
+  // Only fields one platform persists and the other does not: everything else follows the type's own support,
+  // which packages/schema/src/platform.ts derives from the mappings.
+  const fields = Object.fromEntries(
+    infos
+      .map(({ id, t }) => [id, Object.fromEntries(Object.entries(fieldSupport(t)).filter(([, on]) => !on.ios || !on.android))] as const)
+      .filter(([, partial]) => Object.keys(partial).length > 0),
   );
-
   const counterparts = Object.fromEntries(infos.filter(({ x }) => x.counterparts?.length).map(({ id, x }) => [id, x.counterparts]));
+  const union = (ids: string[]) => (ids.length ? ids.map((id) => JSON.stringify(id)).join(' | ') : 'never');
+  const supported = (platform: 'healthkit' | 'healthconnect') => infos.filter(({ x }) => x.platforms?.[platform]).map(({ id }) => id);
+  const ios = supported('healthkit');
+  const android = supported('healthconnect');
 
-  const out: string[] = [HEADER];
-  out.push(`import type { HealthType } from './types.js';\n`);
-  out.push(`export type PlatformId = 'ios' | 'android';\n`);
-  out.push(`export interface PlatformTypeSupport {
-  supported: boolean;
-  read: boolean;
-  write: boolean;
-  /** reachable through read()/write(); false when a dedicated operation is required (e.g. readRoute) */
-  generic: boolean;
-  /** minimum OS version, when newer than the library baseline */
-  since?: string;
-  notes?: string[];
-}
-
-export interface TypePlatforms {
-  ios: PlatformTypeSupport;
-  android: PlatformTypeSupport;
-  /** value field → the platforms that persist it */
-  fields: Record<string, { ios: boolean; android: boolean }>;
-}
-
-/**
+  return (
+    [
+      HEADER,
+      `import type { HealthType } from './types.js';\n`,
+      `/**
  * A related type on the other platform. \`interchangeable: false\` means the values measure different things
  * and MUST NOT be converted or summed together — only used to point the developer at the right type.
  */
@@ -107,32 +71,18 @@ export interface Counterpart {
   platform: 'healthkit' | 'healthconnect';
   interchangeable: boolean;
   reason: string;
-}\n`);
-  out.push(`/** Types both platforms persist (${cross.length}). */`);
-  out.push(`export const CROSS_PLATFORM_TYPES = ${JSON.stringify(cross)} as const;`);
-  out.push(`export type CrossPlatformType = (typeof CROSS_PLATFORM_TYPES)[number];\n`);
-  out.push(`/** Types only Apple HealthKit persists (${iosOnly.length}). */`);
-  out.push(`export const IOS_ONLY_TYPES = ${JSON.stringify(iosOnly)} as const;`);
-  out.push(`export type IosOnlyType = (typeof IOS_ONLY_TYPES)[number];\n`);
-  out.push(`/** Types only Android Health Connect persists (${androidOnly.length}). */`);
-  out.push(`export const ANDROID_ONLY_TYPES = ${JSON.stringify(androidOnly)} as const;`);
-  out.push(`export type AndroidOnlyType = (typeof ANDROID_ONLY_TYPES)[number];\n`);
-  out.push(`export const TYPE_PLATFORMS: Record<HealthType, TypePlatforms> = ${JSON.stringify(platforms, null, 2)};\n`);
-  out.push(`export const TYPE_COUNTERPARTS: Partial<Record<HealthType, Counterpart[]>> = ${JSON.stringify(counterparts, null, 2)};\n`);
-  out.push(`/** Platform support for one type, without needing a provider instance. */
-export const platformSupport = (type: HealthType, platform: PlatformId): PlatformTypeSupport => TYPE_PLATFORMS[type][platform];
-
-/** Value fields the given platform does not persist for this type. */
-export const unsupportedFields = (type: HealthType, platform: PlatformId): string[] =>
-  Object.entries(TYPE_PLATFORMS[type].fields)
-    .filter(([, f]) => !f[platform])
-    .map(([name]) => name);
-
-/** Related types on the other platform. Check \`interchangeable\` before substituting one for the other. */
-export const counterpartsOf = (type: HealthType): Counterpart[] => TYPE_COUNTERPARTS[type] ?? [];
-
-export const isCrossPlatform = (type: HealthType): type is CrossPlatformType => TYPE_PLATFORMS[type].ios.supported && TYPE_PLATFORMS[type].android.supported;`);
-  return out.join('\n') + '\n';
+}\n`,
+      `/** Types both platforms persist (${ios.filter((id) => android.includes(id)).length}). */`,
+      `export type CrossPlatformType = ${union(ios.filter((id) => android.includes(id)))};`,
+      `/** Types only Apple HealthKit persists (${ios.filter((id) => !android.includes(id)).length}). */`,
+      `export type IosOnlyType = ${union(ios.filter((id) => !android.includes(id)))};`,
+      `/** Types only Android Health Connect persists (${android.filter((id) => !ios.includes(id)).length}). */`,
+      `export type AndroidOnlyType = ${union(android.filter((id) => !ios.includes(id)))};\n`,
+      `/** Value fields only one platform persists. Everything absent here follows the type's platform support. */`,
+      `export const FIELD_PLATFORMS: Partial<Record<HealthType, Record<string, { ios: boolean; android: boolean }>>> = ${JSON.stringify(fields, null, 2)};\n`,
+      `export const TYPE_COUNTERPARTS: Partial<Record<HealthType, Counterpart[]>> = ${JSON.stringify(counterparts, null, 2)};`,
+    ].join('\n') + '\n'
+  );
 }
 
 void basename;

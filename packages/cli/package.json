@@ -1,7 +1,7 @@
 {
   "name": "@healthspec/cli",
   "version": "0.0.0",
-  "description": "healthspec doctor — finds HealthKit and Health Connect configuration mistakes before App Review or Play Console does; healthspec mapping — one type's platform mapping.",
+  "description": "healthspec doctor \u2014 finds HealthKit and Health Connect configuration mistakes before App Review or Play Console does; healthspec mapping \u2014 one type's platform mapping.",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -10,7 +10,9 @@
   "exports": {
     ".": {
       "types": "./dist/api.d.ts",
+      "react-native": "./dist/api.js",
       "import": "./dist/api.js",
+      "require": "./dist/cjs/api.js",
       "default": "./dist/api.js"
     }
   },
@@ -19,7 +21,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node ../../tools/release/src/mark-cjs.mjs dist/cjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test test/*.test.ts"
   },
@@ -35,5 +37,9 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
-  }
+  },
+  "main": "./dist/cjs/api.js",
+  "module": "./dist/api.js",
+  "types": "./dist/api.d.ts",
+  "react-native": "./dist/api.js"
 }

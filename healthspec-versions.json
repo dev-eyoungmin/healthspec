@@ -4,5 +4,6 @@
   "google": "0.0.0",
   "libraries": {
     "expo-health": "0.0.0"
-  }
+  },
+  "dart": "0.1.0"
 }

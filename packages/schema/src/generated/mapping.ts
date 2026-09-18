@@ -33,8 +33,6 @@ export interface HealthKitMapping {
   read: boolean;
   write: boolean;
   notes?: string[];
-  /** Sources that independently confirmed this mapping — see tools/verify and docs/VERIFICATION.md. */
-  verifiedBy?: { identifiers?: string[]; record?: string[] };
 }
 export interface HealthConnectMapping {
   /** androidx.health.connect.client.records class name */
@@ -47,8 +45,6 @@ export interface HealthConnectMapping {
   unit?: string;
   /** Record holds a series of samples; providers flatten to one record per sample */
   series?: boolean;
-  /** Sources that independently confirmed this mapping — see tools/verify and docs/VERIFICATION.md. */
-  verifiedBy?: { identifiers?: string[]; record?: string[] };
   /** Not a Record class — reached through a dedicated operation (e.g. readRoute), never readRecords */
   special?: boolean;
   /** Personal Health Record (FHIR) resource type — read through readMedicalResources */
@@ -87,12 +83,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierActiveEnergyBurned",
       "unit": "kcal",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "ActiveCaloriesBurnedRecord",
@@ -100,12 +91,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "energy",
       "unit": "kilocalories",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "calories-burned"
@@ -157,12 +143,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "unit": "min",
       "notes": [
         "HealthKit computes this type; apps can read it but never write it."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "notes": [],
     "fieldUnits": {
@@ -183,11 +164,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierAppleMoveTime",
       "unit": "min",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -214,11 +190,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances",
       "unit": "count",
       "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -245,11 +216,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierAppleSleepingWristTemperature",
       "unit": "degC",
       "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -278,11 +244,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "idle": 1
       },
       "valueField": "status",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -306,12 +267,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "unit": "min",
       "notes": [
         "HealthKit computes this type; apps can read it but never write it."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "notes": [],
     "fieldUnits": {
@@ -336,12 +292,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "unit": "%",
       "notes": [
         "HealthKit computes this type; apps can read it but never write it."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "notes": [],
     "fieldUnits": {
@@ -369,11 +320,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "repeat_very_low": 4
       },
       "valueField": "level",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -400,12 +346,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "since": "iOS 16",
       "notes": [
         "HealthKit computes this type; apps can read it but never write it."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "notes": [],
     "fieldUnits": {
@@ -427,12 +368,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierBasalBodyTemperature",
-      "unit": "degC",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "degC"
     },
     "healthconnect": {
       "read": true,
@@ -440,12 +376,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "record": "BasalBodyTemperatureRecord",
       "permission": "BASAL_BODY_TEMPERATURE",
       "field": "temperature",
-      "unit": "celsius",
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "unit": "celsius"
     },
     "openmhealth": {
       "schema": "body-temperature"
@@ -468,12 +399,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierBasalEnergyBurned",
-      "unit": "kcal",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "kcal"
     },
     "notes": [],
     "fieldUnits": {
@@ -496,12 +422,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "record": "BasalMetabolicRateRecord",
       "permission": "BASAL_METABOLIC_RATE",
       "field": "basalMetabolicRate",
-      "unit": "kilocaloriesPerDay",
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "unit": "kilocaloriesPerDay"
     },
     "notes": [],
     "fieldUnits": {
@@ -530,12 +451,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "none": 5
       },
       "since": "iOS 18",
-      "valueField": "flow",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "flow"
     },
     "notes": [],
     "fieldUnits": {}
@@ -562,12 +478,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "none": 5
       },
       "since": "iOS 18",
-      "valueField": "flow",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "flow"
     },
     "notes": [],
     "fieldUnits": {}
@@ -587,12 +498,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierBloodAlcoholContent",
-      "unit": "%",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "%"
     },
     "notes": [],
     "fieldUnits": {
@@ -617,12 +523,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "notes": [
         "Read with HKUnit.moleUnit(with: .milli, molarMass: HKUnitMolarMassBloodGlucose).unitDivided(by: .liter()). Meal relation from HKMetadataKeyBloodGlucoseMealTime."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "record": "BloodGlucoseRecord",
@@ -630,12 +531,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "level",
       "unit": "millimolesPerLiter",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "blood-glucose"
@@ -667,13 +563,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "notes": [
         "Authorization is requested for both quantity types; reads use the correlation so the pair stays together."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated",
-          "react-native-health"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "record": "BloodPressureRecord",
@@ -684,12 +574,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       },
       "unit": "millimetersOfMercury",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "blood-pressure"
@@ -718,12 +603,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "notes": [
         "HKUnit.percent() is a fraction (0.21 = 21%); multiply by 100."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "record": "BodyFatRecord",
@@ -731,12 +611,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "percentage",
       "unit": "percent",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "body-fat-percentage"
@@ -761,12 +636,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierBodyMassIndex",
-      "unit": "count",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "count"
     },
     "notes": [],
     "fieldUnits": {
@@ -791,12 +661,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "notes": [
         "Measurement location from HKMetadataKeyBodyTemperatureSensorLocation."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "record": "BodyTemperatureRecord",
@@ -804,12 +669,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "temperature",
       "unit": "celsius",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "body-temperature"
@@ -835,12 +695,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "record": "BodyWaterMassRecord",
       "permission": "BODY_WATER_MASS",
       "field": "mass",
-      "unit": "kilograms",
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "unit": "kilograms"
     },
     "notes": [],
     "fieldUnits": {
@@ -863,12 +718,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "record": "BoneMassRecord",
       "permission": "BONE_MASS",
       "field": "mass",
-      "unit": "kilograms",
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "unit": "kilograms"
     },
     "notes": [],
     "fieldUnits": {
@@ -898,12 +748,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       },
       "notes": [
         "HealthKit records appearance only; sensation is Health Connect only."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "read": true,
@@ -913,11 +758,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "fields": {
         "appearance": "appearance",
         "sensation": "sensation"
-      },
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
       }
     },
     "notes": [],
@@ -935,12 +775,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "read": true,
       "write": false,
       "kind": "clinical",
-      "identifier": "HKClinicalTypeIdentifierAllergyRecord",
-      "verifiedBy": {
-        "identifiers": [
-          "react-native-health"
-        ]
-      }
+      "identifier": "HKClinicalTypeIdentifierAllergyRecord"
     },
     "healthconnect": {
       "read": true,
@@ -965,12 +800,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "read": true,
       "write": false,
       "kind": "clinical",
-      "identifier": "HKClinicalTypeIdentifierConditionRecord",
-      "verifiedBy": {
-        "identifiers": [
-          "react-native-health"
-        ]
-      }
+      "identifier": "HKClinicalTypeIdentifierConditionRecord"
     },
     "healthconnect": {
       "read": true,
@@ -995,12 +825,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "read": true,
       "write": false,
       "kind": "clinical",
-      "identifier": "HKClinicalTypeIdentifierCoverageRecord",
-      "verifiedBy": {
-        "identifiers": [
-          "react-native-health"
-        ]
-      }
+      "identifier": "HKClinicalTypeIdentifierCoverageRecord"
     },
     "notes": [],
     "fieldUnits": {}
@@ -1017,12 +842,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "read": true,
       "write": false,
       "kind": "clinical",
-      "identifier": "HKClinicalTypeIdentifierImmunizationRecord",
-      "verifiedBy": {
-        "identifiers": [
-          "react-native-health"
-        ]
-      }
+      "identifier": "HKClinicalTypeIdentifierImmunizationRecord"
     },
     "healthconnect": {
       "read": true,
@@ -1047,12 +867,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "read": true,
       "write": false,
       "kind": "clinical",
-      "identifier": "HKClinicalTypeIdentifierLabResultRecord",
-      "verifiedBy": {
-        "identifiers": [
-          "react-native-health"
-        ]
-      }
+      "identifier": "HKClinicalTypeIdentifierLabResultRecord"
     },
     "healthconnect": {
       "read": true,
@@ -1077,12 +892,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "read": true,
       "write": false,
       "kind": "clinical",
-      "identifier": "HKClinicalTypeIdentifierMedicationRecord",
-      "verifiedBy": {
-        "identifiers": [
-          "react-native-health"
-        ]
-      }
+      "identifier": "HKClinicalTypeIdentifierMedicationRecord"
     },
     "healthconnect": {
       "read": true,
@@ -1185,12 +995,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "read": true,
       "write": false,
       "kind": "clinical",
-      "identifier": "HKClinicalTypeIdentifierProcedureRecord",
-      "verifiedBy": {
-        "identifiers": [
-          "react-native-health"
-        ]
-      }
+      "identifier": "HKClinicalTypeIdentifierProcedureRecord"
     },
     "healthconnect": {
       "read": true,
@@ -1253,12 +1058,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "read": true,
       "write": false,
       "kind": "clinical",
-      "identifier": "HKClinicalTypeIdentifierVitalSignRecord",
-      "verifiedBy": {
-        "identifiers": [
-          "react-native-health"
-        ]
-      }
+      "identifier": "HKClinicalTypeIdentifierVitalSignRecord"
     },
     "healthconnect": {
       "read": true,
@@ -1294,12 +1094,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "oral": 6,
         "patch": 7
       },
-      "valueField": "method",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "method"
     },
     "notes": [],
     "fieldUnits": {}
@@ -1320,12 +1115,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierCrossCountrySkiingSpeed",
       "unit": "m/s",
-      "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 18"
     },
     "notes": [],
     "fieldUnits": {
@@ -1348,12 +1138,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierCyclingCadence",
       "unit": "count/min",
-      "since": "iOS 17",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 17"
     },
     "healthconnect": {
       "read": true,
@@ -1362,12 +1147,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "permission": "CYCLING_PEDALING_CADENCE",
       "field": "samples[].revolutionsPerMinute",
       "unit": "rpm",
-      "series": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "series": true
     },
     "notes": [],
     "fieldUnits": {
@@ -1390,12 +1170,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierCyclingFunctionalThresholdPower",
       "unit": "W",
-      "since": "iOS 17",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 17"
     },
     "notes": [],
     "fieldUnits": {
@@ -1418,12 +1193,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierCyclingPower",
       "unit": "W",
-      "since": "iOS 17",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 17"
     },
     "notes": [],
     "fieldUnits": {
@@ -1446,12 +1216,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierCyclingSpeed",
       "unit": "m/s",
-      "since": "iOS 17",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 17"
     },
     "notes": [],
     "fieldUnits": {
@@ -1471,12 +1236,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierDistanceWalkingRunning",
       "unit": "m",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "DistanceRecord",
@@ -1484,12 +1244,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "distance",
       "unit": "meters",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "physical-activity"
@@ -1515,12 +1270,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierDistanceCrossCountrySkiing",
       "unit": "m",
-      "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 18"
     },
     "notes": [],
     "fieldUnits": {
@@ -1540,12 +1290,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierDistanceCycling",
-      "unit": "m",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m"
     },
     "notes": [],
     "fieldUnits": {
@@ -1565,12 +1310,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierDistanceDownhillSnowSports",
-      "unit": "m",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m"
     },
     "notes": [],
     "fieldUnits": {
@@ -1591,12 +1331,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierDistancePaddleSports",
       "unit": "m",
-      "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 18"
     },
     "notes": [],
     "fieldUnits": {
@@ -1617,12 +1352,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierDistanceRowing",
       "unit": "m",
-      "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 18"
     },
     "notes": [],
     "fieldUnits": {
@@ -1643,12 +1373,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierDistanceSkatingSports",
       "unit": "m",
-      "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 18"
     },
     "notes": [],
     "fieldUnits": {
@@ -1668,12 +1393,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierDistanceSwimming",
-      "unit": "m",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m"
     },
     "notes": [],
     "fieldUnits": {
@@ -1693,12 +1413,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierDistanceWheelchair",
-      "unit": "m",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m"
     },
     "notes": [],
     "fieldUnits": {
@@ -1742,12 +1457,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierElectrodermalActivity",
-      "unit": "mcS",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "mcS"
     },
     "notes": [],
     "fieldUnits": {
@@ -1768,12 +1478,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "record": "ElevationGainedRecord",
       "permission": "ELEVATION_GAINED",
       "field": "elevation",
-      "unit": "meters",
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "unit": "meters"
     },
     "notes": [],
     "fieldUnits": {
@@ -1795,12 +1500,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierEnvironmentalAudioExposure",
-      "unit": "dBASPL",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "dBASPL"
     },
     "notes": [],
     "fieldUnits": {
@@ -1846,12 +1546,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierEnvironmentalSoundReduction",
       "unit": "dBASPL",
-      "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 16"
     },
     "notes": [],
     "fieldUnits": {
@@ -1874,12 +1569,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierEstimatedWorkoutEffortScore",
       "unit": "appleEffortScore",
-      "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 18"
     },
     "notes": [],
     "fieldUnits": {
@@ -1911,12 +1601,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "special": true,
       "notes": [
         "Read consent is per session via requestExerciseRoute (no READ permission exists); WRITE_EXERCISE_ROUTE covers writes."
-      ],
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -1941,12 +1626,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "permission": "EXERCISE",
       "field": "exerciseType",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "physical-activity"
@@ -1970,12 +1650,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierFlightsClimbed",
       "unit": "count",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "FloorsClimbedRecord",
@@ -1983,12 +1658,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "floors",
       "unit": "count",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [],
     "fieldUnits": {
@@ -2010,12 +1680,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierForcedExpiratoryVolume1",
-      "unit": "L",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "L"
     },
     "notes": [],
     "fieldUnits": {
@@ -2037,12 +1702,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierForcedVitalCapacity",
-      "unit": "L",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "L"
     },
     "notes": [],
     "fieldUnits": {
@@ -2063,12 +1723,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierHandwashingEvent",
-      "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "values": {}
     },
     "notes": [],
     "fieldUnits": {}
@@ -2088,12 +1743,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierHeadphoneAudioExposure",
-      "unit": "dBASPL",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "dBASPL"
     },
     "notes": [],
     "fieldUnits": {
@@ -2115,11 +1765,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierHeadphoneAudioExposureEvent",
       "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -2143,12 +1788,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierHeartRate",
       "unit": "count/min",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "HeartRateRecord",
@@ -2157,12 +1797,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "unit": "bpm",
       "series": true,
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "heart-rate"
@@ -2190,12 +1825,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierHeartRateRecoveryOneMinute",
       "unit": "count/min",
-      "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 16"
     },
     "notes": [],
     "fieldUnits": {
@@ -2237,12 +1867,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierHeight",
       "unit": "m",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "HeightRecord",
@@ -2250,12 +1875,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "height",
       "unit": "meters",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "body-height"
@@ -2280,11 +1900,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierHighHeartRateEvent",
       "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -2308,12 +1923,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "heartRateVariabilityMillis",
       "unit": "ms",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [
       "SDNN and RMSSD are different statistics and MUST NOT be converted into each other. See hrv_sdnn for HealthKit."
@@ -2337,12 +1947,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
       "unit": "ms",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "notes": [
       "SDNN and RMSSD are different statistics and MUST NOT be converted into each other. See hrv_rmssd for Health Connect."
@@ -2364,12 +1969,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierDietaryWater",
       "unit": "L",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "HydrationRecord",
@@ -2377,12 +1977,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "volume",
       "unit": "liters",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [],
     "fieldUnits": {
@@ -2404,11 +1999,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierInfrequentMenstrualCycles",
       "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -2429,12 +2019,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierInhalerUsage",
-      "unit": "count",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "count"
     },
     "notes": [],
     "fieldUnits": {
@@ -2465,11 +2050,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
           },
           "required": true
         }
-      },
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
       }
     },
     "notes": [],
@@ -2490,23 +2070,13 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierIntermenstrualBleeding",
-      "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "values": {}
     },
     "healthconnect": {
       "read": true,
       "write": true,
       "record": "IntermenstrualBleedingRecord",
-      "permission": "INTERMENSTRUAL_BLEEDING",
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "permission": "INTERMENSTRUAL_BLEEDING"
     },
     "notes": [],
     "fieldUnits": {}
@@ -2526,11 +2096,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierIrregularHeartRhythmEvent",
       "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -2553,11 +2118,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierIrregularMenstrualCycles",
       "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -2579,12 +2139,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierLactation",
-      "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "values": {}
     },
     "notes": [],
     "fieldUnits": {}
@@ -2604,12 +2159,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierLeanBodyMass",
       "unit": "kg",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "LeanBodyMassRecord",
@@ -2617,12 +2167,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "mass",
       "unit": "kilograms",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [],
     "fieldUnits": {
@@ -2644,11 +2189,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierLowCardioFitnessEvent",
       "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -2671,11 +2211,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierLowHeartRateEvent",
       "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -2731,11 +2266,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
           "type": "boolean",
           "required": true
         }
-      },
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
       }
     },
     "healthconnect": {
@@ -2747,12 +2277,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "notes": [
         "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN.",
         "MenstruationFlowRecord is instantaneous: Health Connect keeps only start, so end reads back equal to start."
-      ],
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      ]
     },
     "notes": [],
     "fieldUnits": {}
@@ -2770,12 +2295,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "read": true,
       "write": true,
       "record": "MenstruationPeriodRecord",
-      "permission": "MENSTRUATION",
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "permission": "MENSTRUATION"
     },
     "notes": [],
     "fieldUnits": {}
@@ -2793,12 +2313,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierMindfulSession",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "MindfulnessSessionRecord",
@@ -2806,12 +2321,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "feature": "MINDFULNESS_SESSION",
       "field": "mindfulnessSessionType",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [],
     "fieldUnits": {}
@@ -2829,12 +2339,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierNikeFuel",
-      "unit": "count",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "count"
     },
     "notes": [],
     "fieldUnits": {
@@ -2855,12 +2360,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierNumberOfAlcoholicBeverages",
       "unit": "count",
-      "since": "iOS 15",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 15"
     },
     "notes": [],
     "fieldUnits": {
@@ -2880,12 +2380,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierNumberOfTimesFallen",
-      "unit": "count",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "count"
     },
     "notes": [],
     "fieldUnits": {
@@ -2947,12 +2442,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "notes": [
         "No single nutrition object: one quantity sample per nutrient, grouped in an HKCorrelationTypeIdentifierFood correlation on write and when reading.",
         "HKUnit strings: kcal, g, mg, mcg."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "read": true,
@@ -3002,11 +2492,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "biotinMicrograms": "biotin",
         "pantothenicAcidMilligrams": "pantothenicAcid",
         "caffeineMilligrams": "caffeine"
-      },
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
       }
     },
     "notes": [
@@ -3079,24 +2564,14 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       },
       "notes": [
         "HealthKit: positive = luteinizingHormoneSurge, high = estrogenSurge, inconclusive = indeterminate."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "read": true,
       "write": true,
       "record": "OvulationTestRecord",
       "permission": "OVULATION_TEST",
-      "field": "result",
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "field": "result"
     },
     "notes": [],
     "fieldUnits": {}
@@ -3119,12 +2594,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "notes": [
         "HKUnit.percent() is a fraction (0.97 = 97%); multiply by 100."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "record": "OxygenSaturationRecord",
@@ -3132,12 +2602,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "percentage",
       "unit": "percent",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "oxygen-saturation"
@@ -3163,12 +2628,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierPaddleSportsSpeed",
       "unit": "m/s",
-      "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 18"
     },
     "notes": [],
     "fieldUnits": {
@@ -3190,12 +2650,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierPeakExpiratoryFlowRate",
-      "unit": "L/min",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "L/min"
     },
     "notes": [],
     "fieldUnits": {
@@ -3217,12 +2672,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierPeripheralPerfusionIndex",
-      "unit": "%",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "%"
     },
     "notes": [],
     "fieldUnits": {
@@ -3244,11 +2694,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierPersistentIntermenstrualBleeding",
       "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -3272,12 +2717,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierPhysicalEffort",
       "unit": "kcal/(kg*hr)",
-      "since": "iOS 17",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 17"
     },
     "notes": [],
     "fieldUnits": {
@@ -3301,12 +2741,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "permission": "POWER",
       "field": "samples[].power",
       "unit": "watts",
-      "series": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "series": true
     },
     "notes": [],
     "fieldUnits": {
@@ -3327,12 +2762,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierPregnancy",
-      "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "values": {}
     },
     "notes": [],
     "fieldUnits": {}
@@ -3355,12 +2785,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "positive": 2,
         "indeterminate": 3
       },
-      "valueField": "result",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "result"
     },
     "notes": [],
     "fieldUnits": {}
@@ -3383,12 +2808,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "positive": 2,
         "indeterminate": 3
       },
-      "valueField": "result",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "result"
     },
     "notes": [],
     "fieldUnits": {}
@@ -3408,11 +2828,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierProlongedMenstrualPeriods",
       "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -3435,12 +2850,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierRespiratoryRate",
       "unit": "count/min",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "RespiratoryRateRecord",
@@ -3448,12 +2858,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "rate",
       "unit": "breaths/min",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "respiratory-rate"
@@ -3478,12 +2883,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierRestingHeartRate",
       "unit": "count/min",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "RestingHeartRateRecord",
@@ -3491,12 +2891,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "beatsPerMinute",
       "unit": "bpm",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [],
     "fieldUnits": {
@@ -3519,12 +2914,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierRowingSpeed",
       "unit": "m/s",
-      "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 18"
     },
     "notes": [],
     "fieldUnits": {
@@ -3547,12 +2937,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierRunningGroundContactTime",
       "unit": "ms",
-      "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 16"
     },
     "notes": [],
     "fieldUnits": {
@@ -3575,12 +2960,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierRunningPower",
       "unit": "W",
-      "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 16"
     },
     "notes": [],
     "fieldUnits": {
@@ -3603,12 +2983,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierRunningSpeed",
       "unit": "m/s",
-      "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 16"
     },
     "notes": [],
     "fieldUnits": {
@@ -3631,12 +3006,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierRunningStrideLength",
       "unit": "m",
-      "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 16"
     },
     "notes": [],
     "fieldUnits": {
@@ -3659,12 +3029,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierRunningVerticalOscillation",
       "unit": "cm",
-      "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 16"
     },
     "notes": [],
     "fieldUnits": {
@@ -3694,11 +3059,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
             "false": "unprotected"
           }
         }
-      },
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
       }
     },
     "healthconnect": {
@@ -3706,12 +3066,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "record": "SexualActivityRecord",
       "permission": "SEXUAL_ACTIVITY",
-      "field": "protectionUsed",
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "field": "protectionUsed"
     },
     "notes": [],
     "fieldUnits": {}
@@ -3731,12 +3086,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierSixMinuteWalkTestDistance",
-      "unit": "m",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m"
     },
     "notes": [],
     "fieldUnits": {
@@ -3761,12 +3111,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "unit": "celsius (delta)",
       "series": true,
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [
       "HealthKit's HKQuantityTypeIdentifierAppleSleepingWristTemperature is an absolute nightly value, not a delta — a candidate for a separate v1.1 type, not a mapping of this one.",
@@ -3793,11 +3138,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKCategoryTypeIdentifierSleepApneaEvent",
       "values": {},
       "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -3821,24 +3161,14 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "notes": [
         "HealthKit has no session object: each stage is a separate category sample. Providers derive sessions by grouping consecutive samples from the same source with gaps ≤ 60 minutes; the session id is the first sample's UUID."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "record": "SleepSessionRecord",
       "permission": "SLEEP",
       "field": "stages[]",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "sleep-episode"
@@ -3865,12 +3195,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "permission": "SPEED",
       "field": "samples[].speed",
       "unit": "metersPerSecond",
-      "series": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "series": true
     },
     "notes": [],
     "fieldUnits": {
@@ -3892,12 +3217,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierStairAscentSpeed",
-      "unit": "m/s",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m/s"
     },
     "notes": [],
     "fieldUnits": {
@@ -3919,12 +3239,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierStairDescentSpeed",
-      "unit": "m/s",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m/s"
     },
     "notes": [],
     "fieldUnits": {
@@ -3967,12 +3282,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierStepCount",
       "unit": "count",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "StepsRecord",
@@ -3980,12 +3290,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "count",
       "unit": "count",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "step-count"
@@ -4012,12 +3317,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "permission": "STEPS_CADENCE",
       "field": "samples[].rate",
       "unit": "steps/min",
-      "series": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "series": true
     },
     "notes": [],
     "fieldUnits": {
@@ -4037,12 +3337,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierSwimmingStrokeCount",
-      "unit": "count",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "count"
     },
     "notes": [],
     "fieldUnits": {
@@ -4070,12 +3365,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4101,12 +3391,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4131,12 +3416,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "decreased": 2,
         "increased": 3
       },
-      "valueField": "change",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "change"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4162,12 +3442,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4193,12 +3468,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4224,12 +3494,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4255,12 +3520,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4286,12 +3546,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4317,12 +3572,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4348,12 +3598,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4379,12 +3624,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4410,12 +3650,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4441,12 +3676,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4472,12 +3702,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4503,12 +3728,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4534,12 +3754,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4565,12 +3780,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4596,12 +3806,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4627,12 +3832,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4658,12 +3858,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4689,12 +3884,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4720,12 +3910,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4751,12 +3936,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4782,12 +3962,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4813,12 +3988,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4841,12 +4011,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "present": 0,
         "not_present": 1
       },
-      "valueField": "presence",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "presence"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4872,12 +4037,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4903,12 +4063,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4934,12 +4089,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4965,12 +4115,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -4996,12 +4141,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -5027,12 +4167,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -5058,12 +4193,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -5089,12 +4219,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -5117,12 +4242,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "present": 0,
         "not_present": 1
       },
-      "valueField": "presence",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "presence"
     },
     "notes": [],
     "fieldUnits": {}
@@ -5148,12 +4268,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -5179,12 +4294,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -5210,12 +4320,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -5241,12 +4346,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
         "moderate": 3,
         "severe": 4
       },
-      "valueField": "severity",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "valueField": "severity"
     },
     "notes": [],
     "fieldUnits": {}
@@ -5265,12 +4365,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierTimeInDaylight",
       "unit": "min",
-      "since": "iOS 17",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 17"
     },
     "notes": [],
     "fieldUnits": {
@@ -5291,12 +4386,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "category",
       "identifier": "HKCategoryTypeIdentifierToothbrushingEvent",
-      "values": {},
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "values": {}
     },
     "notes": [],
     "fieldUnits": {}
@@ -5320,12 +4410,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": false,
       "notes": [
         "Derived as active + basal over the same interval. Records report recordingMethod=unknown and metadata.derived=true."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "healthconnect": {
       "record": "TotalCaloriesBurnedRecord",
@@ -5333,12 +4418,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "energy",
       "unit": "kilocalories",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [
       "HealthKit has no native total-energy type; writes are rejected on iOS with NOT_SUPPORTED."
@@ -5363,12 +4443,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierUnderwaterDepth",
       "unit": "m",
-      "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 16"
     },
     "notes": [],
     "fieldUnits": {
@@ -5390,12 +4465,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierUVExposure",
-      "unit": "count",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "count"
     },
     "notes": [],
     "fieldUnits": {
@@ -5417,12 +4487,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierVO2Max",
       "unit": "ml/(kg*min)",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "Vo2MaxRecord",
@@ -5430,12 +4495,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "vo2MillilitersPerMinuteKilogram",
       "unit": "mL/kg/min",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [
       "HealthKit stores the test method in HKMetadataKeyVO2MaxTestType; Health Connect in measurementMethod."
@@ -5459,12 +4519,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierWaistCircumference",
-      "unit": "m",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m"
     },
     "notes": [],
     "fieldUnits": {
@@ -5487,11 +4542,6 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierWalkingAsymmetryPercentage",
       "unit": "%",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      },
       "notes": [
         "HealthKit reserves this type for Apple: apps may read it but not write it (checked by healthspec-check)."
       ]
@@ -5516,12 +4566,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierWalkingDoubleSupportPercentage",
-      "unit": "%",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "%"
     },
     "notes": [],
     "fieldUnits": {
@@ -5546,12 +4591,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "unit": "count/min",
       "notes": [
         "HealthKit computes this type; apps can read it but never write it."
-      ],
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      ]
     },
     "notes": [],
     "fieldUnits": {
@@ -5573,12 +4613,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierWalkingSpeed",
-      "unit": "m/s",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m/s"
     },
     "notes": [],
     "fieldUnits": {
@@ -5600,12 +4635,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "write": true,
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierWalkingStepLength",
-      "unit": "m",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "unit": "m"
     },
     "notes": [],
     "fieldUnits": {
@@ -5628,12 +4658,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierWaterTemperature",
       "unit": "degC",
-      "since": "iOS 16",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 16"
     },
     "notes": [],
     "fieldUnits": {
@@ -5655,12 +4680,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierBodyMass",
       "unit": "kg",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "WeightRecord",
@@ -5668,12 +4688,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "weight",
       "unit": "kilograms",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "openmhealth": {
       "schema": "body-weight"
@@ -5696,12 +4711,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "identifier": "HKQuantityTypeIdentifierPushCount",
       "unit": "count",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "write": true
     },
     "healthconnect": {
       "record": "WheelchairPushesRecord",
@@ -5709,12 +4719,7 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "field": "count",
       "unit": "count",
       "read": true,
-      "write": true,
-      "verifiedBy": {
-        "record": [
-          "react-native-health-connect"
-        ]
-      }
+      "write": true
     },
     "notes": [],
     "fieldUnits": {
@@ -5737,912 +4742,13 @@ export const TYPE_MAPPINGS: Record<HealthType, TypeMapping> = {
       "kind": "quantity",
       "identifier": "HKQuantityTypeIdentifierWorkoutEffortScore",
       "unit": "appleEffortScore",
-      "since": "iOS 18",
-      "verifiedBy": {
-        "identifiers": [
-          "kingstinct-generated"
-        ]
-      }
+      "since": "iOS 18"
     },
     "notes": [],
     "fieldUnits": {
       "score": "score"
     }
   }
-};
-
-export const HEALTH_CONNECT_PERMISSION_PREFIX = 'android.permission.health.';
-
-/** Health Connect runtime permissions per type. Empty object when Health Connect does not support the type. */
-export const HEALTH_CONNECT_PERMISSIONS: Record<HealthType, { read?: string; write?: string }> = {
-  "active_energy": {
-    "read": "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
-    "write": "android.permission.health.WRITE_ACTIVE_CALORIES_BURNED"
-  },
-  "activity_summary": {},
-  "apple_exercise_time": {},
-  "apple_move_time": {},
-  "apple_sleeping_breathing_disturbances": {},
-  "apple_sleeping_wrist_temperature": {},
-  "apple_stand_hour": {},
-  "apple_stand_time": {},
-  "apple_walking_steadiness": {},
-  "apple_walking_steadiness_event": {},
-  "atrial_fibrillation_burden": {},
-  "basal_body_temperature": {
-    "read": "android.permission.health.READ_BASAL_BODY_TEMPERATURE",
-    "write": "android.permission.health.WRITE_BASAL_BODY_TEMPERATURE"
-  },
-  "basal_energy": {},
-  "basal_metabolic_rate": {
-    "read": "android.permission.health.READ_BASAL_METABOLIC_RATE",
-    "write": "android.permission.health.WRITE_BASAL_METABOLIC_RATE"
-  },
-  "bleeding_after_pregnancy": {},
-  "bleeding_during_pregnancy": {},
-  "blood_alcohol_content": {},
-  "blood_glucose": {
-    "read": "android.permission.health.READ_BLOOD_GLUCOSE",
-    "write": "android.permission.health.WRITE_BLOOD_GLUCOSE"
-  },
-  "blood_pressure": {
-    "read": "android.permission.health.READ_BLOOD_PRESSURE",
-    "write": "android.permission.health.WRITE_BLOOD_PRESSURE"
-  },
-  "body_fat": {
-    "read": "android.permission.health.READ_BODY_FAT",
-    "write": "android.permission.health.WRITE_BODY_FAT"
-  },
-  "body_mass_index": {},
-  "body_temperature": {
-    "read": "android.permission.health.READ_BODY_TEMPERATURE",
-    "write": "android.permission.health.WRITE_BODY_TEMPERATURE"
-  },
-  "body_water_mass": {
-    "read": "android.permission.health.READ_BODY_WATER_MASS",
-    "write": "android.permission.health.WRITE_BODY_WATER_MASS"
-  },
-  "bone_mass": {
-    "read": "android.permission.health.READ_BONE_MASS",
-    "write": "android.permission.health.WRITE_BONE_MASS"
-  },
-  "cervical_mucus": {
-    "read": "android.permission.health.READ_CERVICAL_MUCUS",
-    "write": "android.permission.health.WRITE_CERVICAL_MUCUS"
-  },
-  "clinical_allergy": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_ALLERGIES_INTOLERANCES"
-  },
-  "clinical_condition": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_CONDITIONS"
-  },
-  "clinical_coverage": {},
-  "clinical_immunization": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_VACCINES"
-  },
-  "clinical_lab_result": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_LABORATORY_RESULTS"
-  },
-  "clinical_medication": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_MEDICATIONS"
-  },
-  "clinical_note": {},
-  "clinical_personal_details": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_PERSONAL_DETAILS"
-  },
-  "clinical_practitioner_details": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_PRACTITIONER_DETAILS"
-  },
-  "clinical_pregnancy": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_PREGNANCY"
-  },
-  "clinical_procedure": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_PROCEDURES"
-  },
-  "clinical_social_history": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_SOCIAL_HISTORY"
-  },
-  "clinical_visit": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_VISITS"
-  },
-  "clinical_vital_sign": {
-    "read": "android.permission.health.READ_MEDICAL_DATA_VITAL_SIGNS"
-  },
-  "contraceptive": {},
-  "cross_country_skiing_speed": {},
-  "cycling_cadence": {
-    "read": "android.permission.health.READ_CYCLING_PEDALING_CADENCE",
-    "write": "android.permission.health.WRITE_CYCLING_PEDALING_CADENCE"
-  },
-  "cycling_functional_threshold_power": {},
-  "cycling_power": {},
-  "cycling_speed": {},
-  "distance": {
-    "read": "android.permission.health.READ_DISTANCE",
-    "write": "android.permission.health.WRITE_DISTANCE"
-  },
-  "distance_cross_country_skiing": {},
-  "distance_cycling": {},
-  "distance_downhill_snow_sports": {},
-  "distance_paddle_sports": {},
-  "distance_rowing": {},
-  "distance_skating_sports": {},
-  "distance_swimming": {},
-  "distance_wheelchair": {},
-  "electrocardiogram": {},
-  "electrodermal_activity": {},
-  "elevation_gained": {
-    "read": "android.permission.health.READ_ELEVATION_GAINED",
-    "write": "android.permission.health.WRITE_ELEVATION_GAINED"
-  },
-  "environmental_audio_exposure": {},
-  "environmental_audio_exposure_event": {},
-  "environmental_sound_reduction": {},
-  "estimated_workout_effort_score": {},
-  "exercise_route": {
-    "write": "android.permission.health.WRITE_EXERCISE_ROUTE"
-  },
-  "exercise_session": {
-    "read": "android.permission.health.READ_EXERCISE",
-    "write": "android.permission.health.WRITE_EXERCISE"
-  },
-  "floors_climbed": {
-    "read": "android.permission.health.READ_FLOORS_CLIMBED",
-    "write": "android.permission.health.WRITE_FLOORS_CLIMBED"
-  },
-  "forced_expiratory_volume_1": {},
-  "forced_vital_capacity": {},
-  "handwashing_event": {},
-  "headphone_audio_exposure": {},
-  "headphone_audio_exposure_event": {},
-  "heart_rate": {
-    "read": "android.permission.health.READ_HEART_RATE",
-    "write": "android.permission.health.WRITE_HEART_RATE"
-  },
-  "heart_rate_recovery_one_minute": {},
-  "heartbeat_series": {},
-  "height": {
-    "read": "android.permission.health.READ_HEIGHT",
-    "write": "android.permission.health.WRITE_HEIGHT"
-  },
-  "high_heart_rate_event": {},
-  "hrv_rmssd": {
-    "read": "android.permission.health.READ_HEART_RATE_VARIABILITY",
-    "write": "android.permission.health.WRITE_HEART_RATE_VARIABILITY"
-  },
-  "hrv_sdnn": {},
-  "hydration": {
-    "read": "android.permission.health.READ_HYDRATION",
-    "write": "android.permission.health.WRITE_HYDRATION"
-  },
-  "infrequent_menstrual_cycles": {},
-  "inhaler_usage": {},
-  "insulin_delivery": {},
-  "intermenstrual_bleeding": {
-    "read": "android.permission.health.READ_INTERMENSTRUAL_BLEEDING",
-    "write": "android.permission.health.WRITE_INTERMENSTRUAL_BLEEDING"
-  },
-  "irregular_heart_rhythm_event": {},
-  "irregular_menstrual_cycles": {},
-  "lactation": {},
-  "lean_body_mass": {
-    "read": "android.permission.health.READ_LEAN_BODY_MASS",
-    "write": "android.permission.health.WRITE_LEAN_BODY_MASS"
-  },
-  "low_cardio_fitness_event": {},
-  "low_heart_rate_event": {},
-  "medication_dose": {},
-  "menstruation_flow": {
-    "read": "android.permission.health.READ_MENSTRUATION",
-    "write": "android.permission.health.WRITE_MENSTRUATION"
-  },
-  "menstruation_period": {
-    "read": "android.permission.health.READ_MENSTRUATION",
-    "write": "android.permission.health.WRITE_MENSTRUATION"
-  },
-  "mindfulness_session": {
-    "read": "android.permission.health.READ_MINDFULNESS",
-    "write": "android.permission.health.WRITE_MINDFULNESS"
-  },
-  "nike_fuel": {},
-  "number_of_alcoholic_beverages": {},
-  "number_of_times_fallen": {},
-  "nutrition": {
-    "read": "android.permission.health.READ_NUTRITION",
-    "write": "android.permission.health.WRITE_NUTRITION"
-  },
-  "ovulation_test": {
-    "read": "android.permission.health.READ_OVULATION_TEST",
-    "write": "android.permission.health.WRITE_OVULATION_TEST"
-  },
-  "oxygen_saturation": {
-    "read": "android.permission.health.READ_OXYGEN_SATURATION",
-    "write": "android.permission.health.WRITE_OXYGEN_SATURATION"
-  },
-  "paddle_sports_speed": {},
-  "peak_expiratory_flow_rate": {},
-  "peripheral_perfusion_index": {},
-  "persistent_intermenstrual_bleeding": {},
-  "physical_effort": {},
-  "power": {
-    "read": "android.permission.health.READ_POWER",
-    "write": "android.permission.health.WRITE_POWER"
-  },
-  "pregnancy": {},
-  "pregnancy_test": {},
-  "progesterone_test": {},
-  "prolonged_menstrual_periods": {},
-  "respiratory_rate": {
-    "read": "android.permission.health.READ_RESPIRATORY_RATE",
-    "write": "android.permission.health.WRITE_RESPIRATORY_RATE"
-  },
-  "resting_heart_rate": {
-    "read": "android.permission.health.READ_RESTING_HEART_RATE",
-    "write": "android.permission.health.WRITE_RESTING_HEART_RATE"
-  },
-  "rowing_speed": {},
-  "running_ground_contact_time": {},
-  "running_power": {},
-  "running_speed": {},
-  "running_stride_length": {},
-  "running_vertical_oscillation": {},
-  "sexual_activity": {
-    "read": "android.permission.health.READ_SEXUAL_ACTIVITY",
-    "write": "android.permission.health.WRITE_SEXUAL_ACTIVITY"
-  },
-  "six_minute_walk_distance": {},
-  "skin_temperature": {
-    "read": "android.permission.health.READ_SKIN_TEMPERATURE",
-    "write": "android.permission.health.WRITE_SKIN_TEMPERATURE"
-  },
-  "sleep_apnea_event": {},
-  "sleep_session": {
-    "read": "android.permission.health.READ_SLEEP",
-    "write": "android.permission.health.WRITE_SLEEP"
-  },
-  "speed": {
-    "read": "android.permission.health.READ_SPEED",
-    "write": "android.permission.health.WRITE_SPEED"
-  },
-  "stair_ascent_speed": {},
-  "stair_descent_speed": {},
-  "state_of_mind": {},
-  "steps": {
-    "read": "android.permission.health.READ_STEPS",
-    "write": "android.permission.health.WRITE_STEPS"
-  },
-  "steps_cadence": {
-    "read": "android.permission.health.READ_STEPS_CADENCE",
-    "write": "android.permission.health.WRITE_STEPS_CADENCE"
-  },
-  "swimming_stroke_count": {},
-  "symptom_abdominal_cramps": {},
-  "symptom_acne": {},
-  "symptom_appetite_changes": {},
-  "symptom_bladder_incontinence": {},
-  "symptom_bloating": {},
-  "symptom_breast_pain": {},
-  "symptom_chest_tightness_or_pain": {},
-  "symptom_chills": {},
-  "symptom_constipation": {},
-  "symptom_coughing": {},
-  "symptom_diarrhea": {},
-  "symptom_dizziness": {},
-  "symptom_dry_skin": {},
-  "symptom_fainting": {},
-  "symptom_fatigue": {},
-  "symptom_fever": {},
-  "symptom_generalized_body_ache": {},
-  "symptom_hair_loss": {},
-  "symptom_headache": {},
-  "symptom_heartburn": {},
-  "symptom_hot_flashes": {},
-  "symptom_loss_of_smell": {},
-  "symptom_loss_of_taste": {},
-  "symptom_lower_back_pain": {},
-  "symptom_memory_lapse": {},
-  "symptom_mood_changes": {},
-  "symptom_nausea": {},
-  "symptom_night_sweats": {},
-  "symptom_pelvic_pain": {},
-  "symptom_rapid_pounding_or_fluttering_heartbeat": {},
-  "symptom_runny_nose": {},
-  "symptom_shortness_of_breath": {},
-  "symptom_sinus_congestion": {},
-  "symptom_skipped_heartbeat": {},
-  "symptom_sleep_changes": {},
-  "symptom_sore_throat": {},
-  "symptom_vaginal_dryness": {},
-  "symptom_vomiting": {},
-  "symptom_wheezing": {},
-  "time_in_daylight": {},
-  "toothbrushing_event": {},
-  "total_energy": {
-    "read": "android.permission.health.READ_TOTAL_CALORIES_BURNED",
-    "write": "android.permission.health.WRITE_TOTAL_CALORIES_BURNED"
-  },
-  "underwater_depth": {},
-  "uv_exposure": {},
-  "vo2_max": {
-    "read": "android.permission.health.READ_VO2_MAX",
-    "write": "android.permission.health.WRITE_VO2_MAX"
-  },
-  "waist_circumference": {},
-  "walking_asymmetry": {},
-  "walking_double_support": {},
-  "walking_heart_rate_average": {},
-  "walking_speed": {},
-  "walking_step_length": {},
-  "water_temperature": {},
-  "weight": {
-    "read": "android.permission.health.READ_WEIGHT",
-    "write": "android.permission.health.WRITE_WEIGHT"
-  },
-  "wheelchair_pushes": {
-    "read": "android.permission.health.READ_WHEELCHAIR_PUSHES",
-    "write": "android.permission.health.WRITE_WHEELCHAIR_PUSHES"
-  },
-  "workout_effort_score": {}
-};
-
-/** Every HealthKit object type identifier that must be authorized for a type. Empty when HealthKit does not support the type. */
-export const HEALTHKIT_IDENTIFIERS: Record<HealthType, string[]> = {
-  "active_energy": [
-    "HKQuantityTypeIdentifierActiveEnergyBurned"
-  ],
-  "activity_summary": [
-    "HKActivitySummaryTypeIdentifier"
-  ],
-  "apple_exercise_time": [
-    "HKQuantityTypeIdentifierAppleExerciseTime"
-  ],
-  "apple_move_time": [
-    "HKQuantityTypeIdentifierAppleMoveTime"
-  ],
-  "apple_sleeping_breathing_disturbances": [
-    "HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances"
-  ],
-  "apple_sleeping_wrist_temperature": [
-    "HKQuantityTypeIdentifierAppleSleepingWristTemperature"
-  ],
-  "apple_stand_hour": [
-    "HKCategoryTypeIdentifierAppleStandHour"
-  ],
-  "apple_stand_time": [
-    "HKQuantityTypeIdentifierAppleStandTime"
-  ],
-  "apple_walking_steadiness": [
-    "HKQuantityTypeIdentifierAppleWalkingSteadiness"
-  ],
-  "apple_walking_steadiness_event": [
-    "HKCategoryTypeIdentifierAppleWalkingSteadinessEvent"
-  ],
-  "atrial_fibrillation_burden": [
-    "HKQuantityTypeIdentifierAtrialFibrillationBurden"
-  ],
-  "basal_body_temperature": [
-    "HKQuantityTypeIdentifierBasalBodyTemperature"
-  ],
-  "basal_energy": [
-    "HKQuantityTypeIdentifierBasalEnergyBurned"
-  ],
-  "basal_metabolic_rate": [],
-  "bleeding_after_pregnancy": [
-    "HKCategoryTypeIdentifierBleedingAfterPregnancy"
-  ],
-  "bleeding_during_pregnancy": [
-    "HKCategoryTypeIdentifierBleedingDuringPregnancy"
-  ],
-  "blood_alcohol_content": [
-    "HKQuantityTypeIdentifierBloodAlcoholContent"
-  ],
-  "blood_glucose": [
-    "HKQuantityTypeIdentifierBloodGlucose"
-  ],
-  "blood_pressure": [
-    "HKCorrelationTypeIdentifierBloodPressure",
-    "HKQuantityTypeIdentifierBloodPressureSystolic",
-    "HKQuantityTypeIdentifierBloodPressureDiastolic"
-  ],
-  "body_fat": [
-    "HKQuantityTypeIdentifierBodyFatPercentage"
-  ],
-  "body_mass_index": [
-    "HKQuantityTypeIdentifierBodyMassIndex"
-  ],
-  "body_temperature": [
-    "HKQuantityTypeIdentifierBodyTemperature"
-  ],
-  "body_water_mass": [],
-  "bone_mass": [],
-  "cervical_mucus": [
-    "HKCategoryTypeIdentifierCervicalMucusQuality"
-  ],
-  "clinical_allergy": [
-    "HKClinicalTypeIdentifierAllergyRecord"
-  ],
-  "clinical_condition": [
-    "HKClinicalTypeIdentifierConditionRecord"
-  ],
-  "clinical_coverage": [
-    "HKClinicalTypeIdentifierCoverageRecord"
-  ],
-  "clinical_immunization": [
-    "HKClinicalTypeIdentifierImmunizationRecord"
-  ],
-  "clinical_lab_result": [
-    "HKClinicalTypeIdentifierLabResultRecord"
-  ],
-  "clinical_medication": [
-    "HKClinicalTypeIdentifierMedicationRecord"
-  ],
-  "clinical_note": [
-    "HKClinicalTypeIdentifierClinicalNoteRecord"
-  ],
-  "clinical_personal_details": [],
-  "clinical_practitioner_details": [],
-  "clinical_pregnancy": [],
-  "clinical_procedure": [
-    "HKClinicalTypeIdentifierProcedureRecord"
-  ],
-  "clinical_social_history": [],
-  "clinical_visit": [],
-  "clinical_vital_sign": [
-    "HKClinicalTypeIdentifierVitalSignRecord"
-  ],
-  "contraceptive": [
-    "HKCategoryTypeIdentifierContraceptive"
-  ],
-  "cross_country_skiing_speed": [
-    "HKQuantityTypeIdentifierCrossCountrySkiingSpeed"
-  ],
-  "cycling_cadence": [
-    "HKQuantityTypeIdentifierCyclingCadence"
-  ],
-  "cycling_functional_threshold_power": [
-    "HKQuantityTypeIdentifierCyclingFunctionalThresholdPower"
-  ],
-  "cycling_power": [
-    "HKQuantityTypeIdentifierCyclingPower"
-  ],
-  "cycling_speed": [
-    "HKQuantityTypeIdentifierCyclingSpeed"
-  ],
-  "distance": [
-    "HKQuantityTypeIdentifierDistanceWalkingRunning"
-  ],
-  "distance_cross_country_skiing": [
-    "HKQuantityTypeIdentifierDistanceCrossCountrySkiing"
-  ],
-  "distance_cycling": [
-    "HKQuantityTypeIdentifierDistanceCycling"
-  ],
-  "distance_downhill_snow_sports": [
-    "HKQuantityTypeIdentifierDistanceDownhillSnowSports"
-  ],
-  "distance_paddle_sports": [
-    "HKQuantityTypeIdentifierDistancePaddleSports"
-  ],
-  "distance_rowing": [
-    "HKQuantityTypeIdentifierDistanceRowing"
-  ],
-  "distance_skating_sports": [
-    "HKQuantityTypeIdentifierDistanceSkatingSports"
-  ],
-  "distance_swimming": [
-    "HKQuantityTypeIdentifierDistanceSwimming"
-  ],
-  "distance_wheelchair": [
-    "HKQuantityTypeIdentifierDistanceWheelchair"
-  ],
-  "electrocardiogram": [
-    "HKDataTypeIdentifierElectrocardiogram"
-  ],
-  "electrodermal_activity": [
-    "HKQuantityTypeIdentifierElectrodermalActivity"
-  ],
-  "elevation_gained": [],
-  "environmental_audio_exposure": [
-    "HKQuantityTypeIdentifierEnvironmentalAudioExposure"
-  ],
-  "environmental_audio_exposure_event": [
-    "HKCategoryTypeIdentifierAudioExposureEvent"
-  ],
-  "environmental_sound_reduction": [
-    "HKQuantityTypeIdentifierEnvironmentalSoundReduction"
-  ],
-  "estimated_workout_effort_score": [
-    "HKQuantityTypeIdentifierEstimatedWorkoutEffortScore"
-  ],
-  "exercise_route": [
-    "HKWorkoutRouteTypeIdentifier"
-  ],
-  "exercise_session": [
-    "HKWorkoutTypeIdentifier"
-  ],
-  "floors_climbed": [
-    "HKQuantityTypeIdentifierFlightsClimbed"
-  ],
-  "forced_expiratory_volume_1": [
-    "HKQuantityTypeIdentifierForcedExpiratoryVolume1"
-  ],
-  "forced_vital_capacity": [
-    "HKQuantityTypeIdentifierForcedVitalCapacity"
-  ],
-  "handwashing_event": [
-    "HKCategoryTypeIdentifierHandwashingEvent"
-  ],
-  "headphone_audio_exposure": [
-    "HKQuantityTypeIdentifierHeadphoneAudioExposure"
-  ],
-  "headphone_audio_exposure_event": [
-    "HKCategoryTypeIdentifierHeadphoneAudioExposureEvent"
-  ],
-  "heart_rate": [
-    "HKQuantityTypeIdentifierHeartRate"
-  ],
-  "heart_rate_recovery_one_minute": [
-    "HKQuantityTypeIdentifierHeartRateRecoveryOneMinute"
-  ],
-  "heartbeat_series": [
-    "HKDataTypeIdentifierHeartbeatSeries"
-  ],
-  "height": [
-    "HKQuantityTypeIdentifierHeight"
-  ],
-  "high_heart_rate_event": [
-    "HKCategoryTypeIdentifierHighHeartRateEvent"
-  ],
-  "hrv_rmssd": [],
-  "hrv_sdnn": [
-    "HKQuantityTypeIdentifierHeartRateVariabilitySDNN"
-  ],
-  "hydration": [
-    "HKQuantityTypeIdentifierDietaryWater"
-  ],
-  "infrequent_menstrual_cycles": [
-    "HKCategoryTypeIdentifierInfrequentMenstrualCycles"
-  ],
-  "inhaler_usage": [
-    "HKQuantityTypeIdentifierInhalerUsage"
-  ],
-  "insulin_delivery": [
-    "HKQuantityTypeIdentifierInsulinDelivery"
-  ],
-  "intermenstrual_bleeding": [
-    "HKCategoryTypeIdentifierIntermenstrualBleeding"
-  ],
-  "irregular_heart_rhythm_event": [
-    "HKCategoryTypeIdentifierIrregularHeartRhythmEvent"
-  ],
-  "irregular_menstrual_cycles": [
-    "HKCategoryTypeIdentifierIrregularMenstrualCycles"
-  ],
-  "lactation": [
-    "HKCategoryTypeIdentifierLactation"
-  ],
-  "lean_body_mass": [
-    "HKQuantityTypeIdentifierLeanBodyMass"
-  ],
-  "low_cardio_fitness_event": [
-    "HKCategoryTypeIdentifierLowCardioFitnessEvent"
-  ],
-  "low_heart_rate_event": [
-    "HKCategoryTypeIdentifierLowHeartRateEvent"
-  ],
-  "medication_dose": [
-    "HKDataTypeIdentifierMedicationDoseEvent"
-  ],
-  "menstruation_flow": [
-    "HKCategoryTypeIdentifierMenstrualFlow"
-  ],
-  "menstruation_period": [],
-  "mindfulness_session": [
-    "HKCategoryTypeIdentifierMindfulSession"
-  ],
-  "nike_fuel": [
-    "HKQuantityTypeIdentifierNikeFuel"
-  ],
-  "number_of_alcoholic_beverages": [
-    "HKQuantityTypeIdentifierNumberOfAlcoholicBeverages"
-  ],
-  "number_of_times_fallen": [
-    "HKQuantityTypeIdentifierNumberOfTimesFallen"
-  ],
-  "nutrition": [
-    "HKQuantityTypeIdentifierDietaryEnergyConsumed",
-    "HKQuantityTypeIdentifierDietaryProtein",
-    "HKQuantityTypeIdentifierDietaryCarbohydrates",
-    "HKQuantityTypeIdentifierDietaryFatTotal",
-    "HKQuantityTypeIdentifierDietaryFatSaturated",
-    "HKQuantityTypeIdentifierDietaryFatMonounsaturated",
-    "HKQuantityTypeIdentifierDietaryFatPolyunsaturated",
-    "HKQuantityTypeIdentifierDietaryFiber",
-    "HKQuantityTypeIdentifierDietarySugar",
-    "HKQuantityTypeIdentifierDietaryCholesterol",
-    "HKQuantityTypeIdentifierDietarySodium",
-    "HKQuantityTypeIdentifierDietaryPotassium",
-    "HKQuantityTypeIdentifierDietaryCalcium",
-    "HKQuantityTypeIdentifierDietaryIron",
-    "HKQuantityTypeIdentifierDietaryMagnesium",
-    "HKQuantityTypeIdentifierDietaryPhosphorus",
-    "HKQuantityTypeIdentifierDietaryZinc",
-    "HKQuantityTypeIdentifierDietaryCopper",
-    "HKQuantityTypeIdentifierDietaryManganese",
-    "HKQuantityTypeIdentifierDietaryChloride",
-    "HKQuantityTypeIdentifierDietarySelenium",
-    "HKQuantityTypeIdentifierDietaryIodine",
-    "HKQuantityTypeIdentifierDietaryChromium",
-    "HKQuantityTypeIdentifierDietaryMolybdenum",
-    "HKQuantityTypeIdentifierDietaryVitaminA",
-    "HKQuantityTypeIdentifierDietaryVitaminB6",
-    "HKQuantityTypeIdentifierDietaryVitaminB12",
-    "HKQuantityTypeIdentifierDietaryVitaminC",
-    "HKQuantityTypeIdentifierDietaryVitaminD",
-    "HKQuantityTypeIdentifierDietaryVitaminE",
-    "HKQuantityTypeIdentifierDietaryVitaminK",
-    "HKQuantityTypeIdentifierDietaryThiamin",
-    "HKQuantityTypeIdentifierDietaryRiboflavin",
-    "HKQuantityTypeIdentifierDietaryNiacin",
-    "HKQuantityTypeIdentifierDietaryFolate",
-    "HKQuantityTypeIdentifierDietaryBiotin",
-    "HKQuantityTypeIdentifierDietaryPantothenicAcid",
-    "HKQuantityTypeIdentifierDietaryCaffeine"
-  ],
-  "ovulation_test": [
-    "HKCategoryTypeIdentifierOvulationTestResult"
-  ],
-  "oxygen_saturation": [
-    "HKQuantityTypeIdentifierOxygenSaturation"
-  ],
-  "paddle_sports_speed": [
-    "HKQuantityTypeIdentifierPaddleSportsSpeed"
-  ],
-  "peak_expiratory_flow_rate": [
-    "HKQuantityTypeIdentifierPeakExpiratoryFlowRate"
-  ],
-  "peripheral_perfusion_index": [
-    "HKQuantityTypeIdentifierPeripheralPerfusionIndex"
-  ],
-  "persistent_intermenstrual_bleeding": [
-    "HKCategoryTypeIdentifierPersistentIntermenstrualBleeding"
-  ],
-  "physical_effort": [
-    "HKQuantityTypeIdentifierPhysicalEffort"
-  ],
-  "power": [],
-  "pregnancy": [
-    "HKCategoryTypeIdentifierPregnancy"
-  ],
-  "pregnancy_test": [
-    "HKCategoryTypeIdentifierPregnancyTestResult"
-  ],
-  "progesterone_test": [
-    "HKCategoryTypeIdentifierProgesteroneTestResult"
-  ],
-  "prolonged_menstrual_periods": [
-    "HKCategoryTypeIdentifierProlongedMenstrualPeriods"
-  ],
-  "respiratory_rate": [
-    "HKQuantityTypeIdentifierRespiratoryRate"
-  ],
-  "resting_heart_rate": [
-    "HKQuantityTypeIdentifierRestingHeartRate"
-  ],
-  "rowing_speed": [
-    "HKQuantityTypeIdentifierRowingSpeed"
-  ],
-  "running_ground_contact_time": [
-    "HKQuantityTypeIdentifierRunningGroundContactTime"
-  ],
-  "running_power": [
-    "HKQuantityTypeIdentifierRunningPower"
-  ],
-  "running_speed": [
-    "HKQuantityTypeIdentifierRunningSpeed"
-  ],
-  "running_stride_length": [
-    "HKQuantityTypeIdentifierRunningStrideLength"
-  ],
-  "running_vertical_oscillation": [
-    "HKQuantityTypeIdentifierRunningVerticalOscillation"
-  ],
-  "sexual_activity": [
-    "HKCategoryTypeIdentifierSexualActivity"
-  ],
-  "six_minute_walk_distance": [
-    "HKQuantityTypeIdentifierSixMinuteWalkTestDistance"
-  ],
-  "skin_temperature": [],
-  "sleep_apnea_event": [
-    "HKCategoryTypeIdentifierSleepApneaEvent"
-  ],
-  "sleep_session": [
-    "HKCategoryTypeIdentifierSleepAnalysis"
-  ],
-  "speed": [],
-  "stair_ascent_speed": [
-    "HKQuantityTypeIdentifierStairAscentSpeed"
-  ],
-  "stair_descent_speed": [
-    "HKQuantityTypeIdentifierStairDescentSpeed"
-  ],
-  "state_of_mind": [
-    "HKDataTypeIdentifierStateOfMind"
-  ],
-  "steps": [
-    "HKQuantityTypeIdentifierStepCount"
-  ],
-  "steps_cadence": [],
-  "swimming_stroke_count": [
-    "HKQuantityTypeIdentifierSwimmingStrokeCount"
-  ],
-  "symptom_abdominal_cramps": [
-    "HKCategoryTypeIdentifierAbdominalCramps"
-  ],
-  "symptom_acne": [
-    "HKCategoryTypeIdentifierAcne"
-  ],
-  "symptom_appetite_changes": [
-    "HKCategoryTypeIdentifierAppetiteChanges"
-  ],
-  "symptom_bladder_incontinence": [
-    "HKCategoryTypeIdentifierBladderIncontinence"
-  ],
-  "symptom_bloating": [
-    "HKCategoryTypeIdentifierBloating"
-  ],
-  "symptom_breast_pain": [
-    "HKCategoryTypeIdentifierBreastPain"
-  ],
-  "symptom_chest_tightness_or_pain": [
-    "HKCategoryTypeIdentifierChestTightnessOrPain"
-  ],
-  "symptom_chills": [
-    "HKCategoryTypeIdentifierChills"
-  ],
-  "symptom_constipation": [
-    "HKCategoryTypeIdentifierConstipation"
-  ],
-  "symptom_coughing": [
-    "HKCategoryTypeIdentifierCoughing"
-  ],
-  "symptom_diarrhea": [
-    "HKCategoryTypeIdentifierDiarrhea"
-  ],
-  "symptom_dizziness": [
-    "HKCategoryTypeIdentifierDizziness"
-  ],
-  "symptom_dry_skin": [
-    "HKCategoryTypeIdentifierDrySkin"
-  ],
-  "symptom_fainting": [
-    "HKCategoryTypeIdentifierFainting"
-  ],
-  "symptom_fatigue": [
-    "HKCategoryTypeIdentifierFatigue"
-  ],
-  "symptom_fever": [
-    "HKCategoryTypeIdentifierFever"
-  ],
-  "symptom_generalized_body_ache": [
-    "HKCategoryTypeIdentifierGeneralizedBodyAche"
-  ],
-  "symptom_hair_loss": [
-    "HKCategoryTypeIdentifierHairLoss"
-  ],
-  "symptom_headache": [
-    "HKCategoryTypeIdentifierHeadache"
-  ],
-  "symptom_heartburn": [
-    "HKCategoryTypeIdentifierHeartburn"
-  ],
-  "symptom_hot_flashes": [
-    "HKCategoryTypeIdentifierHotFlashes"
-  ],
-  "symptom_loss_of_smell": [
-    "HKCategoryTypeIdentifierLossOfSmell"
-  ],
-  "symptom_loss_of_taste": [
-    "HKCategoryTypeIdentifierLossOfTaste"
-  ],
-  "symptom_lower_back_pain": [
-    "HKCategoryTypeIdentifierLowerBackPain"
-  ],
-  "symptom_memory_lapse": [
-    "HKCategoryTypeIdentifierMemoryLapse"
-  ],
-  "symptom_mood_changes": [
-    "HKCategoryTypeIdentifierMoodChanges"
-  ],
-  "symptom_nausea": [
-    "HKCategoryTypeIdentifierNausea"
-  ],
-  "symptom_night_sweats": [
-    "HKCategoryTypeIdentifierNightSweats"
-  ],
-  "symptom_pelvic_pain": [
-    "HKCategoryTypeIdentifierPelvicPain"
-  ],
-  "symptom_rapid_pounding_or_fluttering_heartbeat": [
-    "HKCategoryTypeIdentifierRapidPoundingOrFlutteringHeartbeat"
-  ],
-  "symptom_runny_nose": [
-    "HKCategoryTypeIdentifierRunnyNose"
-  ],
-  "symptom_shortness_of_breath": [
-    "HKCategoryTypeIdentifierShortnessOfBreath"
-  ],
-  "symptom_sinus_congestion": [
-    "HKCategoryTypeIdentifierSinusCongestion"
-  ],
-  "symptom_skipped_heartbeat": [
-    "HKCategoryTypeIdentifierSkippedHeartbeat"
-  ],
-  "symptom_sleep_changes": [
-    "HKCategoryTypeIdentifierSleepChanges"
-  ],
-  "symptom_sore_throat": [
-    "HKCategoryTypeIdentifierSoreThroat"
-  ],
-  "symptom_vaginal_dryness": [
-    "HKCategoryTypeIdentifierVaginalDryness"
-  ],
-  "symptom_vomiting": [
-    "HKCategoryTypeIdentifierVomiting"
-  ],
-  "symptom_wheezing": [
-    "HKCategoryTypeIdentifierWheezing"
-  ],
-  "time_in_daylight": [
-    "HKQuantityTypeIdentifierTimeInDaylight"
-  ],
-  "toothbrushing_event": [
-    "HKCategoryTypeIdentifierToothbrushingEvent"
-  ],
-  "total_energy": [
-    "HKQuantityTypeIdentifierActiveEnergyBurned",
-    "HKQuantityTypeIdentifierBasalEnergyBurned"
-  ],
-  "underwater_depth": [
-    "HKQuantityTypeIdentifierUnderwaterDepth"
-  ],
-  "uv_exposure": [
-    "HKQuantityTypeIdentifierUVExposure"
-  ],
-  "vo2_max": [
-    "HKQuantityTypeIdentifierVO2Max"
-  ],
-  "waist_circumference": [
-    "HKQuantityTypeIdentifierWaistCircumference"
-  ],
-  "walking_asymmetry": [
-    "HKQuantityTypeIdentifierWalkingAsymmetryPercentage"
-  ],
-  "walking_double_support": [
-    "HKQuantityTypeIdentifierWalkingDoubleSupportPercentage"
-  ],
-  "walking_heart_rate_average": [
-    "HKQuantityTypeIdentifierWalkingHeartRateAverage"
-  ],
-  "walking_speed": [
-    "HKQuantityTypeIdentifierWalkingSpeed"
-  ],
-  "walking_step_length": [
-    "HKQuantityTypeIdentifierWalkingStepLength"
-  ],
-  "water_temperature": [
-    "HKQuantityTypeIdentifierWaterTemperature"
-  ],
-  "weight": [
-    "HKQuantityTypeIdentifierBodyMass"
-  ],
-  "wheelchair_pushes": [
-    "HKQuantityTypeIdentifierPushCount"
-  ],
-  "workout_effort_score": [
-    "HKQuantityTypeIdentifierWorkoutEffortScore"
-  ]
 };
 
 export const DEVICE_TYPE_MAPPING: Record<DeviceType, { healthkit?: string; healthconnect?: string }> = {

@@ -1,14 +1,16 @@
 {
   "name": "@healthspec/core",
   "version": "0.0.0",
-  "description": "HealthSpec provider contract, HealthStore facade, MockProvider, cursors and time buckets — pure TypeScript, no React Native dependency.",
+  "description": "HealthSpec provider contract, HealthStore facade, MockProvider, cursors and time buckets \u2014 pure TypeScript, no React Native dependency.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "react-native": "./dist/index.js",
       "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js",
       "default": "./dist/index.js"
     }
   },
@@ -17,7 +19,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node ../../tools/release/src/mark-cjs.mjs dist/cjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test test/*.test.ts"
   },
@@ -33,5 +35,9 @@
     "url": "https://github.com/dev-eyoungmin/healthspec.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/dev-eyoungmin/healthspec"
+  "homepage": "https://github.com/dev-eyoungmin/healthspec",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "react-native": "./dist/index.js"
 }

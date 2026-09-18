@@ -73,9 +73,18 @@ test('publishing includes the native sources autolinking needs', () => {
   for (const entry of ['build', 'plugin/build', 'app.plugin.js', 'ios', 'android', 'expo-module.config.json']) {
     assert.ok((pkg.files as string[]).includes(entry), `package.json files must include "${entry}"`);
   }
+  // Metro reads "react-native" and gets ES modules; Jest and Node read "main" and get CommonJS. An app that
+  // tests with jest-expo would otherwise have to add this package to transformIgnorePatterns.
   assert.equal(pkg.main, 'build/index.js');
+  assert.equal(pkg['react-native'], 'build/esm/index.js');
+  assert.equal(pkg.module, 'build/esm/index.js');
   assert.equal(pkg.types, 'build/index.d.ts');
-  for (const peer of ['expo', 'react', 'react-native']) assert.ok(pkg.peerDependencies[peer], `${peer} must be a peer dependency`);
+  assert.match(read('build/index.js'), /^"use strict"/);
+  assert.match(read('build/esm/index.js'), /^export /m);
+  for (const [peer, range] of Object.entries<string>(pkg.peerDependencies)) {
+    assert.ok(['expo', 'react', 'react-native'].includes(peer), `unexpected peer dependency ${peer}`);
+    assert.match(range, /^>=\d/, `${peer} needs a version range an app can check, not "${range}"`);
+  }
   assert.ok(!pkg.dependencies['expo-modules-core'], 'expo-modules-core is provided by expo, not a direct dependency');
 });
 

@@ -8,13 +8,24 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "react-native": "./dist/index.js",
       "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js",
       "default": "./dist/index.js"
     },
     "./bundle": {
       "types": "./dist/bundle.d.ts",
+      "react-native": "./dist/bundle.js",
       "import": "./dist/bundle.js",
+      "require": "./dist/cjs/bundle.js",
       "default": "./dist/bundle.js"
+    },
+    "./examples": {
+      "types": "./dist/examples.d.ts",
+      "react-native": "./dist/examples.js",
+      "import": "./dist/examples.js",
+      "require": "./dist/cjs/examples.js",
+      "default": "./dist/examples.js"
     }
   },
   "files": [
@@ -22,7 +33,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node ../../tools/release/src/mark-cjs.mjs dist/cjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test test/*.test.ts"
   },
@@ -35,5 +46,9 @@
     "url": "https://github.com/dev-eyoungmin/healthspec.git",
     "directory": "packages/schema"
   },
-  "homepage": "https://github.com/dev-eyoungmin/healthspec"
+  "homepage": "https://github.com/dev-eyoungmin/healthspec",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "react-native": "./dist/index.js"
 }
