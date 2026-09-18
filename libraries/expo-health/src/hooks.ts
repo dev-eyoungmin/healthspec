@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Cursor, HealthRecordOf, HealthType } from '@healthspec/schema';
 import type { AggregateQuery, AggregateResult, ChangeSet, HealthError, PermissionRequest, PermissionResult, ReadQuery } from '@healthspec/core';
+import { defaultStore } from './default-store.js';
 import { toHealthError } from './errors.js';
-import { HealthStore } from './store.js';
+import type { HealthStore } from './store.js';
 
 export interface AsyncState<T> {
   data: T | undefined;
@@ -33,7 +34,7 @@ function useLatestRequest() {
 }
 
 export function useHealthStore(store?: HealthStore): HealthStore {
-  return useMemo(() => store ?? HealthStore.default(), [store]);
+  return useMemo(() => store ?? defaultStore(), [store]);
 }
 
 export function useHealthPermissions(request: PermissionRequest, options: { store?: HealthStore; auto?: boolean } = {}) {

@@ -2,6 +2,7 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 import { Platform } from 'react-native';
 import { HealthStore as CoreHealthStore, MockProvider, type MockProviderOptions, type Provider } from '@healthspec/core';
 import { AppleHealthProvider, type AppleHealthProviderOptions } from './AppleHealthProvider.js';
+import { setDefaultStore } from './default-store.js';
 import { HealthConnectProvider, type HealthConnectProviderOptions } from './HealthConnectProvider.js';
 import type { AppleHealthNative, HealthConnectNative } from './native.js';
 
@@ -48,3 +49,6 @@ export class HealthStore extends CoreHealthStore {
     HealthStore.instance = undefined;
   }
 }
+
+// The hooks reach the app-wide store through this, so that they do not depend on React Native themselves.
+setDefaultStore(() => HealthStore.default());
