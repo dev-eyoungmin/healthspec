@@ -86,6 +86,9 @@ Spec compliance:
   and [what each error means](docs/guides/errors.md).
 - Peer dependency ranges an app can check (`expo >=54`, `react >=19`, `react-native >=0.81`), and release checks
   for bundle size, module formats and version agreement across packages.
+- **Every package carries its licence and says where to file a bug.** npm publishes one directory, not the
+  repository, so each package now packs its own `LICENSE` and declares `keywords`, `bugs` and the Node version it
+  needs. The release check fails if a tarball loses any of them.
 
 ### Added
 

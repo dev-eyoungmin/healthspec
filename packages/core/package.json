@@ -1,8 +1,20 @@
 {
   "name": "@healthspec/core",
   "version": "0.0.0",
-  "description": "HealthSpec provider contract, HealthStore facade, MockProvider, cursors and time buckets \u2014 pure TypeScript, no React Native dependency.",
+  "description": "HealthSpec provider contract, HealthStore facade, MockProvider, cursors and time buckets — pure TypeScript, no React Native dependency.",
+  "keywords": [
+    "health",
+    "healthkit",
+    "health-connect",
+    "fitness",
+    "provider",
+    "mock",
+    "typescript"
+  ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20.11"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -36,6 +48,9 @@
     "directory": "packages/core"
   },
   "homepage": "https://github.com/dev-eyoungmin/healthspec",
+  "bugs": {
+    "url": "https://github.com/dev-eyoungmin/healthspec/issues"
+  },
   "main": "./dist/cjs/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

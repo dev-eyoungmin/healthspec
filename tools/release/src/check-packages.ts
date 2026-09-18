@@ -36,6 +36,17 @@ const PACKAGES: Record<string, string[]> = {
 
 const problems: string[] = [];
 
+/** What npm shows on the package page, and what a licence audit looks for. Missing fields are found by users. */
+function checkMetadata(name: string, manifest: Record<string, unknown>, entries: Set<string>): string[] {
+  const issues: string[] = [];
+  for (const field of ['description', 'keywords', 'license', 'homepage', 'bugs', 'repository']) {
+    const value = manifest[field];
+    if (value === undefined || (Array.isArray(value) && value.length === 0)) issues.push(`${name}: package.json has no ${field}`);
+  }
+  if (!entries.has('LICENSE')) issues.push(`${name}: the tarball carries no LICENSE`);
+  return issues;
+}
+
 /** One version across the npm packages, and the platform packages in step with healthspec-versions.json. */
 function checkVersions(): string[] {
   const issues: string[] = [];
@@ -50,6 +61,8 @@ function checkVersions(): string[] {
   if (pubspec !== versions['dart']) issues.push(`healthspec-versions.json says dart is ${String(versions['dart'])}, pubspec.yaml says ${pubspec}`);
   return issues;
 }
+/** Each package carries its own copy, because npm publishes one directory, not the repository. */
+const license = readFileSync(path.join(ROOT, 'LICENSE'), 'utf8');
 const out = mkdtempSync(path.join(tmpdir(), 'healthspec-pack-'));
 /** The packed packages, unpacked as an app would install them, so they can be imported for real. */
 const modules = path.join(out, 'node_modules');
@@ -66,6 +79,8 @@ try {
     if ([...entries].some((e) => e.includes('/build/intermediates/') || e.startsWith('android/build/') || e.includes('.gradle/'))) problems.push(`${name}: Gradle build output is packed`);
 
     const manifest = JSON.parse(execFileSync('tar', ['-xzOf', tarball, 'package/package.json'], { encoding: 'utf8' })) as Record<string, Record<string, string> | undefined>;
+    problems.push(...checkMetadata(name, manifest, entries));
+    if (readFileSync(path.join(cwd, 'LICENSE'), 'utf8') !== license) problems.push(`${name}: LICENSE differs from the repository's`);
     for (const field of ['dependencies', 'peerDependencies']) {
       for (const [dep, range] of Object.entries(manifest[field] ?? {})) {
         if (range.startsWith('workspace:')) problems.push(`${name}: ${field}.${dep} is still "${range}"`);

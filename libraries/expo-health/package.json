@@ -42,6 +42,9 @@
   },
   "author": "HealthSpec contributors",
   "homepage": "https://github.com/dev-eyoungmin/healthspec",
+  "bugs": {
+    "url": "https://github.com/dev-eyoungmin/healthspec/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/dev-eyoungmin/healthspec.git",

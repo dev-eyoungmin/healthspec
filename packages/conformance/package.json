@@ -2,7 +2,18 @@
   "name": "@healthspec/conformance",
   "version": "0.0.0",
   "description": "Conformance suite every HealthSpec provider must pass. Run it against your Provider to claim compatibility.",
+  "keywords": [
+    "health",
+    "healthkit",
+    "health-connect",
+    "conformance",
+    "test-suite",
+    "spec"
+  ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20.11"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -37,6 +48,9 @@
     "directory": "packages/conformance"
   },
   "homepage": "https://github.com/dev-eyoungmin/healthspec",
+  "bugs": {
+    "url": "https://github.com/dev-eyoungmin/healthspec/issues"
+  },
   "main": "./dist/cjs/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -2,7 +2,19 @@
   "name": "@healthspec/schema",
   "version": "0.0.0",
   "description": "HealthSpec generated types, platform mapping tables, unit helpers and API semantics.",
+  "keywords": [
+    "health",
+    "healthkit",
+    "health-connect",
+    "json-schema",
+    "types",
+    "fitness",
+    "spec"
+  ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20.11"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -47,6 +59,9 @@
     "directory": "packages/schema"
   },
   "homepage": "https://github.com/dev-eyoungmin/healthspec",
+  "bugs": {
+    "url": "https://github.com/dev-eyoungmin/healthspec/issues"
+  },
   "main": "./dist/cjs/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
