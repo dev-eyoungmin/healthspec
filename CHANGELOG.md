@@ -66,6 +66,27 @@ Spec compliance:
   observed before JavaScript listens are delivered to the first subscription.
 - React hooks no longer apply a stale response over a newer one.
 
+### Fit for an app to depend on
+
+- **Half the bundle, gone.** `@healthspec/expo` added 345 kB (minified) to an app; it now adds 183 kB, and a CI
+  budget keeps it there. The generated validators were a function per constraint across 182 types — the
+  constraints are data now, interpreted by 120 lines. The platform, identifier and permission tables are derived
+  from the mappings instead of generated a second time, provenance metadata stays out of the runtime table, and
+  the raw JSON Schemas and type examples moved behind `@healthspec/schema/bundle` and `/examples`.
+- **CommonJS as well as ES modules.** Metro reads the ES build, Jest and Node read the CommonJS one, so an app
+  testing with `jest-expo` no longer needs a `transformIgnorePatterns` entry. The release check installs each
+  packed tarball and loads it both ways.
+- **`syncTypes`** — the incremental-sync loop every mirroring app writes: cursors per type in any AsyncStorage-like
+  storage, stored only after a batch is handled (at least once, never lost), a resync flag when a cursor expires,
+  and types the platform lacks skipped rather than failing.
+- **The hooks are tested**, rendered: a slow earlier query no longer wins, no state is set after unmount, and two
+  overlapping syncs do not report the same changes twice. They no longer import React Native either, so they can
+  be rendered in a plain Node test.
+- **Guides** for [incremental sync](docs/guides/incremental-sync.md), [testing without a device](docs/guides/testing.md)
+  and [what each error means](docs/guides/errors.md).
+- Peer dependency ranges an app can check (`expo >=54`, `react >=19`, `react-native >=0.81`), and release checks
+  for bundle size, module formats and version agreement across packages.
+
 ### Added
 
 - **`@healthspec/cli`** — `healthspec doctor` checks a prebuilt Expo project for what App Review and Play Console

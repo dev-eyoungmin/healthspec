@@ -63,6 +63,27 @@ In Expo Go the native module is absent and `HealthStore.default()` falls back to
 The mock mirrors the platform it runs on — its types and optional operations — so a screen that works in Expo Go
 works on a device.
 
+## Keeping a copy in sync
+
+```ts
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { syncTypes } from '@healthspec/expo';
+
+const report = await syncTypes({
+  store,
+  storage: AsyncStorage,
+  types: ['steps', 'sleep_session'],
+  onBatch: async ({ type, upserts, deletes, resynced }) => {
+    if (resynced) await db.deleteAllOf(type); // the cursor expired; this batch is the whole history
+    await db.apply(type, upserts, deletes);
+  },
+});
+```
+
+A type's cursor is stored only after its batch is handled, so a crash repeats a batch rather than losing one.
+See the [incremental sync guide](../../docs/guides/incremental-sync.md), including background work on both
+platforms.
+
 ## Hooks
 
 ```ts
@@ -106,12 +127,24 @@ The API is identical; these behaviours are specified (see [SPEC.md](../../spec/S
 `AppleHealthProvider` also offers `listMedications()` (iOS 26), `readEcgVoltages(id)` and
 `disableBackgroundDelivery(types)`.
 
+## Size and module formats
+
+`import { HealthStore } from '@healthspec/expo'` adds about 185 kB (minified) to an app: the specification's
+type, mapping and validation tables, which Metro cannot tree-shake. A CI check keeps that from creeping up. The
+raw JSON Schemas are not part of it — tooling imports them from `@healthspec/schema/bundle`.
+
+The package ships ES modules for Metro (`react-native` / `module`) and CommonJS for Jest and Node (`main`), so
+`jest-expo` needs no `transformIgnorePatterns` entry.
+
 ## Status
 
 Pre-release. The Android module compiles in a real Expo app and its serialization is unit-tested against the
 spec; the iOS module is type-checked against the iOS 15 and iOS 26 SDKs and its HealthKit tables are checked
 against the HealthKit runtime. Behaviour on devices is still being verified — see
 [NATIVE-VERIFICATION.md](../../docs/NATIVE-VERIFICATION.md).
+
+Guides: [incremental sync](../../docs/guides/incremental-sync.md) ·
+[testing without a device](../../docs/guides/testing.md) · [errors](../../docs/guides/errors.md).
 
 Migrating from another library: [react-native-healthkit](../../docs/migration/from-react-native-healthkit.md) ·
 [react-native-health-connect](../../docs/migration/from-react-native-health-connect.md) ·

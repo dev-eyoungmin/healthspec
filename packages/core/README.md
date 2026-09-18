@@ -10,4 +10,7 @@ Platform-independent half of the HealthSpec SDK:
 - `encodeCursor` / `decodeCursor` — opaque sync cursors
 - `bucketRanges` and friends — zone-aware hour/day/week/month buckets via `Intl`
 - `aggregateRecords` — reference aggregation (aligned buckets, values clipped to the range) used by the mock and providers' record fallbacks
+- `syncTypes` — incremental sync with cursor storage: at-least-once delivery, resync when a cursor expires
 - `HealthError` — the only error type that crosses the provider boundary
+
+Ships as both ES modules and CommonJS, so Jest needs no extra configuration.

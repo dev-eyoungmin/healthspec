@@ -103,6 +103,7 @@ Expo 프로바이더는 CI에서 네이티브 모듈 fake 위에서 이 스위�
 | [검증](docs/VERIFICATION.md) | 무엇이 어느 증거 등급으로 확인됐는가 |
 | [네이티브 검증](docs/NATIVE-VERIFICATION.md) | 실기기가 필요한 항목 |
 | [기존 라이브러리 비교](docs/PARITY.md) | 기능 대조 |
+| 가이드 | [증분 동기화](docs/guides/incremental-sync.md) · [기기 없이 테스트하기](docs/guides/testing.md) · [오류](docs/guides/errors.md) |
 | 마이그레이션 | [react-native-healthkit](docs/migration/from-react-native-healthkit.md) · [react-native-health-connect](docs/migration/from-react-native-health-connect.md) · [react-native-health](docs/migration/from-react-native-health.md)에서 |
 
 ## 개발

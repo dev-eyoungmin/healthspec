@@ -111,6 +111,7 @@ device.
 | [Verification](docs/VERIFICATION.md) | what is established, and at which level of evidence |
 | [Native verification](docs/NATIVE-VERIFICATION.md) | what still needs a device |
 | [Parity](docs/PARITY.md) | comparison with existing libraries |
+| Guides | [incremental sync](docs/guides/incremental-sync.md) · [testing without a device](docs/guides/testing.md) · [errors](docs/guides/errors.md) |
 | Migration | from [react-native-healthkit](docs/migration/from-react-native-healthkit.md) · [react-native-health-connect](docs/migration/from-react-native-health-connect.md) · [react-native-health](docs/migration/from-react-native-health.md) |
 
 ## Develop
