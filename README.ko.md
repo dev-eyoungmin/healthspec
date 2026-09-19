@@ -4,6 +4,8 @@
 
 **모든 플랫폼의 온디바이스 헬스 데이터를 위한 표준 명세**
 
+[문서 사이트](https://dev-eyoungmin.github.io/healthspec/) · [182개 헬스 타입 둘러보기](https://dev-eyoungmin.github.io/healthspec/types/)
+
 [English](README.md) · [한국어](README.ko.md)
 
 </div>

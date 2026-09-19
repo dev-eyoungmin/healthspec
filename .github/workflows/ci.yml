@@ -35,6 +35,10 @@ jobs:
       - name: npm tarballs are complete
         run: pnpm release:check
 
+      # The site is generated from the same spec; a broken link in a guide fails here, not after a deploy.
+      - name: The documentation site builds
+        run: pnpm site && pnpm --filter @healthspec/site check
+
   swift:
     name: Swift
     runs-on: macos-15

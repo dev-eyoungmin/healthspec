@@ -68,6 +68,13 @@ const report = await runConformanceSuite(myProvider);
 Declaring `changes: false` is a legitimate choice — the suite skips what you do not claim. Claiming something
 you do not do is what it is there to catch.
 
+## The documentation site
+
+`pnpm site` writes `site/`, `pnpm site:serve` opens it. Everything on it is generated from this repository — the
+guides and the specification are the markdown files, the type reference comes from `spec/schema` — so a page is
+changed by changing its source, never by editing HTML. `pnpm --filter @healthspec/site check` verifies every
+internal link and anchor, and CI runs it. Pushing to `main` deploys.
+
 ## Releasing
 
 1. `pnpm release:version <x.y.z>` — one version across the five npm packages and `healthspec-versions.json`. Add

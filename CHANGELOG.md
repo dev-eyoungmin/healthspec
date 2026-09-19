@@ -89,6 +89,10 @@ Spec compliance:
 - **`readChunks`** — a wide range, a window at a time. A year of heart rate is hundreds of thousands of samples
   in one array; this yields a page per window instead, de-duplicating the records that straddle a boundary, and
   stops early on a `limit` or an abort signal.
+- **A documentation site**, at [dev-eyoungmin.github.io/healthspec](https://dev-eyoungmin.github.io/healthspec/):
+  the guides and the specification, and a page per health type with its fields, units, aggregation and the exact
+  HealthKit identifier or Health Connect record it maps to — searchable, and generated from `spec/schema`, so it
+  cannot drift from the packages. A link checker covers every internal link and anchor, and CI runs it.
 - **Every package carries its licence and says where to file a bug.** npm publishes one directory, not the
   repository, so each package now packs its own `LICENSE` and declares `keywords`, `bugs` and the Node version it
   needs. The release check fails if a tarball loses any of them.

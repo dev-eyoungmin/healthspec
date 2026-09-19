@@ -4,6 +4,8 @@
 
 **Standardized specification for on-device health data across every platform**
 
+[Documentation site](https://dev-eyoungmin.github.io/healthspec/) · [Browse the 182 health types](https://dev-eyoungmin.github.io/healthspec/types/)
+
 [English](README.md) · [한국어](README.ko.md)
 
 </div>
@@ -106,6 +108,7 @@ device.
 
 | | |
 |---|---|
+| [Documentation site](https://dev-eyoungmin.github.io/healthspec/) | all of the below, browsable, with a page per health type |
 | [Specification](spec/SPEC.md) | normative behaviour |
 | [Platform mapping](docs/mapping/README.md) | generated, per type and per field |
 | [Verification](docs/VERIFICATION.md) | what is established, and at which level of evidence |
