@@ -28,7 +28,7 @@ export const STATE_OF_MIND_ASSOCIATION: Record<string, number> = {
   money: 11, partner: 12, self_care: 13, spirituality: 14, tasks: 15, travel: 16, work: 17, weather: 18,
 };
 
-/** HKElectrocardiogram.Classification — unverified */
+/** HKElectrocardiogram.Classification — checked against the iOS 26 SDK headers; `unrecognized` is 100, not 7. */
 export const ECG_CLASSIFICATION: Record<string, number> = {
   not_set: 0,
   sinus_rhythm: 1,
@@ -37,10 +37,10 @@ export const ECG_CLASSIFICATION: Record<string, number> = {
   inconclusive_high_heart_rate: 4,
   inconclusive_poor_reading: 5,
   inconclusive_other: 6,
-  unrecognized: 7,
+  unrecognized: 100,
 };
 
-/** HKElectrocardiogram.SymptomsStatus — unverified */
+/** HKElectrocardiogram.SymptomsStatus — checked against the iOS 26 SDK headers. */
 export const ECG_SYMPTOMS_STATUS: Record<string, number> = { not_set: 0, none: 1, present: 2 };
 
 export const BIOLOGICAL_SEX: Record<string, number> = { female: 1, male: 2, other: 3 };
@@ -51,7 +51,7 @@ export const FITZPATRICK_SKIN_TYPE: Record<string, number> = { type_1: 1, type_2
 export const WHEELCHAIR_USE: Record<string, number> = { not_using: 1, using: 2 };
 export const ACTIVITY_MOVE_MODE: Record<string, number> = { active_energy: 1, move_time: 2 };
 
-/** HKMedicationDoseEvent (iOS 26) — transcribed from kingstinct's spec; unverified */
+/** HKMedicationDoseEvent (iOS 26) — checked against the iOS 26 SDK headers. */
 export const MEDICATION_SCHEDULE_TYPE: Record<string, number> = { as_needed: 1, scheduled: 2 };
 export const MEDICATION_LOG_STATUS: Record<string, number> = { not_interacted: 1, notification_not_sent: 2, snoozed: 3, taken: 4, skipped: 5, not_logged: 6 };
 

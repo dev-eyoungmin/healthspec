@@ -4,6 +4,8 @@
 
 **Standardized specification for on-device health data across every platform**
 
+[Documentation site](https://dev-eyoungmin.github.io/healthspec/) · [Browse the 182 health types](https://dev-eyoungmin.github.io/healthspec/types/)
+
 [English](README.md) · [한국어](README.ko.md)
 
 </div>
@@ -21,8 +23,10 @@ specification and prove it with the conformance suite.
 Type semantics follow [IEEE 1752 / Open mHealth](https://www.openmhealth.org/) where those standards define a
 concept.
 
-> **Pre-release.** Nothing is published yet and no code has run on a physical device.
-> See [NATIVE-VERIFICATION.md](docs/NATIVE-VERIFICATION.md).
+> **Pre-release.** Nothing is published yet. The native modules compile (Android in a real app build, iOS
+> type-checked against the iOS 15 and 26 SDKs) and their HealthKit tables are checked against the HealthKit
+> runtime, but behaviour on physical devices is still being verified — see
+> [NATIVE-VERIFICATION.md](docs/NATIVE-VERIFICATION.md).
 
 ## Packages
 
@@ -32,6 +36,7 @@ concept.
 | [`@healthspec/schema`](packages/schema) | TypeScript | types, validators, platform tables |
 | [`@healthspec/core`](packages/core) | TypeScript | `Provider` contract, `HealthStore`, `MockProvider` |
 | [`@healthspec/conformance`](packages/conformance) | TypeScript | conformance suite |
+| [`@healthspec/cli`](packages/cli) | TypeScript | `healthspec doctor` · `healthspec mapping` |
 | [`HealthSpec`](packages/apple) | Swift | HealthKit mapping — SPM and CocoaPods |
 | [`dev.healthspec:healthspec`](packages/google) | Kotlin | Health Connect mapping, serialization, aggregation |
 | [`healthspec`](packages/dart) | Dart | type system and mapping |
@@ -69,6 +74,9 @@ string from the specification:
 ["@healthspec/expo", { "read": ["steps", "heart_rate", "sleep_session"], "write": ["weight"], "background": true }]
 ```
 
+After `npx expo prebuild`, `npx healthspec doctor` checks the native projects for what App Review and Play Console
+would reject.
+
 ## Health types
 
 182 types — **38** on both platforms, **129** Apple only, **15** Android only.
@@ -93,15 +101,21 @@ const report = await runConformanceSuite(myProvider);
 report.conformant;   // every scenario cites the SPEC clause it enforces
 ```
 
+The Expo providers pass the suite in CI over fakes of their native modules, and the example app runs it on a
+device.
+
 ## Documentation
 
 | | |
 |---|---|
+| [Documentation site](https://dev-eyoungmin.github.io/healthspec/) | all of the below, browsable, with a page per health type |
 | [Specification](spec/SPEC.md) | normative behaviour |
 | [Platform mapping](docs/mapping/README.md) | generated, per type and per field |
 | [Verification](docs/VERIFICATION.md) | what is established, and at which level of evidence |
 | [Native verification](docs/NATIVE-VERIFICATION.md) | what still needs a device |
 | [Parity](docs/PARITY.md) | comparison with existing libraries |
+| Guides | [incremental sync](docs/guides/incremental-sync.md) · [testing without a device](docs/guides/testing.md) · [errors](docs/guides/errors.md) |
+| Migration | from [react-native-healthkit](docs/migration/from-react-native-healthkit.md) · [react-native-health-connect](docs/migration/from-react-native-health-connect.md) · [react-native-health](docs/migration/from-react-native-health.md) |
 
 ## Develop
 
@@ -110,6 +124,8 @@ pnpm install
 pnpm codegen        # spec → generated code and docs
 pnpm verify         # codegen freshness + build + typecheck + tests + the Swift runtime check
 ```
+
+Native builds (Android SDK, Xcode) are covered in [CONTRIBUTING.md](CONTRIBUTING.md#native-code).
 
 Adding a health type is one JSON file under `spec/schema/types/` plus `pnpm codegen`. See
 [CONTRIBUTING.md](CONTRIBUTING.md).

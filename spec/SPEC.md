@@ -4,7 +4,7 @@
 
 HealthSpec defines a platform-neutral data model and provider contract for on-device health data. The JSON Schemas in `schema/` are normative for *data*; this document is normative for *behaviour*. The key words MUST, MUST NOT, SHOULD and MAY are to be interpreted as in RFC 2119.
 
-A **provider** is an implementation of the contract in §9 over one data store: Apple HealthKit, Android Health Connect, a vendor SDK, or a mock. A **conformant provider** passes the conformance suite (`conformance/`, forthcoming) for every type and capability it declares.
+A **provider** is an implementation of the contract in §9 over one data store: Apple HealthKit, Android Health Connect, a vendor SDK, or a mock. A **conformant provider** passes the conformance suite ([`@healthspec/conformance`](../packages/conformance)) for every type and capability it declares.
 
 Semantics follow IEEE 1752.1 / Open mHealth where both define a concept. HealthSpec adds what a mobile SDK needs and those standards leave open: platform mapping, permissions, availability, and incremental sync.
 
@@ -133,7 +133,7 @@ Availability = available | not_installed | update_required | not_supported
 read(type, { start, end, sources?, limit?, order?, zone? })
 ```
 
-- The range is `[start, end)`. Interval records overlapping the range are returned whole (not clipped).
+- The range is `[start, end)`. Interval records overlapping the range are returned whole (not clipped). An interval that ends exactly at `start` does not overlap; an instantaneous record at `start` is inside, one at `end` is not.
 - `sources.excludeManual` omits `recordingMethod = manual`. `sources.apps` / `sources.devices` filter by source when the platform can.
 - Results are ordered by `start` ascending unless `order: 'desc'`.
 - `limit` caps the result count; providers MUST NOT silently truncate without `limit`.
@@ -144,11 +144,25 @@ read(type, { start, end, sources?, limit?, order?, zone? })
 
 ### 5.3 Series flattening
 
-Where the native store holds a series inside one record (Health Connect `HeartRateRecord.samples`, `SkinTemperatureRecord.deltas`), the provider MUST return one `sample` record per element with `id = <nativeId>#<index>` and `start = end = sample.time`. The native record's `source` applies to every element.
+Where the native store holds a series inside one record (Health Connect `HeartRateRecord.samples`, `SkinTemperatureRecord.deltas`), the provider MUST return one `sample` record per element with `id = <nativeId>#<index>` and `start = end = sample.time`. The native record's `source` applies to every element. Only elements inside the query range are returned, in the query's order; `index` is the element's position in the native record, so ids stay stable whichever elements a query returns.
+
+The flattened id is the record's id everywhere:
+
+- `write` resolves a written sample with the id a later `read` returns (`<nativeId>#0` when the provider stores one sample per native record).
+- `readById` and `delete({ ids })` accept flattened ids. Deleting `<nativeId>#<n>` removes that element only; the provider rewrites the native record without it, or deletes the record when nothing remains.
+- A change feed reports the deletion of a whole native record by `<nativeId>`, which stands for every `<nativeId>#<n>`. A rewritten record arrives as upserts of its remaining elements; consumers replace every `<nativeId>#*` they hold with them.
 
 ### 5.4 Session derivation
 
 Where the native store has no session object (HealthKit sleep analysis), the provider MUST derive sessions: group consecutive stage samples from the same `source` whose gap is ≤ 60 minutes; the session's `id` is the first sample's native id, `start`/`end` span the group, and `value.stages` lists the samples in order. Consumers needing the raw samples use `metadata.hk.sampleIds`.
+
+A derived session behaves as one record: `readById` with the id of any of its samples returns the whole session, and `delete({ ids })` with a session id deletes every sample in it. Because sessions are re-derived, a change feed reports new or changed sessions as upserts but deletions by *sample* id; a consumer drops the session containing a deleted sample id and keeps the upserts.
+
+The same applies wherever a platform spreads one spec record over several native objects — a HealthKit food correlation and its nutrient samples form one `nutrition` record whose id is the correlation's.
+
+### 5.5 Clinical records
+
+`clinical_*` records carry a FHIR resource verbatim in `value.fhir`. Where the platform keeps no timestamp or name outside the resource (Health Connect Personal Health Record), the provider derives them from it: `start` is the first of `effective[DateTime|Period.start|Instant]`, `occurrenceDateTime`, `performed[DateTime|Period.start]`, `onsetDateTime`, `period.start`, `authoredOn`, `recordedDate`, `issued`, `date`, `meta.lastUpdated`; `end` is the matching period end or `start`; a resource with none of them is dated at the Unix epoch. `displayName` comes from the resource's code text or first coding display. Range, order and limit then apply to those derived values.
 
 ---
 
@@ -164,7 +178,11 @@ aggregate(type, { start, end, fn, bucket?, zone?, sources? })
 
 ### 6.2 Buckets
 
-`bucket` is `hour | day | week | month`, evaluated in `zone` (§1.5). Weeks start on Monday (ISO 8601). Multi-field types (blood pressure, nutrition) aggregate their first numeric field unless the query names a `field`. Each bucket result carries its own `start`/`end`. Empty buckets MUST be present with `null` values so consumers can draw gaps.
+`bucket` is `hour | day | week | month`, evaluated in `zone` (§1.5). Weeks start on Monday (ISO 8601). Multi-field types (blood pressure, nutrition) aggregate their first numeric field unless the query names a `field`; naming a field the type does not have MUST reject with `INVALID_ARGUMENT`. Each bucket result carries its own `start`/`end`. Empty buckets MUST be present with `null` values so consumers can draw gaps.
+
+Buckets are aligned to calendar boundaries, so the first bucket usually starts before the query's `start` and the last ends after its `end`. A bucket's `start`/`end` report the aligned boundaries, but its value covers only the part of the bucket inside `[start, end)`: data outside the query range is never counted.
+
+A provider whose platform aggregates in the device zone only (HealthKit) MUST reject a different `zone` with `NOT_SUPPORTED` rather than return device-zone buckets.
 
 ### 6.3 De-duplication
 
@@ -174,11 +192,15 @@ Two sources often record the same physical activity (phone + watch steps). Platf
 - `read()` MUST return the raw, possibly overlapping records.
 - A consumer summing `read()` results will over-count; this is by design and MUST be documented by every SDK.
 
+Where the platform has no aggregate for a type, or cannot apply a query's filter in its aggregate (Health Connect cannot exclude manual entries there), the provider reduces raw records itself. Such a result is not de-duplicated, and SDKs MUST document which types and filters take that path.
+
 ---
 
 ## 7. Writing and deleting
 
-`write(records)` accepts records without `id` (assigned by the store) and resolves with the stored records including ids. Providers MUST validate every record against its schema before touching the native store and reject the whole batch with `INVALID_ARGUMENT` on the first failure — partial writes are not allowed. A type whose platform mapping has `write: false` MUST reject with `NOT_SUPPORTED`.
+`write(records)` accepts records without `id` (assigned by the store) and resolves with the stored records including ids. Providers MUST validate every record against its schema before touching the native store and reject the whole batch with `INVALID_ARGUMENT` on the first failure — partial writes are not allowed. A batch is written atomically: when the platform fails part-way, nothing written by the call may remain (a provider that has to write in several steps rolls back what it wrote). An empty batch resolves with `[]`. A type whose platform mapping has `write: false` MUST reject with `NOT_SUPPORTED` — including types a platform reserves for itself (HealthKit lets apps read, but not write, stand hours, heart-rhythm notifications and similar Apple-generated data).
+
+A platform may require a field the schema otherwise treats as optional. Such fields are marked in the mapping (`metadataFields.*.required`) and in the type's `required` list where they carry information the caller must supply; a required boolean defaults to `false`.
 
 `delete({ ids })` and `delete({ type, start, end })` remove records the calling app wrote. Platforms refuse to delete other apps' data; providers surface that as `PERMISSION_DENIED`.
 
@@ -200,7 +222,12 @@ When a cursor can no longer be resumed (Health Connect tokens expire after 30 da
 
 ### 8.2 Subscriptions
 
-`subscribe(types, handler)` invokes `handler` when the store reports new data for any listed type, and returns an unsubscribe function. Delivery is best-effort and MAY be coalesced; handlers MUST fetch via `changes` rather than trusting the event payload. With the `background` capability, HealthKit providers MUST register background delivery and Health Connect providers SHOULD schedule periodic work, since Health Connect has no push mechanism.
+`subscribe(types, handler)` invokes `handler` when the store reports new data for any listed type, and returns an unsubscribe function. Delivery is best-effort and MAY be coalesced; handlers MUST fetch via `changes` rather than trusting the event payload. Changes a provider observed before any handler was attached (for example during a launch the platform started in the background) SHOULD be delivered to the first subscription.
+
+With the `background` capability:
+
+- **HealthKit** providers MUST register background delivery for subscribed types and MUST re-create the observers it needs while the app launches, before application code runs. Registration persists across launches and unsubscribing; providers SHOULD offer a way to disable it.
+- **Health Connect** has no push mechanism. Providers poll while the app runs; reading while backgrounded requires `READ_HEALTH_DATA_IN_BACKGROUND` and periodic work scheduled by the app (e.g. a background task calling `changes`). SDKs MUST document this.
 
 ---
 
@@ -234,6 +261,8 @@ Provider {
 Every rejection is a `HealthError { code: HealthErrorCode, message, cause? }` (codes in `@healthspec/schema`). A provider MUST NOT throw native error objects across the contract boundary.
 
 A provider's `capabilities()` is a promise to the conformance suite: every declared type and capability is exercised; undeclared ones are asserted to reject with `NOT_SUPPORTED`. `capabilities().types` is the single answer to "is this type supported" — any internal check a provider performs MUST agree with it, so that an unsupported type rejects with `NOT_SUPPORTED` before permissions are ever consulted.
+
+Capabilities describe the running device, not the platform in general: a type the OS version does not know (HealthKit State of Mind before iOS 18) or a feature the device has not received (Health Connect skin temperature, mindfulness, Personal Health Record, background and history reads) is not declared.
 
 ### 9.1 Optional operations
 

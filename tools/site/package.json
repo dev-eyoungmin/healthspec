@@ -1,0 +1,15 @@
+{
+  "name": "@healthspec/site",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Builds the documentation site: the guides, the specification, and a browsable reference for every health type.",
+  "scripts": {
+    "build": "tsx src/build.ts",
+    "check": "tsx src/check-links.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "marked": "^15.0.0"
+  }
+}

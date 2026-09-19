@@ -6,7 +6,7 @@
  * imports no React Native, so these tests run in plain Node.
  */
 import type { ExerciseSessionRecord, HealthType, SleepSessionRecord } from '@healthspec/schema';
-import type { AggregateResult, HealthStore, TypeSupport } from '@healthspec/core';
+import { defaultZone, zonedParts, type AggregateResult, type HealthStore, type TypeSupport } from '@healthspec/core';
 
 /** Types this screen shows. Declared once and reused for permissions, support checks and queries. */
 export const SCREEN_TYPES = ['steps', 'distance', 'active_energy', 'heart_rate', 'sleep_session', 'weight', 'exercise_session'] as const;
@@ -31,13 +31,19 @@ export interface Summary {
 }
 
 const DAY = 86_400_000;
-const iso = (ms: number) => new Date(ms).toISOString();
+const pad = (n: number) => String(n).padStart(2, '0');
+/** The calendar day an instant falls on in `zone` — not the UTC date, which is a day off east of Greenwich. */
+const localDate = (instant: string, zone: string) => {
+  const p = zonedParts(Date.parse(instant), zone);
+  return `${p.year}-${pad(p.month)}-${pad(p.day)}`;
+};
 const minutesBetween = (start: string, end: string) => Math.round((Date.parse(end) - Date.parse(start)) / 60_000);
 
 /** Same call on both platforms — the point of the exercise. */
-export async function loadSummary(store: HealthStore, options: { days?: number; now?: number } = {}): Promise<Summary> {
+export async function loadSummary(store: HealthStore, options: { days?: number; now?: number; zone?: string } = {}): Promise<Summary> {
   const days = options.days ?? 7;
   const now = options.now ?? Date.now();
+  const zone = options.zone ?? defaultZone();
   const start = new Date(now - days * DAY);
   const end = new Date(now);
 
@@ -45,12 +51,12 @@ export async function loadSummary(store: HealthStore, options: { days?: number; 
   const unavailable = SCREEN_TYPES.map((t) => store.support(t)).filter((s) => !s.read);
 
   const bucket = async (type: ScreenType): Promise<AggregateResult[]> =>
-    supported(type) ? store.aggregate(type, { start, end, fn: 'sum', bucket: 'day' }) : [];
+    supported(type) ? store.aggregate(type, { start, end, fn: 'sum', bucket: 'day', zone }) : [];
 
   const [steps, distance, energy] = await Promise.all([bucket('steps'), bucket('distance'), bucket('active_energy')]);
 
   const byDay = new Map<string, DailySummary>();
-  const dayKey = (isoDate: string) => isoDate.slice(0, 10);
+  const dayKey = (instant: string) => localDate(instant, zone);
   const put = (results: AggregateResult[], apply: (row: DailySummary, value: number | null) => void) => {
     for (const r of results) {
       const key = dayKey(r.start);
@@ -99,4 +105,3 @@ export async function loadSummary(store: HealthStore, options: { days?: number; 
  */
 export const screenPermissions = { read: [...SCREEN_TYPES] as HealthType[], write: ['weight'] as HealthType[], history: true };
 
-void iso;

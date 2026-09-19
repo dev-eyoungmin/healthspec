@@ -2,16 +2,68 @@
   "name": "@healthspec/schema",
   "version": "0.0.0",
   "description": "HealthSpec generated types, platform mapping tables, unit helpers and API semantics.",
+  "keywords": [
+    "health",
+    "healthkit",
+    "health-connect",
+    "json-schema",
+    "types",
+    "fitness",
+    "spec"
+  ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20.11"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "react-native": "./dist/index.js",
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/index.js"
+    },
+    "./bundle": {
+      "types": "./dist/bundle.d.ts",
+      "react-native": "./dist/bundle.js",
+      "import": "./dist/bundle.js",
+      "require": "./dist/cjs/bundle.js",
+      "default": "./dist/bundle.js"
+    },
+    "./examples": {
+      "types": "./dist/examples.d.ts",
+      "react-native": "./dist/examples.js",
+      "import": "./dist/examples.js",
+      "require": "./dist/cjs/examples.js",
+      "default": "./dist/examples.js"
+    }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node ../../tools/release/src/mark-cjs.mjs dist/cjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test test/*.test.ts"
-  }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dev-eyoungmin/healthspec.git",
+    "directory": "packages/schema"
+  },
+  "homepage": "https://dev-eyoungmin.github.io/healthspec/",
+  "bugs": {
+    "url": "https://github.com/dev-eyoungmin/healthspec/issues"
+  },
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "react-native": "./dist/index.js"
 }

@@ -1,8 +1,13 @@
+import { TYPE_MAPPINGS, type HealthType } from '@healthspec/schema';
+import { bucketRanges, defaultZone, primaryField, type BucketRange } from '@healthspec/core';
 import type {
   AppleHealthNative,
+  HCAggregateBucket,
   HCAggregateOptions,
   HCChanges,
+  HCFeature,
   HCInsertRecord,
+  HCMedicalResource,
   HCReadOptions,
   HCRecord,
   HCRoutePoint,
@@ -21,9 +26,49 @@ import type {
   HKStatisticsOptions,
 } from '../src/native.js';
 
-/** In-memory HealthKit bridge: samples live per identifier; every call is recorded for assertions. */
+/** Reduce numbers the way HKStatistics and Health Connect aggregates do. */
+function reduce(fn: string, values: number[]): number | null {
+  if (values.length === 0) return null;
+  switch (fn) {
+    case 'sum':
+      return values.reduce((a, b) => a + b, 0);
+    case 'avg':
+      return values.reduce((a, b) => a + b, 0) / values.length;
+    case 'min':
+      return Math.min(...values);
+    case 'max':
+      return Math.max(...values);
+    case 'count':
+      return values.length;
+    default:
+      return null;
+  }
+}
+
+/** Aligned buckets over [start, end) whose values cover only the part inside the range (SPEC §6.2). */
+function clippedBuckets(start: number, end: number, bucket: string | undefined, zone: string): Array<BucketRange & { from: number; to: number }> {
+  const ranges = bucket ? bucketRanges(start, end, bucket as 'day', zone) : [{ start, end }];
+  return ranges.map((r) => ({ ...r, from: Math.max(r.start, start), to: Math.min(r.end, end) }));
+}
+
+/** Rejection shaped like a native module's coded error (Expo CodedException / Swift promise.reject). */
+const codedError = (code: string, message: string) => Object.assign(new Error(message), { code });
+
+/** Identifiers HealthKit lets apps share, derived from the spec (which healthspec-check verifies against the runtime). */
+const HK_WRITABLE = new Set(
+  Object.values(TYPE_MAPPINGS).flatMap((m) => (m.healthkit?.write ? [...(m.healthkit.identifiers ?? []), ...(m.healthkit.identifier ? [m.healthkit.identifier] : []), ...Object.values(m.healthkit.fields ?? {})] : [])),
+);
+
+/**
+ * In-memory HealthKit bridge: samples live per identifier; every call is recorded for assertions. It rejects what
+ * HealthKit raises for (the Swift module turns those exceptions into E_INVALID_ARGUMENT), so a TypeScript mistake
+ * that would crash on a device fails a test instead.
+ */
 export class FakeApple implements AppleHealthNative {
   available = true;
+  backgroundConfigured = true;
+  unsupported = new Set<string>();
+  pending: string[] = [];
   samples = new Map<string, HKSample[]>();
   authorized = new Set<string>();
   denied = new Set<string>();
@@ -39,10 +84,40 @@ export class FakeApple implements AppleHealthNative {
   summaries: HKActivitySummary[] = [];
   meds: HKMedication[] = [];
 
+  /** Per-identifier change log: an anchor is a position in it. */
+  private log = new Map<string, Array<{ upsert?: string; delete?: string }>>();
+
   add(identifier: string, partial: Partial<HKSample> & { start: string; end: string }): HKSample {
     const s: HKSample = { uuid: partial.uuid ?? `uuid-${this.nextUuid++}`, identifier, metadata: {}, sourceBundleId: 'com.example.watch', wasUserEntered: false, ...partial };
     this.samples.set(identifier, [...(this.samples.get(identifier) ?? []), s]);
+    this.log.set(identifier, [...(this.log.get(identifier) ?? []), { upsert: s.uuid }]);
     return s;
+  }
+
+  private remove(identifier: string, uuid: string): boolean {
+    const list = this.samples.get(identifier) ?? [];
+    if (!list.some((s) => s.uuid === uuid)) return false;
+    this.samples.set(identifier, list.filter((s) => s.uuid !== uuid));
+    this.log.set(identifier, [...(this.log.get(identifier) ?? []), { delete: uuid }]);
+    return true;
+  }
+
+  /** What HealthKit stores for a saved object; the app writing it is this one. */
+  private store(sample: HKSaveSample): HKSample {
+    const metadata = Object.fromEntries(Object.entries(sample.metadata ?? {}).map(([k, v]) => [k, String(v)]));
+    const partial: Partial<HKSample> & { start: string; end: string } = {
+      uuid: `saved-${this.nextUuid++}`,
+      start: sample.start,
+      end: sample.end,
+      metadata,
+      sourceBundleId: 'com.example.app',
+      wasUserEntered: sample.metadata?.['HKWasUserEntered'] === true,
+    };
+    if (sample.value !== undefined) partial.value = sample.value;
+    if (sample.category !== undefined) partial.category = sample.category;
+    if (sample.workoutActivityType !== undefined) partial.workoutActivityType = sample.workoutActivityType;
+    if (sample.objects) partial.objects = sample.objects.map((o) => this.store(o));
+    return this.add(sample.identifier, partial);
   }
 
   private rec(fn: string, ...args: unknown[]) {
@@ -55,8 +130,25 @@ export class FakeApple implements AppleHealthNative {
   bundleIdentifier() {
     return 'com.example.app';
   }
+  supportedIdentifiers(identifiers: string[]) {
+    return identifiers.filter((id) => !this.unsupported.has(id));
+  }
+  backgroundDeliveryConfigured() {
+    return this.backgroundConfigured;
+  }
+  pendingChanges() {
+    const out = this.pending;
+    this.pending = [];
+    return out;
+  }
   async requestAuthorization(read: string[], write: string[]) {
     this.rec('requestAuthorization', read, write);
+    for (const id of read) {
+      if (id.startsWith('HKCorrelationTypeIdentifier') || id === 'HKDataTypeIdentifierMedicationDoseEvent') throw codedError('E_INVALID_ARGUMENT', `Authorization to read ${id} is disallowed`);
+    }
+    for (const id of write) {
+      if (!HK_WRITABLE.has(id)) throw codedError('E_INVALID_ARGUMENT', `Authorization to share ${id} is disallowed`);
+    }
     for (const id of write) if (!this.denied.has(id)) this.authorized.add(id);
   }
   async authorizationStatus(identifiers: string[]) {
@@ -77,27 +169,50 @@ export class FakeApple implements AppleHealthNative {
     if (!options.ascending) list.reverse();
     return options.limit === undefined ? list : list.slice(0, options.limit);
   }
+  /** Computed from stored samples like HKStatisticsCollectionQuery, unless a test fixes `statsResponse`. */
   async statistics(options: HKStatisticsOptions) {
     this.rec('statistics', options);
-    return this.statsResponse;
+    if (this.statsResponse.length) return this.statsResponse;
+    const start = Date.parse(options.start);
+    const end = Date.parse(options.end);
+    const samples = (this.samples.get(options.identifier) ?? []).filter((s) => !options.sourceBundleIds || options.sourceBundleIds.includes(s.sourceBundleId));
+    return clippedBuckets(start, end, options.interval?.unit, defaultZone()).map((b) => ({
+      start: new Date(b.start).toISOString(),
+      end: new Date(b.end).toISOString(),
+      value: reduce(options.fn, samples.filter((s) => Date.parse(s.start) >= b.from && Date.parse(s.start) < b.to).map((s) => s.value ?? 0)),
+    }));
   }
   async anchoredQuery(options: HKAnchoredOptions) {
     this.rec('anchoredQuery', options);
-    if (options.anchor === 'bad') {
-      const e = Object.assign(new Error('anchor could not be decoded'), { code: 'E_CURSOR_EXPIRED' });
-      throw e;
-    }
-    const all = this.samples.get(options.identifier) ?? [];
-    const from = options.anchor ? Number(options.anchor) : 0;
-    return { samples: all.slice(from), deleted: this.anchoredResponse.deleted ?? [], anchor: String(all.length) };
+    const log = this.log.get(options.identifier) ?? [];
+    const current = this.samples.get(options.identifier) ?? [];
+    if (options.anchor === undefined) return { samples: current, deleted: this.anchoredResponse.deleted ?? [], anchor: String(log.length) };
+    const from = Number(options.anchor);
+    if (!Number.isInteger(from)) throw codedError('E_CURSOR_EXPIRED', 'anchor could not be decoded');
+    const entries = log.slice(from);
+    const upserted = new Set(entries.flatMap((e) => (e.upsert ? [e.upsert] : [])));
+    return {
+      samples: current.filter((s) => upserted.has(s.uuid)),
+      deleted: [...entries.flatMap((e) => (e.delete ? [e.delete] : [])), ...(this.anchoredResponse.deleted ?? [])],
+      anchor: String(log.length),
+    };
   }
   async save(samples: HKSaveSample[]) {
     this.rec('save', samples);
-    return samples.map(() => `saved-${this.nextUuid++}`);
+    // Metadata HealthKit requires, in the type it requires, or the sample initialiser raises.
+    const required: Record<string, [string, 'boolean' | 'number']> = {
+      HKCategoryTypeIdentifierMenstrualFlow: ['HKMenstrualCycleStart', 'boolean'],
+      HKQuantityTypeIdentifierInsulinDelivery: ['HKInsulinDeliveryReason', 'number'],
+    };
+    for (const sample of samples) {
+      const rule = required[sample.identifier];
+      if (rule && typeof sample.metadata?.[rule[0]] !== rule[1]) throw codedError('E_INVALID_ARGUMENT', `${sample.identifier} requires ${rule[0]} as a ${rule[1]}`);
+    }
+    return samples.map((sample) => this.store(sample).uuid);
   }
   async deleteObjects(identifier: string, kind: HKKind, uuids: string[]) {
     this.rec('deleteObjects', identifier, kind, uuids);
-    return uuids.length;
+    return uuids.filter((uuid) => this.remove(identifier, uuid)).length;
   }
   async deleteByRange(identifier: string, kind: HKKind, start: string, end: string) {
     this.rec('deleteByRange', identifier, kind, start, end);
@@ -160,7 +275,11 @@ export class FakeApple implements AppleHealthNative {
   }
 }
 
-/** In-memory Health Connect bridge returning spec-shaped records. */
+/**
+ * In-memory Health Connect bridge returning spec-shaped records. It enforces the Kotlin module's argument
+ * contract (spec type ids everywhere, one atomic insert, flattened series ids) so a TypeScript mismatch fails here
+ * instead of on a device.
+ */
 export class FakeHealthConnect implements HealthConnectNative {
   status: HCSdkStatus = 'available';
   granted = new Set<string>();
@@ -169,14 +288,23 @@ export class FakeHealthConnect implements HealthConnectNative {
   calls: Array<{ fn: string; args: unknown[] }> = [];
   expiredTokens = new Set<string>();
   routes = new Map<string, HCRoutePoint[]>();
-  medical = new Map<string, HCRecord[]>();
+  /** keyed by clinical_* spec type id, as HealthSpecMedicalTypes is */
+  medical = new Map<string, HCMedicalResource[]>();
+  deviceFeatures: Record<HCFeature, boolean> = { MINDFULNESS_SESSION: true, SKIN_TEMPERATURE: true, PERSONAL_HEALTH_RECORD: true, READ_HEALTH_DATA_IN_BACKGROUND: true, READ_HEALTH_DATA_HISTORY: true };
   private nextId = 1;
+
+  features() {
+    const off = Object.fromEntries(Object.keys(this.deviceFeatures).map((k) => [k, false])) as Record<HCFeature, boolean>;
+    return this.status === 'available' ? { ...this.deviceFeatures } : off;
+  }
 
   private rec(fn: string, ...args: unknown[]) {
     this.calls.push({ fn, args });
   }
   add(type: string, partial: Partial<HCRecord> & { start: string; end: string; value: Record<string, unknown> }): HCRecord {
-    const r: HCRecord = { id: partial.id ?? `hc-${this.nextId++}`, source: { app: { id: 'com.example.other' }, recordingMethod: 'automatic' }, metadata: {}, ...partial };
+    // Series records arrive flattened, one sample per record with a "#<index>" id.
+    const series = TYPE_MAPPINGS[type as HealthType]?.healthconnect?.series ? '#0' : '';
+    const r: HCRecord = { id: partial.id ?? `hc-${this.nextId++}${series}`, source: { app: { id: 'com.example.other' }, recordingMethod: 'automatic' }, metadata: {}, ...partial };
     this.records.set(type, [...(this.records.get(type) ?? []), r]);
     this.changeLog.set(type, [...(this.changeLog.get(type) ?? []), { upsert: r }]);
     return r;
@@ -213,13 +341,37 @@ export class FakeHealthConnect implements HealthConnectNative {
     if (!options.ascending) list.reverse();
     return options.limit === undefined ? list : list.slice(0, options.limit);
   }
+  /** Fixed buckets for a test, or computed from records like Aggregation.kt's reduce path. */
+  aggregateResponse: HCAggregateBucket[] | undefined;
   async aggregate(type: string, options: HCAggregateOptions) {
     this.rec('aggregate', type, options);
-    return [{ start: options.start, end: options.end, value: 42 }];
+    if (this.aggregateResponse) return this.aggregateResponse;
+    const start = Date.parse(options.start);
+    const end = Date.parse(options.end);
+    const field = options.field ?? primaryField(type as HealthType);
+    const records = (this.records.get(type) ?? []).filter((r) => (!options.apps || options.apps.includes(r.source.app?.id ?? '')) && (!options.excludeManual || r.source.recordingMethod !== 'manual'));
+    return clippedBuckets(start, end, options.bucket, options.zone).map((b) => {
+      const inside = records.filter((r) => Date.parse(r.start) >= b.from && Date.parse(r.start) < b.to);
+      const value =
+        options.fn === 'duration'
+          ? inside.length ? inside.reduce((a, r) => a + (Date.parse(r.end) - Date.parse(r.start)), 0) / 1000 : null
+          : reduce(options.fn, options.fn === 'count' ? inside.map(() => 1) : inside.map((r) => Number(r.value[field ?? ''])).filter((n) => !Number.isNaN(n)));
+      return { start: new Date(b.start).toISOString(), end: new Date(b.end).toISOString(), value };
+    });
   }
-  async insertRecords(type: string, records: HCInsertRecord[]) {
-    this.rec('insertRecords', type, records);
-    return records.map((r) => this.add(type, { start: r.start, end: r.end, value: r.value, source: { app: { id: 'com.example.app' }, recordingMethod: r.recordingMethod } }).id);
+  async insertRecords(records: HCInsertRecord[]) {
+    this.rec('insertRecords', records);
+    // HealthSpecTypes.require + the write check run for every record before anything is inserted.
+    for (const r of records) {
+      const hc = TYPE_MAPPINGS[r.type as HealthType]?.healthconnect;
+      if (!hc || hc.special || hc.medicalResourceType) throw codedError('E_INVALID_ARGUMENT', `Health Connect does not support type '${r.type}'`);
+      if (!hc.write) throw codedError('E_NOT_SUPPORTED', `Health Connect cannot write "${r.type}"`);
+    }
+    return records.map((r) => {
+      const source: HCRecord['source'] = { app: { id: 'com.example.app' }, recordingMethod: r.recordingMethod };
+      if (r.device) source.device = r.device;
+      return this.add(r.type, { start: r.start, end: r.end, value: r.value, source }).id;
+    });
   }
   async deleteRecordsByIds(type: string, ids: string[]) {
     this.rec('deleteRecordsByIds', type, ids);
@@ -234,15 +386,21 @@ export class FakeHealthConnect implements HealthConnectNative {
   }
   async readRecord(type: string, id: string) {
     this.rec('readRecord', type, id);
-    return (this.records.get(type) ?? []).find((r) => r.id === id) ?? null;
+    // A bare id of a series record resolves to its first sample, as Serialization.parseSeriesId does.
+    const list = this.records.get(type) ?? [];
+    return list.find((r) => r.id === id) ?? list.find((r) => r.id === `${id}#0`) ?? null;
   }
   async readExerciseRoute(sessionId: string) {
     this.rec('readExerciseRoute', sessionId);
     return this.routes.get(sessionId) ?? null;
   }
-  async readMedicalResources(medicalResourceType: string, options: HCReadOptions) {
-    this.rec('readMedicalResources', medicalResourceType, options);
-    return this.medical.get(medicalResourceType) ?? [];
+  async readMedicalResources(type: string, options: HCReadOptions) {
+    this.rec('readMedicalResources', type, options);
+    // HealthSpecMedicalTypes.require(type): only clinical_* spec ids resolve.
+    if (!TYPE_MAPPINGS[type as HealthType]?.healthconnect?.medicalResourceType) throw codedError('E_INVALID_ARGUMENT', `'${type}' is not a Health Connect medical resource type`);
+    if (!this.deviceFeatures.PERSONAL_HEALTH_RECORD) throw codedError('E_NOT_SUPPORTED', 'Personal Health Record is not available on this device');
+    const all = this.medical.get(type) ?? [];
+    return options.limit === undefined ? all : all.slice(0, options.limit);
   }
   async openSettings() {
     this.rec('openSettings');

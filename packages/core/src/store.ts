@@ -1,4 +1,4 @@
-import { HEALTH_TYPES, TYPE_PLATFORMS, validateRecord, type Availability, type Cursor, type ExerciseRouteRecord, type HealthProfile, type HealthRecord, type HealthRecordOf, type HealthType, type PlatformId } from '@healthspec/schema';
+import { HEALTH_TYPES, TYPE_MAPPINGS, TYPE_PLATFORMS, validateRecord, type Availability, type Cursor, type ExerciseRouteRecord, type HealthProfile, type HealthRecord, type HealthRecordOf, type HealthType, type PlatformId } from '@healthspec/schema';
 import { assertAggregateSupported } from './aggregate.js';
 import { counterpartHint, describeType, type SupportReport, type TypeSupport } from './support.js';
 import { invalidArgument, isHealthError, notSupported } from './errors.js';
@@ -79,6 +79,7 @@ export class HealthStore {
     if (!this.capabilities().aggregate) throw notSupported(`provider "${this.id}" cannot aggregate`);
     assertAggregateSupported(type, query.fn);
     assertRange(query.start, query.end);
+    if (query.field !== undefined && !(query.field in TYPE_MAPPINGS[type].fieldUnits)) throw invalidArgument(`"${query.field}" is not a numeric field of "${type}"`);
     return this.provider.aggregate(type, query);
   }
 

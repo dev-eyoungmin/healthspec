@@ -10,11 +10,16 @@ export function emitKotlinTypes(b: SpecBundle): string {
     .map((t) => {
       const hc = t.json['x-healthspec'].platforms.healthconnect;
       const primary = Object.keys(t.json.properties ?? {}).find((k) => t.json.properties[k]?.['x-unit']);
-      return `    "${t.json.title}" to TypeSpec(${hc.record}::class, "${hc.permission}", ${hc.read}, ${hc.write}, ${hc.series ? 'true' : 'false'}, ${primary ? `"${primary}"` : 'null'}),`;
+      const feature = hc.feature ? `HealthConnectFeatures.FEATURE_${hc.feature}` : 'null';
+      return `    "${t.json.title}" to TypeSpec(${hc.record}::class, "${hc.permission}", ${hc.read}, ${hc.write}, ${hc.series ? 'true' : 'false'}, ${primary ? `"${primary}"` : 'null'}, ${feature}),`;
     });
   return `// GENERATED FILE — do not edit. Source of truth: spec/schema/**. Regenerate with \`pnpm codegen\`.
+@file:OptIn(ExperimentalMindfulnessSessionApi::class)
+
 package dev.healthspec.generated
 
+import androidx.health.connect.client.HealthConnectFeatures
+import androidx.health.connect.client.feature.ExperimentalMindfulnessSessionApi
 import androidx.health.connect.client.records.*
 import kotlin.reflect.KClass
 
@@ -27,6 +32,8 @@ data class TypeSpec(
   val series: Boolean,
   /** First numeric value field — what aggregate() operates on unless a field is named. */
   val primaryField: String?,
+  /** HealthConnectFeatures.FEATURE_* the device must report available, or null when every device has the type. */
+  val feature: Int?,
 ) {
   val readPermission get() = "android.permission.health.READ_$permissionSuffix"
   val writePermission get() = "android.permission.health.WRITE_$permissionSuffix"
@@ -154,8 +161,11 @@ export function emitKotlinMedicalTypes(b: SpecBundle): string {
     .filter((t) => t.json['x-healthspec'].platforms?.healthconnect?.medicalResourceType)
     .map((t) => `    "${t.json.title}" to "android.permission.health.READ_${t.json['x-healthspec'].platforms.healthconnect.permission}",`);
   return `// GENERATED FILE — do not edit. Source of truth: spec/schema/**. Regenerate with \`pnpm codegen\`.
+@file:OptIn(ExperimentalPersonalHealthRecordApi::class)
+
 package dev.healthspec.generated
 
+import androidx.health.connect.client.feature.ExperimentalPersonalHealthRecordApi
 import androidx.health.connect.client.records.MedicalResource
 
 /**

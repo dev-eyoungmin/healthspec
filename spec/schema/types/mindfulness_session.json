@@ -26,6 +26,7 @@
       "healthconnect": {
         "record": "MindfulnessSessionRecord",
         "permission": "MINDFULNESS",
+        "feature": "MINDFULNESS_SESSION",
         "field": "mindfulnessSessionType",
         "read": true,
         "write": true,

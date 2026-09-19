@@ -1,6 +1,9 @@
 // GENERATED FILE — do not edit. Source of truth: spec/schema/**. Regenerate with `pnpm codegen`.
+@file:OptIn(ExperimentalPersonalHealthRecordApi::class)
+
 package dev.healthspec.generated
 
+import androidx.health.connect.client.feature.ExperimentalPersonalHealthRecordApi
 import androidx.health.connect.client.records.MedicalResource
 
 /**

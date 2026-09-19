@@ -683,7 +683,7 @@ export interface InhalerUsageValue {
 export interface InsulinDeliveryValue {
   /** Unit: IU. Range: 0–… */
   internationalUnits: number;
-  reason?: "basal" | "bolus";
+  reason: "basal" | "bolus";
 }
 
 /** Spotting / bleeding between periods. */

@@ -1,0 +1,61 @@
+{
+  "name": "@healthspec/cli",
+  "version": "0.0.0",
+  "description": "healthspec doctor — finds HealthKit and Health Connect configuration mistakes before App Review or Play Console does; healthspec mapping — one type's platform mapping.",
+  "keywords": [
+    "health",
+    "healthkit",
+    "health-connect",
+    "expo",
+    "doctor",
+    "cli",
+    "app-review"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "type": "module",
+  "bin": {
+    "healthspec": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/api.d.ts",
+      "react-native": "./dist/api.js",
+      "import": "./dist/api.js",
+      "require": "./dist/cjs/api.js",
+      "default": "./dist/api.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node ../../tools/release/src/mark-cjs.mjs dist/cjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@healthspec/schema": "workspace:*"
+  },
+  "homepage": "https://dev-eyoungmin.github.io/healthspec/",
+  "bugs": {
+    "url": "https://github.com/dev-eyoungmin/healthspec/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dev-eyoungmin/healthspec.git",
+    "directory": "packages/cli"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "main": "./dist/cjs/api.js",
+  "module": "./dist/api.js",
+  "types": "./dist/api.d.ts",
+  "react-native": "./dist/api.js",
+  "sideEffects": false
+}

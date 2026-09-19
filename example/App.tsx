@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { HealthStore, isHealthError } from '@healthspec/expo';
+import { runConformanceSuite, type ConformanceReport } from '@healthspec/conformance';
+import { HealthStore, isHealthError, type Availability } from '@healthspec/expo';
 import { loadSummary, screenPermissions, type Summary } from './src/summary';
 
 const store = HealthStore.default();
@@ -9,15 +10,16 @@ const store = HealthStore.default();
 export default function App() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<Availability | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const availability = await store.availability();
-      if (availability !== 'available') {
-        // not_installed and update_required are recoverable — send the user to the installer.
-        setError(`Health data is ${availability.replace('_', ' ')}.`);
+      const state = await store.availability();
+      setAvailability(state);
+      if (state !== 'available') {
+        setError(`Health data is ${state.replace('_', ' ')}.`);
         return;
       }
       await store.requestSupportedPermissions(screenPermissions);
@@ -49,6 +51,12 @@ export default function App() {
         {error && (
           <View style={[styles.card, styles.errorCard]}>
             <Text style={styles.errorText}>{error}</Text>
+            {/* not_installed and update_required are recoverable: Health Connect can be installed or updated. */}
+            {(availability === 'not_installed' || availability === 'update_required') && (
+              <Pressable onPress={() => void store.openInstaller()} style={styles.button}>
+                <Text style={styles.buttonText}>{availability === 'not_installed' ? 'Install Health Connect' : 'Update Health Connect'}</Text>
+              </Pressable>
+            )}
             <Pressable onPress={refresh} style={styles.button}>
               <Text style={styles.buttonText}>Try again</Text>
             </Pressable>
@@ -112,8 +120,62 @@ export default function App() {
             )}
           </>
         )}
+
+        {availability === 'available' && <ConformancePanel />}
       </ScrollView>
     </View>
+  );
+}
+
+/**
+ * Runs the specification's conformance suite against the real provider on this device — the check a CI run over
+ * fakes cannot make. The write run adds one weight entry and deletes it again.
+ */
+function ConformancePanel() {
+  const [report, setReport] = useState<ConformanceReport | null>(null);
+  const [running, setRunning] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+
+  const run = async (readOnly: boolean) => {
+    setRunning(true);
+    setFailure(null);
+    try {
+      await store.requestSupportedPermissions({ read: ['steps', 'weight'], write: ['weight'] });
+      setReport(await runConformanceSuite(store.provider, { readOnly, readableType: 'steps', writableType: 'weight' }));
+    } catch (e) {
+      setFailure(isHealthError(e) ? `${e.code}: ${e.message}` : String(e));
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <Section title="Conformance">
+      <View style={styles.row}>
+        <Pressable disabled={running} onPress={() => void run(true)} style={styles.button}>
+          <Text style={styles.buttonText}>Read-only run</Text>
+        </Pressable>
+        <Pressable disabled={running} onPress={() => void run(false)} style={styles.button}>
+          <Text style={styles.buttonText}>Run with writes</Text>
+        </Pressable>
+      </View>
+      {running && <ActivityIndicator />}
+      {failure && <Text style={styles.errorText}>{failure}</Text>}
+      {report && (
+        <>
+          <Text style={styles.dayValue}>
+            {report.conformant ? 'Conformant' : 'Not conformant'} — {report.passed} passed · {report.failed} failed · {report.skipped} skipped
+          </Text>
+          {report.results
+            .filter((r) => r.status !== 'passed')
+            .map((r) => (
+              <Text key={r.id} style={r.status === 'failed' ? styles.errorText : styles.dayMuted}>
+                {r.status === 'failed' ? '✖' : '–'} {r.id} ({r.clause}){r.detail ? `: ${r.detail}` : ''}
+              </Text>
+            ))}
+        </>
+      )}
+    </Section>
   );
 }
 

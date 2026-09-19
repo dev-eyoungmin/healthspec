@@ -1,22 +1,39 @@
 import ExpoModulesCore
 import HealthKit
-import HealthSpec
 import UIKit
 
+/// Info.plist key the config plugin sets when the app has the background-delivery entitlement.
+private let backgroundDeliveryPlistKey = "HealthSpecBackgroundDelivery"
+
 /**
- * Thin bridge over HealthKit primitives. Type mapping, unit scaling and session derivation live in TypeScript
- * (packages/expo/src/AppleHealthProvider.ts); this module only moves samples across the boundary.
- *
- * Written before a toolchain was available — compile and device-test in Phase 1.5.
+ Thin bridge over HealthKit primitives. Type mapping, unit scaling and session derivation live in TypeScript
+ (libraries/expo-health/src/AppleHealthProvider.ts); this module only moves samples across the boundary.
+
+ HealthKit raises Objective-C exceptions for several kinds of misuse. Calls that can raise go through
+ catchingHealthKit, and statistics are validated before the query exists, so misuse rejects instead of crashing.
  */
 public class HealthSpecModule: Module {
   private let store = HKHealthStore()
-  private var observers: [String: HKObserverQuery] = [:]
+  private var changeObserver: NSObjectProtocol?
 
   public func definition() -> ModuleDefinition {
     Name("HealthSpec")
 
     Events("onChange")
+
+    OnStartObserving("onChange") {
+      self.changeObserver = NotificationCenter.default.addObserver(forName: HealthSpecObservers.changed, object: nil, queue: nil) { [weak self] note in
+        guard let identifier = note.userInfo?["identifier"] as? String else { return }
+        self?.sendEvent("onChange", ["identifier": identifier])
+      }
+      HealthSpecObservers.shared.setListening(true)
+    }
+
+    OnStopObserving("onChange") {
+      HealthSpecObservers.shared.setListening(false)
+      if let observer = self.changeObserver { NotificationCenter.default.removeObserver(observer) }
+      self.changeObserver = nil
+    }
 
     Function("isHealthDataAvailable") { () -> Bool in
       HKHealthStore.isHealthDataAvailable()
@@ -26,6 +43,15 @@ public class HealthSpecModule: Module {
       Bundle.main.bundleIdentifier ?? ""
     }
 
+    /// The identifiers this OS version knows. Types newer than the device are unsupported, not errors (SPEC §9).
+    Function("supportedIdentifiers") { (identifiers: [String]) -> [String] in
+      identifiers.filter { objectType($0) != nil }
+    }
+
+    Function("backgroundDeliveryConfigured") { () -> Bool in
+      Bundle.main.object(forInfoDictionaryKey: backgroundDeliveryPlistKey) as? Bool ?? false
+    }
+
     AsyncFunction("requestAuthorization") { (read: [String], write: [String], promise: Promise) in
       guard HKHealthStore.isHealthDataAvailable() else {
         promise.reject("E_NOT_AVAILABLE", "HealthKit is not available on this device")
@@ -33,12 +59,19 @@ public class HealthSpecModule: Module {
       }
       let readTypes = Set(read.compactMap { objectType($0) })
       let shareTypes = Set(write.compactMap { objectType($0) as? HKSampleType })
-      self.store.requestAuthorization(toShare: shareTypes, read: readTypes) { _, error in
-        if let error {
-          promise.reject(errorCode(error), error.localizedDescription)
-        } else {
-          promise.resolve(nil)
+      do {
+        // Sharing a type Apple reserves, or asking without the usage description, raises synchronously.
+        try catchingHealthKit {
+          self.store.requestAuthorization(toShare: shareTypes, read: readTypes) { _, error in
+            if let error {
+              promise.reject(errorCode(error), error.localizedDescription)
+            } else {
+              promise.resolve(nil)
+            }
+          }
         }
+      } catch {
+        promise.reject("E_INVALID_ARGUMENT", "\(error)")
       }
     }
 
@@ -60,27 +93,25 @@ public class HealthSpecModule: Module {
         let type = try sampleType(options.identifier)
         let start = try parseDate(options.start)
         let end = try parseDate(options.end)
-        let unit = options.unit.map { HKUnit(from: $0) }
-        let units = (options.units ?? [:]).mapValues { HKUnit(from: $0) }
+        let unit = try options.unit.map { try parseUnit($0) }
+        let units = try (options.units ?? [:]).mapValues { try parseUnit($0) }
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: options.ascending)
-        var predicate = predicateForRange(start, end, excludeUserEntered: options.excludeUserEntered)
+        var predicates = [predicateForRange(start, end, excludeUserEntered: options.excludeUserEntered)]
         if let uuids = options.uuids, !uuids.isEmpty {
-          let byId = HKQuery.predicateForObjects(with: Set(uuids.compactMap { UUID(uuidString: $0) }))
-          predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicate, byId])
+          predicates.append(HKQuery.predicateForObjects(with: Set(uuids.compactMap { UUID(uuidString: $0) })))
         }
-        let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: options.limit ?? HKObjectQueryNoLimit, sortDescriptors: [sort]) { _, samples, error in
-          if let error {
-            promise.reject(errorCode(error), error.localizedDescription)
-            return
+        // The source filter is part of the predicate so `limit` counts only matching samples.
+        self.sourcePredicate(type, options.sourceBundleIds, promise) { sources in
+          let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates + (sources.map { [$0] } ?? []))
+          let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: options.limit ?? HKObjectQueryNoLimit, sortDescriptors: [sort]) { _, samples, error in
+            if let error {
+              promise.reject(errorCode(error), error.localizedDescription)
+              return
+            }
+            promise.resolve((samples ?? []).map { serialize($0, unit: unit, units: units) })
           }
-          var result = samples ?? []
-          if let bundleIds = options.sourceBundleIds {
-            let allowed = Set(bundleIds)
-            result = result.filter { allowed.contains($0.sourceRevision.source.bundleIdentifier) }
-          }
-          promise.resolve(result.map { serialize($0, unit: unit, units: units) })
+          self.store.execute(query)
         }
-        self.store.execute(query)
       } catch {
         promise.reject("E_INVALID_ARGUMENT", "\(error)")
       }
@@ -91,34 +122,43 @@ public class HealthSpecModule: Module {
         let type = try quantityType(options.identifier)
         let start = try parseDate(options.start)
         let end = try parseDate(options.end)
-        let unit = HKUnit(from: options.unit)
+        let unit = try parseUnit(options.unit)
+        if let problem = statisticsProblem(type, options.fn, unit) {
+          promise.reject("E_NOT_SUPPORTED", problem)
+          return
+        }
         let statsOptions = statisticsOptions(options.fn)
-        let predicate = predicateForRange(start, end, excludeUserEntered: options.excludeUserEntered)
-        if let interval = options.interval {
-          let anchor = try options.anchor.map { try parseDate($0) } ?? start
-          let query = HKStatisticsCollectionQuery(quantityType: type, quantitySamplePredicate: predicate, options: statsOptions, anchorDate: anchor, intervalComponents: intervalComponents(interval))
-          query.initialResultsHandler = { _, collection, error in
-            if let error {
-              promise.reject(errorCode(error), error.localizedDescription)
-              return
+        let range = predicateForRange(start, end, excludeUserEntered: options.excludeUserEntered)
+        self.sourcePredicate(type, options.sourceBundleIds, promise) { sources in
+          let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [range] + (sources.map { [$0] } ?? []))
+          if let interval = options.interval {
+            let anchor = (try? options.anchor.map { try parseDate($0) }) ?? start
+            let query = HKStatisticsCollectionQuery(quantityType: type, quantitySamplePredicate: predicate, options: statsOptions, anchorDate: anchor, intervalComponents: intervalComponents(interval))
+            query.initialResultsHandler = { _, collection, error in
+              if let error {
+                promise.reject(errorCode(error), error.localizedDescription)
+                return
+              }
+              var out: [[String: Any]] = []
+              collection?.enumerateStatistics(from: min(anchor, start), to: end) { stats, _ in
+                // enumerateStatistics includes the bucket that starts at `end`; the range is [start, end).
+                guard stats.startDate < end else { return }
+                out.append(["start": isoString(stats.startDate), "end": isoString(stats.endDate), "value": statisticValue(stats, options.fn, unit)])
+              }
+              promise.resolve(out)
             }
-            var out: [[String: Any]] = []
-            collection?.enumerateStatistics(from: min(anchor, start), to: end) { stats, _ in
-              out.append(["start": isoString(stats.startDate), "end": isoString(stats.endDate), "value": statisticValue(stats, options.fn, unit)])
+            self.store.execute(query)
+          } else {
+            let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: statsOptions) { _, stats, error in
+              if let error, (error as NSError).code != HKError.errorNoData.rawValue {
+                promise.reject(errorCode(error), error.localizedDescription)
+                return
+              }
+              let value: Any = stats.map { statisticValue($0, options.fn, unit) } ?? NSNull()
+              promise.resolve([["start": isoString(start), "end": isoString(end), "value": value]])
             }
-            promise.resolve(out)
+            self.store.execute(query)
           }
-          self.store.execute(query)
-        } else {
-          let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: statsOptions) { _, stats, error in
-            if let error, (error as NSError).code != HKError.errorNoData.rawValue {
-              promise.reject(errorCode(error), error.localizedDescription)
-              return
-            }
-            let value: Any = stats.map { statisticValue($0, options.fn, unit) } ?? NSNull()
-            promise.resolve([["start": isoString(start), "end": isoString(end), "value": value]])
-          }
-          self.store.execute(query)
         }
       } catch {
         promise.reject("E_INVALID_ARGUMENT", "\(error)")
@@ -128,8 +168,8 @@ public class HealthSpecModule: Module {
     AsyncFunction("anchoredQuery") { (options: AnchoredOptions, promise: Promise) in
       do {
         let type = try sampleType(options.identifier)
-        let unit = options.unit.map { HKUnit(from: $0) }
-        let units = (options.units ?? [:]).mapValues { HKUnit(from: $0) }
+        let unit = try options.unit.map { try parseUnit($0) }
+        let units = try (options.units ?? [:]).mapValues { try parseUnit($0) }
         var anchor: HKQueryAnchor? = nil
         if let encoded = options.anchor, !encoded.isEmpty {
           guard let data = Data(base64Encoded: encoded),
@@ -160,42 +200,48 @@ public class HealthSpecModule: Module {
       }
     }
 
+    /**
+     SPEC §7 forbids partial writes. Every object is built (and validated by HealthKit's initialisers) before
+     anything is saved; samples then go to HealthKit in one call, which is atomic. Workouts can only be created
+     through HKWorkoutBuilder, one at a time, so if a workout fails everything saved by this call is deleted again.
+     */
     AsyncFunction("save") { (samples: [SaveSample], promise: Promise) in
-      // Saved one at a time so the returned UUIDs line up with the input order.
-      var uuids: [String] = []
-      func saveNext(_ index: Int) {
-        guard index < samples.count else {
-          promise.resolve(uuids)
-          return
+      var objects: [Int: HKSample] = [:]
+      do {
+        for (index, sample) in samples.enumerated() where sample.kind != "workout" {
+          objects[index] = try buildObject(sample)
         }
-        let sample = samples[index]
-        if sample.kind == "workout" {
-          self.saveWorkout(sample) { result in
-            switch result {
-            case .success(let uuid):
-              uuids.append(uuid)
-              saveNext(index + 1)
-            case .failure(let error):
-              promise.reject(errorCode(error), error.localizedDescription)
+      } catch {
+        promise.reject("E_INVALID_ARGUMENT", "\(error)")
+        return
+      }
+      let batch = objects.keys.sorted().compactMap { objects[$0] }
+      let saveWorkouts = {
+        self.saveWorkouts(samples, from: 0, saved: []) { result in
+          switch result {
+          case .success(let workouts):
+            promise.resolve(samples.indices.map { objects[$0]?.uuid.uuidString ?? workouts[$0] ?? "" })
+          case .failure(let error):
+            let code = error is HealthSpecError || error is HealthKitRaised ? "E_INVALID_ARGUMENT" : errorCode(error)
+            if batch.isEmpty {
+              promise.reject(code, "\(error)")
+            } else {
+              self.store.delete(batch) { _, _ in promise.reject(code, "\(error)") }
             }
           }
-          return
-        }
-        do {
-          let object = try buildObject(sample)
-          self.store.save(object) { _, error in
-            if let error {
-              promise.reject(errorCode(error), error.localizedDescription)
-              return
-            }
-            uuids.append(object.uuid.uuidString)
-            saveNext(index + 1)
-          }
-        } catch {
-          promise.reject("E_INVALID_ARGUMENT", "\(error)")
         }
       }
-      saveNext(0)
+      if batch.isEmpty {
+        saveWorkouts()
+        return
+      }
+      self.store.save(batch) { _, error in
+        if let error {
+          promise.reject(errorCode(error), error.localizedDescription)
+        } else {
+          saveWorkouts()
+        }
+      }
     }
 
     AsyncFunction("deleteObjects") { (identifier: String, kind: String, uuids: [String], promise: Promise) in
@@ -217,7 +263,7 @@ public class HealthSpecModule: Module {
     AsyncFunction("deleteByRange") { (identifier: String, kind: String, start: String, end: String, promise: Promise) in
       do {
         let type = try sampleType(identifier)
-        let predicate = HKQuery.predicateForSamples(withStart: try parseDate(start), end: try parseDate(end), options: [])
+        let predicate = predicateForRange(try parseDate(start), try parseDate(end), excludeUserEntered: false)
         self.store.deleteObjects(of: type, predicate: predicate) { _, count, error in
           if let error {
             promise.reject(errorCode(error), error.localizedDescription)
@@ -239,6 +285,8 @@ public class HealthSpecModule: Module {
         if let error {
           promise.reject(errorCode(error), error.localizedDescription)
         } else {
+          // Remembered so the observer that background delivery needs is re-created at the next launch.
+          if ok { HealthSpecObservers.shared.setBackground(identifier, enabled: true) }
           promise.resolve(ok)
         }
       }
@@ -253,33 +301,23 @@ public class HealthSpecModule: Module {
         if let error {
           promise.reject(errorCode(error), error.localizedDescription)
         } else {
+          HealthSpecObservers.shared.setBackground(identifier, enabled: false)
           promise.resolve(ok)
         }
       }
     }
 
-    AsyncFunction("startObserving") { (identifier: String, kind: String, promise: Promise) in
-      do {
-        let type = try sampleType(identifier)
-        let observerId = UUID().uuidString
-        let query = HKObserverQuery(sampleType: type, predicate: nil) { [weak self] _, completion, error in
-          if error == nil {
-            self?.sendEvent("onChange", ["identifier": identifier])
-          }
-          completion()
-        }
-        self.observers[observerId] = query
-        self.store.execute(query)
-        promise.resolve(observerId)
-      } catch {
-        promise.reject("E_INVALID_ARGUMENT", "\(error)")
-      }
+    AsyncFunction("startObserving") { (identifier: String, kind: String) -> String in
+      HealthSpecObservers.shared.start(try sampleType(identifier))
     }
 
     AsyncFunction("stopObserving") { (observerId: String) in
-      if let query = self.observers.removeValue(forKey: observerId) {
-        self.store.stop(query)
-      }
+      HealthSpecObservers.shared.stop(observerId)
+    }
+
+    /// Identifiers whose observers fired while JavaScript was not listening (e.g. a background launch).
+    Function("pendingChanges") { () -> [String] in
+      HealthSpecObservers.shared.takePending()
     }
 
     // ---------------------------------------------------------------- non-sample data
@@ -292,7 +330,7 @@ public class HealthSpecModule: Module {
       if let wheelchair = try? self.store.wheelchairUse() { out["wheelchairUse"] = wheelchair.wheelchairUse.rawValue }
       if #available(iOS 14.0, *), let mode = try? self.store.activityMoveMode() { out["activityMoveMode"] = mode.activityMoveMode.rawValue }
       if let dob = try? self.store.dateOfBirthComponents(), let y = dob.year, let m = dob.month, let d = dob.day {
-        out["dateOfBirth"] = String(format: "%04d-%02d-%02d", y, m, d)
+        out["dateOfBirth"] = String(format: "%04ld-%02ld-%02ld", y, m, d)
       }
       return out
     }
@@ -417,19 +455,21 @@ public class HealthSpecModule: Module {
         }
         var out: [[String: Any]] = []
         var settled = false
-        let voltageQuery = HKElectrocardiogramQuery(ecg) { _, measurement, done, error in
+        let voltageQuery = HKElectrocardiogramQuery(ecg) { _, result in
           if settled { return }
-          if let error {
-            settled = true
-            promise.reject(errorCode(error), error.localizedDescription)
-            return
-          }
-          if let measurement, let quantity = measurement.quantity(for: .appleWatchSimilarToLeadI) {
-            out.append(["offsetSeconds": measurement.timeSinceSampleStart, "microvolts": quantity.doubleValue(for: HKUnit.voltUnit(with: .micro))])
-          }
-          if done {
+          switch result {
+          case .measurement(let measurement):
+            if let quantity = measurement.quantity(for: .appleWatchSimilarToLeadI) {
+              out.append(["offsetSeconds": measurement.timeSinceSampleStart, "microvolts": quantity.doubleValue(for: HKUnit.voltUnit(with: .micro))])
+            }
+          case .done:
             settled = true
             promise.resolve(out)
+          case .error(let error):
+            settled = true
+            promise.reject(errorCode(error), error.localizedDescription)
+          @unknown default:
+            break
           }
         }
         self.store.execute(voltageQuery)
@@ -437,11 +477,16 @@ public class HealthSpecModule: Module {
       self.store.execute(query)
     }
 
+    /// Activity summaries for the calendar days touching [start, end) in the device's calendar.
     AsyncFunction("activitySummaries") { (start: String, end: String, promise: Promise) in
       do {
-        let calendar = Calendar.current
-        var from = calendar.dateComponents([.year, .month, .day, .era], from: try parseDate(start))
-        var to = calendar.dateComponents([.year, .month, .day, .era], from: try parseDate(end))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone.current
+        let startDate = try parseDate(start)
+        // The summary predicate includes its end day; the last instant before `end` names the last day wanted.
+        let lastDate = max(startDate, try parseDate(end).addingTimeInterval(-0.001))
+        var from = calendar.dateComponents([.era, .year, .month, .day], from: startDate)
+        var to = calendar.dateComponents([.era, .year, .month, .day], from: lastDate)
         from.calendar = calendar
         to.calendar = calendar
         let predicate = HKQuery.predicate(forActivitySummariesBetweenStart: from, end: to)
@@ -451,8 +496,10 @@ public class HealthSpecModule: Module {
             return
           }
           let formatter = DateFormatter()
-          formatter.dateFormat = "yyyy-MM-dd"
+          formatter.locale = Locale(identifier: "en_US_POSIX")
           formatter.calendar = calendar
+          formatter.timeZone = calendar.timeZone
+          formatter.dateFormat = "yyyy-MM-dd"
           let out: [[String: Any]] = (summaries ?? []).compactMap { summary in
             let components = summary.dateComponents(for: calendar)
             guard let date = calendar.date(from: components) else { return nil }
@@ -481,8 +528,9 @@ public class HealthSpecModule: Module {
     }
 
     AsyncFunction("requestMedicationsAuthorization") { (promise: Promise) in
+      #if compiler(>=6.2)
       if #available(iOS 26.0, *) {
-        // Medications use per-object read authorization (WWDC25). Unverified until built against the iOS 26 SDK.
+        // Medications use per-object read authorization; the type is never part of requestAuthorization.
         self.store.requestPerObjectReadAuthorization(for: HKObjectType.userAnnotatedMedicationType(), predicate: nil) { _, error in
           if let error {
             promise.reject(errorCode(error), error.localizedDescription)
@@ -490,12 +538,14 @@ public class HealthSpecModule: Module {
             promise.resolve(nil)
           }
         }
-      } else {
-        promise.reject("E_NOT_SUPPORTED", "Medications require iOS 26")
+        return
       }
+      #endif
+      promise.reject("E_NOT_SUPPORTED", "Medications require iOS 26")
     }
 
     AsyncFunction("medications") { (promise: Promise) in
+      #if compiler(>=6.2)
       if #available(iOS 26.0, *) {
         Task {
           do {
@@ -503,9 +553,9 @@ public class HealthSpecModule: Module {
             let medications = try await descriptor.result(for: self.store)
             let out: [[String: Any]] = medications.map { med in
               var dict: [String: Any] = [
-                "conceptIdentifier": "\(med.medication.identifier)",
+                "conceptIdentifier": conceptIdentifierString(med.medication.identifier),
                 "displayText": med.medication.displayText,
-                "generalForm": "\(med.medication.generalForm)",
+                "generalForm": med.medication.generalForm.rawValue,
                 "isArchived": med.isArchived,
                 "hasSchedule": med.hasSchedule,
               ]
@@ -517,9 +567,10 @@ public class HealthSpecModule: Module {
             promise.reject(errorCode(error), error.localizedDescription)
           }
         }
-      } else {
-        promise.reject("E_NOT_SUPPORTED", "Medications require iOS 26")
+        return
       }
+      #endif
+      promise.reject("E_NOT_SUPPORTED", "Medications require iOS 26")
     }
 
     AsyncFunction("openHealthApp") { (promise: Promise) in
@@ -528,22 +579,67 @@ public class HealthSpecModule: Module {
           promise.reject("E_PLATFORM", "invalid Health app URL")
           return
         }
-        UIApplication.shared.open(url, options: [:]) { ok in
-          promise.resolve(ok)
+        UIApplication.shared.open(url, options: [:]) { opened in
+          if opened {
+            promise.resolve(nil)
+          } else {
+            promise.reject("E_NOT_AVAILABLE", "the Health app could not be opened")
+          }
         }
       }
     }
 
     OnDestroy {
-      for query in self.observers.values {
-        self.store.stop(query)
+      HealthSpecObservers.shared.stopAll()
+      if let observer = self.changeObserver { NotificationCenter.default.removeObserver(observer) }
+    }
+  }
+
+  /**
+   Resolves bundle identifiers to a predicate over their HKSources, then continues with it (nil when no filter was
+   asked for). Filtering in the predicate, not afterwards, keeps `limit` and statistics honest. No matching source
+   means no matching samples, so a predicate that matches nothing is passed on.
+   */
+  private func sourcePredicate(_ type: HKSampleType, _ bundleIds: [String]?, _ promise: Promise, _ next: @escaping (NSPredicate?) -> Void) {
+    guard let bundleIds else {
+      next(nil)
+      return
+    }
+    let wanted = Set(bundleIds)
+    let query = HKSourceQuery(sampleType: type, samplePredicate: nil) { _, sources, error in
+      if let error {
+        promise.reject(errorCode(error), error.localizedDescription)
+        return
       }
-      self.observers.removeAll()
+      let matching = Set((sources ?? []).filter { wanted.contains($0.bundleIdentifier) })
+      next(HKQuery.predicateForObjects(from: matching))
+    }
+    store.execute(query)
+  }
+
+  /// Workouts from `samples`, in order, keyed by input index. On failure every workout saved so far is deleted.
+  private func saveWorkouts(_ samples: [SaveSample], from index: Int, saved: [(Int, HKWorkout)], completion: @escaping (Result<[Int: String], Error>) -> Void) {
+    guard let next = samples.indices.first(where: { $0 >= index && samples[$0].kind == "workout" }) else {
+      completion(.success(Dictionary(uniqueKeysWithValues: saved.map { ($0.0, $0.1.uuid.uuidString) })))
+      return
+    }
+    saveWorkout(samples[next]) { result in
+      switch result {
+      case .success(let workout):
+        self.saveWorkouts(samples, from: next + 1, saved: saved + [(next, workout)], completion: completion)
+      case .failure(let error):
+        let rollback = saved.map { $0.1 }
+        if rollback.isEmpty {
+          completion(.failure(error))
+        } else {
+          self.store.delete(rollback) { _, _ in completion(.failure(error)) }
+        }
+      }
     }
   }
 
   /// Workouts are created through HKWorkoutBuilder (HKWorkout's initialisers are deprecated).
-  private func saveWorkout(_ sample: SaveSample, completion: @escaping (Result<String, Error>) -> Void) {
+  private func saveWorkout(_ sample: SaveSample, completion: @escaping (Result<HKWorkout, Error>) -> Void) {
     do {
       let start = try parseDate(sample.start)
       let end = try parseDate(sample.end)
@@ -558,7 +654,11 @@ public class HealthSpecModule: Module {
             if let error { completion(.failure(error)); return }
             builder.finishWorkout { workout, error in
               if let error { completion(.failure(error)); return }
-              completion(.success(workout?.uuid.uuidString ?? ""))
+              guard let workout else {
+                completion(.failure(HealthSpecError.invalidArgument("HealthKit did not return the saved workout")))
+                return
+              }
+              completion(.success(workout))
             }
           }
         }

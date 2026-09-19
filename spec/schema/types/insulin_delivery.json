@@ -20,7 +20,12 @@
         "metadataFields": {
           "reason": {
             "key": "HKInsulinDeliveryReason",
-            "type": "number"
+            "type": "number",
+            "values": {
+              "basal": 1,
+              "bolus": 2
+            },
+            "required": true
           }
         },
         "verifiedBy": {
@@ -49,12 +54,14 @@
     }
   },
   "required": [
-    "internationalUnits"
+    "internationalUnits",
+    "reason"
   ],
   "additionalProperties": false,
   "examples": [
     {
-      "internationalUnits": 4.5
+      "internationalUnits": 4.5,
+      "reason": "bolus"
     }
   ]
 }

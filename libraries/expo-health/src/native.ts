@@ -68,6 +68,8 @@ export interface HKStatisticsOptions {
   /** first bucket start, ISO */
   anchor?: string;
   excludeUserEntered?: boolean;
+  /** only samples from these apps; HealthKit still de-duplicates among them */
+  sourceBundleIds?: string[];
 }
 
 export interface HKStatistic {
@@ -101,10 +103,10 @@ export interface HKSaveSample {
   category?: number;
   start: string;
   end: string;
-  metadata?: Record<string, string>;
+  /** typed for HealthKit natively; booleans and numbers keep their type */
+  metadata?: Record<string, string | number | boolean>;
   objects?: HKSaveSample[];
   workoutActivityType?: number;
-  totals?: { distanceMeters?: number; energyKilocalories?: number };
   /** state of mind writes */
   stateOfMind?: { kind: number; valence: number; labels: number[]; associations: number[] };
 }
@@ -156,11 +158,17 @@ export type HKAuthorizationStatus = 'notDetermined' | 'sharingDenied' | 'sharing
 export interface AppleHealthNative {
   isHealthDataAvailable(): boolean;
   bundleIdentifier(): string;
+  /** The subset of identifiers this OS version resolves. */
+  supportedIdentifiers(identifiers: string[]): string[];
+  /** True when the config plugin enabled background delivery (entitlement + Info.plist marker). */
+  backgroundDeliveryConfigured(): boolean;
+  /** Rejects (instead of crashing) when a type may not be shared or a usage description is missing. */
   requestAuthorization(read: string[], write: string[]): Promise<void>;
   authorizationStatus(identifiers: string[]): Promise<Record<string, HKAuthorizationStatus>>;
   querySamples(options: HKQueryOptions): Promise<HKSample[]>;
   statistics(options: HKStatisticsOptions): Promise<HKStatistic[]>;
   anchoredQuery(options: HKAnchoredOptions): Promise<HKAnchoredResult>;
+  /** Every sample is validated before anything is saved; a failure leaves nothing written. UUIDs in input order. */
   save(samples: HKSaveSample[]): Promise<string[]>;
   deleteObjects(identifier: string, kind: HKKind, uuids: string[]): Promise<number>;
   deleteByRange(identifier: string, kind: HKKind, start: string, end: string): Promise<number>;
@@ -168,6 +176,8 @@ export interface AppleHealthNative {
   disableBackgroundDelivery(identifier: string, kind: HKKind): Promise<boolean>;
   startObserving(identifier: string, kind: HKKind): Promise<string>;
   stopObserving(observerId: string): Promise<void>;
+  /** Identifiers whose observers fired while no JavaScript listener was attached (e.g. a background launch). Clears them. */
+  pendingChanges(): string[];
   // ---- non-sample data
   characteristics(): Promise<HKCharacteristics>;
   preferredUnits(identifiers: string[]): Promise<Record<string, string>>;
@@ -226,12 +236,30 @@ export interface HCAggregateBucket {
 }
 
 export interface HCInsertRecord {
+  /** spec type id — one insert call carries every type in the batch, so it is atomic */
+  type: string;
   start: string;
   end: string;
   zoneOffset?: string;
   value: Record<string, unknown>;
   recordingMethod: 'manual' | 'automatic' | 'active' | 'unknown';
+  device?: { manufacturer?: string; model?: string; type?: string };
+  /** `hc.clientRecordId` / `hc.clientRecordVersion` are written to the record's metadata */
   metadata?: Record<string, string>;
+}
+
+/** HealthConnectFeatures.FEATURE_* this module reports on. */
+export type HCFeature = 'MINDFULNESS_SESSION' | 'SKIN_TEMPERATURE' | 'PERSONAL_HEALTH_RECORD' | 'READ_HEALTH_DATA_IN_BACKGROUND' | 'READ_HEALTH_DATA_HISTORY';
+
+/** A Personal Health Record resource as Health Connect stores it: timestamps and names live inside `fhir`. */
+export interface HCMedicalResource {
+  /** `<dataSourceId>/<fhirResourceType>/<fhirResourceId>` */
+  id: string;
+  resourceType: string;
+  fhirVersion: string;
+  /** FHIR resource JSON, verbatim */
+  fhir: string;
+  dataSourceId: string;
 }
 
 export interface HCChanges {
@@ -245,22 +273,28 @@ export interface HCChanges {
 export interface HealthConnectNative {
   getSdkStatus(): HCSdkStatus;
   packageName(): string;
+  /** Optional features this device offers; all false while Health Connect is unavailable. */
+  features(): Record<HCFeature, boolean>;
   openInstaller(): Promise<void>;
+  /** Shows the permission dialog and resolves with every permission now granted (not only this request's). */
   requestPermissions(permissions: string[]): Promise<string[]>;
   getGrantedPermissions(): Promise<string[]>;
   readRecords(type: string, options: HCReadOptions): Promise<HCRecord[]>;
   aggregate(type: string, options: HCAggregateOptions): Promise<HCAggregateBucket[]>;
-  insertRecords(type: string, records: HCInsertRecord[]): Promise<string[]>;
+  /** Inserts every record in one atomic call; ids in input order (series samples get `<id>#0`). */
+  insertRecords(records: HCInsertRecord[]): Promise<string[]>;
+  /** Plain ids delete records; `<id>#<n>` ids remove single series samples. */
   deleteRecordsByIds(type: string, ids: string[]): Promise<void>;
   deleteRecordsByRange(type: string, start: string, end: string): Promise<void>;
   getChangesToken(type: string): Promise<string>;
   getChanges(type: string, token: string): Promise<HCChanges>;
   // ---- dedicated operations
+  /** One record, or one series sample for a `<id>#<n>` id; null when the id is unknown. */
   readRecord(type: string, id: string): Promise<HCRecord | null>;
   /** Asks the user for this session's route; null when the session has no route or consent was refused. */
   readExerciseRoute(sessionId: string): Promise<HCRoutePoint[] | null>;
-  /** Personal Health Record (FHIR) resources of one medical resource type. */
-  readMedicalResources(medicalResourceType: string, options: HCReadOptions): Promise<HCRecord[]>;
+  /** Personal Health Record (FHIR) resources for a clinical_* spec type. Only `limit` of the options applies. */
+  readMedicalResources(type: string, options: HCReadOptions): Promise<HCMedicalResource[]>;
   openSettings(): Promise<void>;
   revokeAllPermissions(): Promise<void>;
 }

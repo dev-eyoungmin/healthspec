@@ -16,6 +16,24 @@ pnpm verify        # codegen freshness + build + typecheck + tests + the Swift r
 
 `pnpm verify` needs a Swift toolchain for its last step. On Linux, run `pnpm test` instead.
 
+## Native code
+
+Native sources live in the platform packages; `pnpm codegen` copies what the Expo module compiles into
+`libraries/expo-health/ios/Shared` and `libraries/expo-health/android/src/main/java/dev/healthspec`. Edit the
+originals, never the copies — `pnpm codegen:check` fails when a copy is stale.
+
+| Change | Check locally |
+|---|---|
+| `packages/apple` | `swift build && swift run healthspec-check` (Command Line Tools are enough) |
+| `packages/google` | `cd packages/google && ./gradlew testDebugUnitTest` (JDK 17, Android SDK 36) |
+| `libraries/expo-health/android` | `cd example && npx expo prebuild -p android && cd android && ./gradlew :app:assembleDebug` |
+| `libraries/expo-health/ios` | `cd example && npx expo prebuild -p ios && cd ios && pod install`, then build in Xcode — or rely on CI's `ios` job |
+| config plugin | `cd example && npx expo prebuild && npx healthspec doctor` |
+
+HealthKit raises Objective-C exceptions for several kinds of misuse. Swift cannot catch them, so any HealthKit call
+that can raise goes through `catchingHealthKit` in the Expo module, and `healthspec-check` verifies the spec
+against the HealthKit runtime so that such calls are not made in the first place.
+
 ## Adding a health type
 
 1. Write `spec/schema/types/<id>.json`. Copy a neighbouring type; the `x-healthspec` block carries the
@@ -49,6 +67,24 @@ const report = await runConformanceSuite(myProvider);
 
 Declaring `changes: false` is a legitimate choice — the suite skips what you do not claim. Claiming something
 you do not do is what it is there to catch.
+
+## The documentation site
+
+`pnpm site` writes `site/`, `pnpm site:serve` opens it. Everything on it is generated from this repository — the
+guides and the specification are the markdown files, the type reference comes from `spec/schema` — so a page is
+changed by changing its source, never by editing HTML. `pnpm --filter @healthspec/site check` verifies every
+internal link and anchor, and CI runs it. Pushing to `main` deploys.
+
+## Releasing
+
+1. `pnpm release:version <x.y.z>` — one version across the five npm packages and `healthspec-versions.json`. Add
+   the release to `CHANGELOG.md`.
+2. `pnpm verify && pnpm release:check` — the second one packs every tarball and checks entry points, licences,
+   module formats, bundle size and that the versions agree.
+3. Tag `npm-v<version>` and push the tag. The release workflow publishes to npm with provenance.
+4. The Swift and Kotlin packages are released separately: `pod trunk push packages/apple/HealthSpec.podspec` after
+   tagging `apple-<version>`; Maven Central publishing of `dev.healthspec:healthspec` needs signing credentials and
+   is not automated yet.
 
 ## Commit messages
 

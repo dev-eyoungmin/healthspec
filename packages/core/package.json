@@ -2,19 +2,57 @@
   "name": "@healthspec/core",
   "version": "0.0.0",
   "description": "HealthSpec provider contract, HealthStore facade, MockProvider, cursors and time buckets — pure TypeScript, no React Native dependency.",
+  "keywords": [
+    "health",
+    "healthkit",
+    "health-connect",
+    "fitness",
+    "provider",
+    "mock",
+    "typescript"
+  ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20.11"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "react-native": "./dist/index.js",
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/index.js"
+    }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node ../../tools/release/src/mark-cjs.mjs dist/cjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@healthspec/schema": "workspace:*"
-  }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dev-eyoungmin/healthspec.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://dev-eyoungmin.github.io/healthspec/",
+  "bugs": {
+    "url": "https://github.com/dev-eyoungmin/healthspec/issues"
+  },
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "react-native": "./dist/index.js"
 }

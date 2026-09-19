@@ -1,5 +1,7 @@
 import Foundation
+import HealthKit
 import HealthSpec
+import HealthSpecCheckSupport
 
 /// Verifies the generated HealthSpec tables against the HealthKit types the runtime actually knows.
 /// Deliberately framework-free: XCTest and Swift Testing need a full Xcode install, and this has to run
@@ -63,24 +65,73 @@ section("HealthKit knows every identifier the spec names") {
   print("    resolved \(resolved) HealthKit identifiers")
 }
 
-section("HealthKit parses every unit the spec declares") {
-  var parsed = 0
-  for (type, info) in HealthSpec.types {
-    guard let unit = info.healthKit?.unit, !unit.isEmpty else { continue }
-    // HKUnit(from:) raises an Objective-C exception for an unknown string rather than returning nil, so
-    // this catches malformed unit strings only when the runtime is lenient; the device checklist covers
-    // the rest. An empty string is always a spec bug.
-    expect(!unit.isEmpty, "\(type.rawValue) declares an empty HKUnit string")
-    parsed += 1
+/// Every (quantity identifier, HKUnit string) pair a provider sends to HealthKit, with the aggregate functions
+/// that reach HKStatistics for it. Nutrition-style `multi` types use the field's canonical unit symbol as the
+/// HKUnit string (see AppleHealthProvider.hkUnit), so those symbols must parse too.
+func quantityUnits(_ info: TypeInfo, _ hk: HealthKitMapping) -> [(identifier: String, unit: String)] {
+  switch hk.kind {
+  case .quantity: return hk.identifier.flatMap { id in hk.unit.map { [(id, $0)] } } ?? []
+  case .derived: return hk.identifiers.compactMap { id in hk.unit.map { (id, $0) } }
+  case .correlation: return hk.identifiers.filter { !$0.hasPrefix("HKCorrelationTypeIdentifier") }.compactMap { id in hk.unit.map { (id, $0) } }
+  case .multi: return hk.fields.compactMap { field, id in info.fieldUnits[field].map { (id, $0) } }
+  default: return []
   }
-  print("    checked \(parsed) unit strings")
 }
 
-section("read-only types are not marked writable") {
-  for type in [HealthType.appleExerciseTime, .appleStandTime, .appleWalkingSteadiness, .atrialFibrillationBurden, .walkingHeartRateAverage] {
-    expect(HealthSpec.types[type]?.healthKit?.writable == false, "\(type.rawValue) must not be writable")
+section("HealthKit parses every unit the spec declares") {
+  // HKUnit(from:) raises for a string it does not know. In an app that is a crash, so it is checked here.
+  var parsed = 0
+  for (type, info) in HealthSpec.types {
+    guard let hk = info.healthKit else { continue }
+    for (identifier, unit) in quantityUnits(info, hk) {
+      var hkUnit: HKUnit?
+      let failure = HSCatchException { hkUnit = HKUnit(from: unit) }
+      expect(failure == nil, "\(type.rawValue): HealthKit rejects unit \"\(unit)\" — \(failure ?? "")")
+      parsed += 1
+      guard let hkUnit, let quantityType = objectType(identifier) as? HKQuantityType else { continue }
+      expect(quantityType.is(compatibleWith: hkUnit), "\(type.rawValue): unit \"\(unit)\" is incompatible with \(identifier)")
+    }
+  }
+  print("    parsed \(parsed) unit strings")
+}
+
+section("aggregate functions match each quantity's aggregation style") {
+  // A cumulative-sum statistics query on a discrete type (or the reverse) raises when it runs.
+  for (type, info) in HealthSpec.types {
+    guard let hk = info.healthKit else { continue }
+    let fns = Set(info.aggregate)
+    for (identifier, _) in quantityUnits(info, hk) {
+      guard let quantityType = objectType(identifier) as? HKQuantityType else { continue }
+      let cumulative = quantityType.aggregationStyle == .cumulative
+      if fns.contains(.sum) { expect(cumulative, "\(type.rawValue): declares sum but \(identifier) is discrete") }
+      if !fns.isDisjoint(with: [.avg, .min, .max]) { expect(!cumulative, "\(type.rawValue): declares avg/min/max but \(identifier) is cumulative") }
+    }
+  }
+}
+
+section("HealthKit lets apps share every type the spec marks writable") {
+  // Requesting share access to a type HealthKit reserves for itself raises instead of failing. The runtime
+  // flags behind that decision are not public API, which is fine for a check tool and never shipped.
+  func allowed(_ type: HKObjectType, _ key: String) -> Bool? {
+    (type as NSObject).responds(to: NSSelectorFromString(key)) ? (type as NSObject).value(forKey: key) as? Bool : nil
+  }
+  var inspected = 0
+  for (type, info) in HealthSpec.types {
+    guard let hk = info.healthKit else { continue }
+    for identifier in hk.identifiers where !identifier.hasPrefix("HKCorrelationTypeIdentifier") {
+      guard let objectType = objectType(identifier) else { continue }
+      if hk.writable, let share = allowed(objectType, "sharingAuthorizationAllowed") {
+        expect(share, "\(type.rawValue): marked writable but HealthKit does not allow sharing \(identifier)")
+        inspected += 1
+      }
+      // Medication dose events use per-object authorization and are never part of a type-wide read request.
+      if hk.readable, hk.kind != .medicationDose, let read = allowed(objectType, "readingAuthorizationAllowed") {
+        expect(read, "\(type.rawValue): marked readable but HealthKit does not allow reading \(identifier)")
+      }
+    }
   }
   expect(HealthSpec.types[.steps]?.healthKit?.writable == true, "steps must be writable")
+  print("    inspected \(inspected) writable identifiers")
 }
 
 section("heart rate variability variants stay apart") {

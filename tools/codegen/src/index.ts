@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { emitMappingDocs } from './emit-docs.js';
@@ -7,10 +7,11 @@ import { emitKotlinEnums, emitKotlinMedicalTypes, emitKotlinNutrition, emitKotli
 import { emitPluginPermissions } from './emit-plugin.js';
 import { emitDart } from './emit-dart.js';
 import { emitSwift } from './emit-swift.js';
-import { emitBundle, emitMapping, emitTypes } from './emit-ts.js';
+import { emitBundle, emitExamples, emitMapping, emitTypes } from './emit-ts.js';
 import { emitValidators } from './emit-validators.js';
 import { loadSpec } from './load.js';
 import { buildValidator, lintSpec, validateExamples } from './validate.js';
+import { vendorNativeSources } from './vendor.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const check = process.argv.includes('--check');
@@ -27,7 +28,8 @@ const outputs: Record<string, string> = {
   'packages/schema/src/generated/mapping.ts': emitMapping(bundle),
   'packages/schema/src/generated/platform.ts': emitPlatform(bundle),
   'packages/schema/src/generated/schema-bundle.ts': emitBundle(bundle),
-  'packages/schema/src/generated/validators.ts': emitValidators(bundle),
+  'packages/schema/src/generated/examples.ts': emitExamples(bundle),
+  'packages/schema/src/generated/value-schemas.ts': emitValidators(bundle),
   'packages/google/src/main/kotlin/dev/healthspec/generated/HealthSpecTypes.kt': emitKotlinTypes(bundle),
   'packages/google/src/main/kotlin/dev/healthspec/generated/HealthSpecEnums.kt': emitKotlinEnums(bundle),
   'packages/google/src/main/kotlin/dev/healthspec/generated/HealthSpecNutrition.kt': emitKotlinNutrition(bundle),
@@ -38,7 +40,20 @@ const outputs: Record<string, string> = {
   'docs/mapping/README.md': emitMappingDocs(bundle),
 };
 
+// Native sources the Expo module compiles, copied from the platform packages (see vendor.ts).
+const vendored = await vendorNativeSources(ROOT, outputs);
+Object.assign(outputs, vendored.outputs);
+
 let stale = 0;
+for (const orphan of vendored.orphans) {
+  if (check) {
+    console.error(`✖ orphaned copy: ${orphan}`);
+    stale++;
+  } else {
+    await rm(path.join(ROOT, orphan));
+    console.log(`✔ removed ${orphan}`);
+  }
+}
 for (const [rel, content] of Object.entries(outputs)) {
   const abs = path.join(ROOT, rel);
   if (check) {

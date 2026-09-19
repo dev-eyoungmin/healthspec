@@ -1,15 +1,18 @@
 plugins {
-  id 'com.android.library'
-  id 'org.jetbrains.kotlin.android'
+  // Versions follow React Native 0.81 (AGP 8.11, Kotlin 2.1.20) so the standalone build and the Expo module
+  // compile these sources with the same toolchain.
+  id 'com.android.library' version '8.11.0'
+  id 'org.jetbrains.kotlin.android' version '2.1.20'
   id 'maven-publish'
 }
 
 group = 'dev.healthspec'
-version = rootProject.hasProperty('healthspecVersion') ? rootProject.healthspecVersion : '0.0.0'
+version = findProperty('healthspecVersion') ?: '0.0.0'
 
 android {
   namespace 'dev.healthspec'
-  compileSdk 35
+  // connect-client 1.1.0 declares minCompileSdk 36.
+  compileSdk 36
   defaultConfig {
     // Health Connect's client library requires API 26.
     minSdk 26
@@ -19,12 +22,19 @@ android {
     sourceCompatibility JavaVersion.VERSION_17
     targetCompatibility JavaVersion.VERSION_17
   }
+  testOptions {
+    // Record constructors only validate their arguments; they never touch the Android framework, so the
+    // serialization tests run on the JVM against the stub android.jar.
+    unitTests.returnDefaultValues = true
+  }
   publishing { singleVariant('release') { withSourcesJar() } }
 }
 
 dependencies {
   api "androidx.health.connect:connect-client:1.1.0"
-  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
+  testImplementation "junit:junit:4.13.2"
+  // Reads the spec's JSON examples in the round-trip test; never shipped.
+  testImplementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
 }
 
 publishing {

@@ -1,7 +1,7 @@
 {
   "name": "@healthspec/expo",
   "version": "0.0.0",
-  "description": "HealthSpec for Expo and React Native \u2014 Apple HealthKit and Android Health Connect behind one spec-conformant API.",
+  "description": "HealthSpec for Expo and React Native — Apple HealthKit and Android Health Connect behind one spec-conformant API.",
   "license": "MIT",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -18,7 +18,7 @@
     "!ios/build"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p plugin/tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json && tsc -p plugin/tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p plugin/tsconfig.json --noEmit",
     "test": "node --import tsx --test test/*.test.ts"
   },
@@ -27,22 +27,28 @@
     "@healthspec/schema": "workspace:*"
   },
   "peerDependencies": {
-    "expo": "*",
-    "react": "*",
-    "react-native": "*"
+    "expo": ">=54.0.0",
+    "react": ">=19.0.0",
+    "react-native": ">=0.81.0"
   },
   "devDependencies": {
+    "@healthspec/conformance": "workspace:*",
     "@types/react": "^19.0.0",
     "expo": "^54.0.0",
     "expo-modules-core": "^3.0.0",
     "react": "^19.0.0",
-    "react-native": "^0.81.0"
+    "react-native": "^0.81.0",
+    "react-test-renderer": "19.2.8"
   },
   "author": "HealthSpec contributors",
-  "homepage": "https://github.com/dev-eyoungmin/healthspec",
+  "homepage": "https://dev-eyoungmin.github.io/healthspec/",
+  "bugs": {
+    "url": "https://github.com/dev-eyoungmin/healthspec/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dev-eyoungmin/healthspec.git"
+    "url": "https://github.com/dev-eyoungmin/healthspec.git",
+    "directory": "libraries/expo-health"
   },
   "keywords": [
     "expo",
@@ -53,5 +59,11 @@
     "fitness",
     "ios",
     "android"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "module": "build/esm/index.js",
+  "react-native": "build/esm/index.js"
 }

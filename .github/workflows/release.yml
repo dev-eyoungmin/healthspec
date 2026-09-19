@@ -1,0 +1,43 @@
+name: Release
+
+# Publishes the npm packages when a version tag is pushed. Bump the versions in each package.json (and
+# healthspec-versions.json) in a commit first; the tag must match @healthspec/expo's version, e.g. npm-v0.1.0.
+on:
+  push:
+    tags: ['npm-v*']
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+
+      - name: The tag matches the package version
+        run: |
+          version=$(node -p "require('./libraries/expo-health/package.json').version")
+          test "npm-v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME does not match version $version"; exit 1; }
+
+      - run: pnpm codegen:check
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm release:check
+
+      # pnpm replaces workspace:* with the packages' versions when publishing.
+      - name: Publish
+        run: pnpm -r --filter "./packages/*" --filter "./libraries/*" publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'

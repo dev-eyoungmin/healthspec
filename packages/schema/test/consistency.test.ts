@@ -6,13 +6,13 @@ import {
   HEALTH_CONNECT_PERMISSIONS,
   HEALTH_TYPES,
   HEALTHKIT_IDENTIFIERS,
-  SCHEMA_BUNDLE,
   SLEEP_STAGE_MAPPING,
   SLEEP_STAGE_VALUES,
   TYPE_MAPPINGS,
   type HealthRecord,
   type StepsRecord,
 } from '../src/index.js';
+import { SCHEMA_BUNDLE } from '../src/bundle.js';
 
 test('HEALTH_TYPES and TYPE_MAPPINGS agree', () => {
   assert.deepEqual([...HEALTH_TYPES], Object.keys(TYPE_MAPPINGS));

@@ -1,6 +1,7 @@
 import {
   HEALTH_TYPES,
   TYPE_MAPPINGS,
+  TYPE_PLATFORMS,
   validateRecord,
   type AccessType,
   type Availability,
@@ -43,11 +44,17 @@ export interface MockProviderOptions {
   seed?: number | false;
   /** Days of seed history (default 7). */
   days?: number;
-  /** Types the mock declares; default every spec type. Seed data is limited to the declared types. */
+  /**
+   * Types the mock declares. Default: every type `platform` supports when a platform is given, else every spec type.
+   * Seed data is limited to the declared types.
+   */
   types?: HealthType[];
   /**
    * 'ios' mirrors HealthKit: read grants are never revealed (`unknown`) and denied reads return empty results.
-   * 'android' mirrors Health Connect: read status is known and denied reads reject with PERMISSION_DENIED. Default 'ios'.
+   * 'android' mirrors Health Connect: read status is known and denied reads reject with PERMISSION_DENIED.
+   * Giving a platform also mirrors its types and optional operations (no profile on Android, no permission
+   * revocation on iOS), so code that only works on one platform fails in the mock too. Without one, the mock
+   * follows iOS permission semantics and offers every type and operation.
    */
   platform?: 'ios' | 'android';
   /** How requestPermissions decides. Default 'grant'. */
@@ -97,6 +104,8 @@ export class MockProvider implements Provider {
   readonly id = 'mock';
   readonly platform: PlatformId | 'mock' = 'mock';
   private readonly options: MockProviderOptions & Required<Pick<MockProviderOptions, 'platform' | 'availability' | 'appId'>>;
+  /** Whether the caller chose a platform, which makes types and optional operations mirror it. */
+  private readonly mirrored: boolean;
   private readonly store = new Map<HealthType, Map<string, HealthRecord>>();
   private readonly log: LogEntry[] = [];
   private seq = 0;
@@ -112,13 +121,14 @@ export class MockProvider implements Provider {
 
   constructor(options: MockProviderOptions = {}) {
     this.options = { platform: 'ios', availability: 'available', appId: MOCK_APP_ID, ...options };
+    this.mirrored = options.platform !== undefined;
     this.profile = options.profile ?? { biologicalSex: 'female', dateOfBirth: '1990-05-14', bloodType: 'o_positive', wheelchairUse: false, activityMoveMode: 'active_energy' };
     if (options.seed !== false) {
       const seed = generateSeedRecords({
         seed: options.seed ?? 42,
         days: options.days ?? 7,
         end: this.now(),
-        ...(options.types ? { types: options.types } : {}),
+        types: this.supportedTypes(),
       });
       this.load(seed, 'seed');
     }
@@ -128,8 +138,28 @@ export class MockProvider implements Provider {
 
   capabilities(): Capabilities {
     const types = this.supportedTypes().filter((t) => t !== 'exercise_route');
-    const write = types.filter((t) => !t.startsWith('clinical_') && t !== 'activity_summary' && t !== 'electrocardiogram' && t !== 'heartbeat_series' && t !== 'medication_dose');
-    return { types, write, aggregate: true, changes: true, subscribe: true, background: true, history: true, profile: true, routes: true, readById: true, openSettings: true, revokePermissions: true, preferredUnits: true };
+    const write = types.filter((t) => {
+      if (!this.mirrored) return !t.startsWith('clinical_') && t !== 'activity_summary' && t !== 'electrocardiogram' && t !== 'heartbeat_series' && t !== 'medication_dose';
+      const mapping = TYPE_MAPPINGS[t][this.options.platform === 'ios' ? 'healthkit' : 'healthconnect'];
+      return mapping?.write === true;
+    });
+    const ios = !this.mirrored || this.options.platform === 'ios';
+    const android = !this.mirrored || this.options.platform === 'android';
+    return {
+      types,
+      write,
+      aggregate: true,
+      changes: true,
+      subscribe: true,
+      background: true,
+      history: true,
+      profile: ios,
+      routes: true,
+      readById: true,
+      openSettings: true,
+      revokePermissions: android,
+      preferredUnits: ios,
+    };
   }
 
   async availability(): Promise<Availability> {
@@ -145,6 +175,8 @@ export class MockProvider implements Provider {
     const read = request.read ?? [];
     const write = request.write ?? [];
     for (const t of [...read, ...write]) this.assertType(t);
+    const writable = new Set(this.capabilities().write);
+    for (const t of write) if (!writable.has(t)) throw notSupported(`mock provider cannot write "${t}"`);
     const ios = this.options.platform === 'ios';
     for (const t of read) {
       const decision = this.decide(t, 'read');
@@ -193,6 +225,7 @@ export class MockProvider implements Provider {
       const issues = validateRecord(r, { partial: true }, `records[${i}]`);
       if (issues.length) throw invalidArgument(issues.map((x) => `${x.path}: ${x.message}`).join('; '));
       this.assertType(r.type);
+      if (!this.capabilities().write.includes(r.type)) throw notSupported(`mock provider cannot write "${r.type}"`);
       if (this.writeStatus.get(r.type) !== 'granted') throw permissionDenied(`write permission for "${r.type}" not granted`);
     });
     const stored = this.load(records, 'mock', this.options.appId);
@@ -265,7 +298,7 @@ export class MockProvider implements Provider {
 
   async getProfile(): Promise<HealthProfile> {
     this.assertAvailable();
-    if (this.capabilityStatus.get('profile') !== 'granted' && this.options.platform === 'android') return {};
+    if (!this.capabilities().profile) throw notSupported('Health Connect has no user profile');
     return { ...this.profile };
   }
 
@@ -299,6 +332,7 @@ export class MockProvider implements Provider {
   }
 
   async revokePermissions(): Promise<void> {
+    if (!this.capabilities().revokePermissions) throw notSupported('HealthKit has no permission revocation');
     this.requested.clear();
     this.deniedReads.clear();
     this.readStatus.clear();
@@ -307,6 +341,7 @@ export class MockProvider implements Provider {
   }
 
   async preferredUnits(types: HealthType[]): Promise<Partial<Record<HealthType, string>>> {
+    if (!this.capabilities().preferredUnits) throw notSupported('Health Connect has no preferred units');
     const out: Partial<Record<HealthType, string>> = {};
     for (const t of types) {
       this.assertType(t);
@@ -348,7 +383,10 @@ export class MockProvider implements Provider {
   }
 
   private supportedTypes(): HealthType[] {
-    return this.options.types ?? [...HEALTH_TYPES];
+    if (this.options.types) return this.options.types;
+    if (!this.mirrored) return [...HEALTH_TYPES];
+    const platform = this.options.platform;
+    return HEALTH_TYPES.filter((t) => TYPE_PLATFORMS[t][platform].supported);
   }
 
   private decide(type: HealthType, access: AccessType): PermissionStatus {

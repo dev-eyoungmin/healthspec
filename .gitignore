@@ -4,6 +4,7 @@ node_modules/
 # build output
 dist/
 build/
+/site/
 .build/
 .swiftpm/
 *.tgz
@@ -27,3 +28,7 @@ xcuserdata/
 .DS_Store
 *.log
 coverage/
+
+# expo prebuild output — generated from app.json and config plugins
+example/android/
+example/ios/

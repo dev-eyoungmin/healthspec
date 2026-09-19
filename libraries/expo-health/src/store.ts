@@ -2,6 +2,7 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 import { Platform } from 'react-native';
 import { HealthStore as CoreHealthStore, MockProvider, type MockProviderOptions, type Provider } from '@healthspec/core';
 import { AppleHealthProvider, type AppleHealthProviderOptions } from './AppleHealthProvider.js';
+import { setDefaultStore } from './default-store.js';
 import { HealthConnectProvider, type HealthConnectProviderOptions } from './HealthConnectProvider.js';
 import type { AppleHealthNative, HealthConnectNative } from './native.js';
 
@@ -30,7 +31,9 @@ export function createDefaultProvider(options: DefaultProviderOptions = {}): Pro
       console.warn('[healthspec] native module "HealthSpec" not found (Expo Go or missing prebuild) — using MockProvider with seed data.');
     }
   }
-  return new MockProvider(options.mock);
+  // Mirror the platform Expo Go runs on, so a type or operation the device lacks is missing in the mock too.
+  const platform = Platform.OS === 'ios' || Platform.OS === 'android' ? { platform: Platform.OS } : {};
+  return new MockProvider({ ...platform, ...options.mock });
 }
 
 export class HealthStore extends CoreHealthStore {
@@ -46,3 +49,6 @@ export class HealthStore extends CoreHealthStore {
     HealthStore.instance = undefined;
   }
 }
+
+// The hooks reach the app-wide store through this, so that they do not depend on React Native themselves.
+setDefaultStore(() => HealthStore.default());

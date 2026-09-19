@@ -4,6 +4,6 @@
 - [`schema/common`](schema/common) — record envelope and source.
 - [`schema/enums`](schema/enums) — shared enumerations with per-platform mappings.
 - [`schema/types`](schema/types) — one JSON Schema (draft 2020-12) per health type, including the HealthKit / Health Connect mapping in `x-healthspec`.
-- `conformance/` — provider test scenarios (Phase 2).
+- Conformance scenarios live in [`packages/conformance`](../packages/conformance); each cites the clause of `SPEC.md` it enforces.
 
 The generated, human-readable mapping table lives at [`../docs/mapping/README.md`](../docs/mapping/README.md).

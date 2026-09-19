@@ -27,7 +27,8 @@
         "metadataFields": {
           "cycleStart": {
             "key": "HKMenstrualCycleStart",
-            "type": "boolean"
+            "type": "boolean",
+            "required": true
           }
         },
         "verifiedBy": {
@@ -43,7 +44,8 @@
         "permission": "MENSTRUATION",
         "field": "flow",
         "notes": [
-          "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN."
+          "Health Connect has no \"none\" flow; it is written as FLOW_UNKNOWN.",
+          "MenstruationFlowRecord is instantaneous: Health Connect keeps only start, so end reads back equal to start."
         ],
         "verifiedBy": {
           "record": [

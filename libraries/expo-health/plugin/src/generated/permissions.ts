@@ -45,7 +45,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKQuantityTypeIdentifierAppleMoveTime"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -54,7 +54,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -63,7 +63,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKQuantityTypeIdentifierAppleSleepingWristTemperature"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -72,7 +72,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierAppleStandHour"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -99,7 +99,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierAppleWalkingSteadinessEvent"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -569,7 +569,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierAudioExposureEvent"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -668,7 +668,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierHeadphoneAudioExposureEvent"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -719,7 +719,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierHighHeartRateEvent"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -756,7 +756,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierInfrequentMenstrualCycles"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -795,7 +795,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierIrregularHeartRhythmEvent"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -804,7 +804,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierIrregularMenstrualCycles"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -834,7 +834,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierLowCardioFitnessEvent"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -843,7 +843,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierLowHeartRateEvent"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -1019,7 +1019,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierPersistentIntermenstrualBleeding"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -1071,7 +1071,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierProlongedMenstrualPeriods"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -1186,7 +1186,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKCategoryTypeIdentifierSleepApneaEvent"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },
@@ -1690,7 +1690,7 @@ export const PERMISSIONS: Record<HealthType, TypePermissions> = {
       "identifiers": [
         "HKQuantityTypeIdentifierWalkingAsymmetryPercentage"
       ],
-      "write": true
+      "write": false
     },
     "healthconnect": null
   },

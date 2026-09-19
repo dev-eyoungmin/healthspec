@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { androidPermissions, applyAndroidManifest, applyEntitlements, applyInfoPlist, resolveProps, type ManifestActivity, type ManifestApplication, type ManifestLike } from '../plugin/src/apply';
+import { androidPermissions, applyAndroidManifest, applyEntitlements, applyGradleProperties, applyInfoPlist, resolveProps, type GradleProperty, type ManifestActivity, type ManifestApplication, type ManifestLike } from '../plugin/src/apply';
 import { HEALTH_TYPES } from '../plugin/src/generated/permissions';
 
 test('resolveProps expands "all" and rejects unknown types', () => {
@@ -24,8 +24,22 @@ test('iOS entitlements and Info.plist', () => {
   const plist = applyInfoPlist({ NSHealthShareUsageDescription: 'custom' }, props);
   assert.equal(plist['NSHealthShareUsageDescription'], 'custom');
   assert.ok(typeof plist['NSHealthUpdateUsageDescription'] === 'string');
+  assert.ok(typeof plist['NSHealthClinicalHealthRecordsShareUsageDescription'] === 'string', 'clinical records crash without their usage description');
+  assert.equal(plist['HealthSpecBackgroundDelivery'], true, 'the native module learns that background delivery is entitled');
+  // A write request from code the plugin config does not list would otherwise crash the app.
   const readOnly = applyInfoPlist({}, resolveProps({ read: ['steps'] }));
-  assert.equal(readOnly['NSHealthUpdateUsageDescription'], undefined);
+  assert.ok(typeof readOnly['NSHealthUpdateUsageDescription'] === 'string');
+  assert.equal(readOnly['NSHealthClinicalHealthRecordsShareUsageDescription'], undefined);
+  assert.equal(readOnly['HealthSpecBackgroundDelivery'], undefined);
+});
+
+test('Android minSdkVersion is raised to what Health Connect needs, never lowered', () => {
+  const added = applyGradleProperties([{ type: 'property', key: 'org.gradle.jvmargs', value: '-Xmx2g' }]);
+  assert.deepEqual(added.at(-1), { type: 'property', key: 'android.minSdkVersion', value: '26' });
+  const raised = applyGradleProperties([{ type: 'property', key: 'android.minSdkVersion', value: '24' }]);
+  assert.equal((raised[0] as Extract<GradleProperty, { type: 'property' }>).value, '26');
+  const kept = applyGradleProperties([{ type: 'property', key: 'android.minSdkVersion', value: '28' }]);
+  assert.equal((kept[0] as Extract<GradleProperty, { type: 'property' }>).value, '28');
 });
 
 test('Android manifest edits are complete and idempotent', () => {

@@ -16,6 +16,7 @@
         "write": false,
         "record": "MedicalResource",
         "permission": "MEDICAL_DATA_PREGNANCY",
+        "feature": "PERSONAL_HEALTH_RECORD",
         "medicalResourceType": "PREGNANCY"
       }
     },
